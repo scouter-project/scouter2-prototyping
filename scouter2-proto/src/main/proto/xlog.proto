@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "scouter2.proto";
+option java_outer_classname = "XlogProto";
+
+package scouter2.proto;
+
+service XlogCollector {
+
+  rpc GetXlogByTxid(XlogSearch) returns (Xlog) {}
+  rpc GetXlogByGxid(XlogSearch) returns (XlogList) {}
+
+  rpc addXlog(stream Xlog) returns (Counting) {}
+}
+
+message Counting {
+  int64 value = 1;
+}
+
+message Xlog {
+  int64 gxid = 1;
+  int64 txid = 2;
+  int64 ptxid = 3;
+  string partitionKey = 4;
+}
+
+message IDWithTimeoutRequest {
+  int32 value = 1;
+  int64 timeout = 2;
+}
+
+message XlogSearch {
+  int64 id = 1;
+  string partitionKey = 2;
+}
+
+message XlogList {
+  repeated Xlog xlogs = 1;
+}
