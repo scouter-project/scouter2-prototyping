@@ -4,3 +4,4 @@ target/
 scouter2-collector/target/
 scouter2-common/target/
 scouter2-proto/target/
+running/

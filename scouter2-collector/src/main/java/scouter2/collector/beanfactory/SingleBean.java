@@ -14,10 +14,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
+package scouter2.collector.beanfactory;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-09
  */
-public interface NoneThreadSafeXlogRepo extends XlogRepo {
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface SingleBean {
 }

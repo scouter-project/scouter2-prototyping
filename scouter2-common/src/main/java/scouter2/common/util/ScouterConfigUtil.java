@@ -8,7 +8,7 @@ import java.util.Properties;
 
 public class ScouterConfigUtil {
 
-	public static Properties appendSystempProps(Properties props) {
+	public static Properties appendSystemProps(Properties props) {
 		Properties appendedProps = new Properties();
 
 		Map<Object, Object> args = new HashMap<Object, Object>();

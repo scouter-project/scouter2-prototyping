@@ -14,10 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
+package scouter2.collector.config;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.beanfactory.SingleBean;
+import scouter2.common.config.ConfigItem;
+import scouter2.common.config.ScouterConfigIF;
+
+import java.util.List;
+import java.util.Properties;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
-public interface NoneThreadSafeXlogRepo extends XlogRepo {
+@Getter
+@Slf4j
+@SingleBean
+public class ConfigCommon implements ScouterConfigIF {
+
+    @Override
+    public List<ConfigItem> getAllConfigs() {
+        return null;
+    }
+
+    @Override
+    public void refresh(Properties properties) {
+
+    }
 }
