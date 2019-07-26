@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "scouter2.proto";
+option java_outer_classname = "InstanceProto";
+
+package scouter2.proto;
+
+import "common.proto";
+
+service InstanceService {
+  rpc heartbeat(stream Instance) returns (Counting) {}
+}
+
+message Instance {
+  string instanceType = 1;
+  int32 instanceName = 2;
+  string address = 3;
+  string version = 4;
+}
+

@@ -14,12 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
+package scouter2.collector.domain.instance;
 
 import lombok.extern.slf4j.Slf4j;
-import scouter2.collector.config.ConfigCommon;
 import scouter2.common.util.ThreadUtil;
-import scouter2.proto.Xlog;
+import scouter2.proto.Instance;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,39 +26,36 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
-public class XlogReceiveQueueConsumer extends Thread {
+public class InstanceReceiveQueueConsumer extends Thread {
     private static AtomicInteger threadNo = new AtomicInteger();
-    private static XlogReceiveQueueConsumer instance;
+    private static InstanceReceiveQueueConsumer instance;
 
-    private ConfigCommon conf;
-    private XlogReceiveQueue xlogReceiveQueue;
-    private XlogAdder xlogAdder;
+    private InstanceReceiveQueue queue;
+    private InstanceAdder instanceAdder;
 
-    public synchronized static XlogReceiveQueueConsumer start(ConfigCommon conf,
-                                                              XlogReceiveQueue xlogReceiveQueue,
-                                                              XlogAdder xlogAdder) {
+    public synchronized static InstanceReceiveQueueConsumer start(InstanceReceiveQueue receiveQueue,
+                                                                  InstanceAdder instanceAdder) {
         if (instance != null) {
-            throw new RuntimeException("Already working xlog consumer exists.");
+            throw new RuntimeException("Already working InstanceReceiveQueueConsumer exists.");
         }
-        instance = new XlogReceiveQueueConsumer(conf, xlogReceiveQueue, xlogAdder);
+        instance = new InstanceReceiveQueueConsumer(receiveQueue, instanceAdder);
         instance.setDaemon(true);
         instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
         instance.start();
         return instance;
     }
 
-    private XlogReceiveQueueConsumer(ConfigCommon conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
-        this.conf = conf;
-        this.xlogReceiveQueue = xlogReceiveQueue;
-        this.xlogAdder = xlogAdder;
+    private InstanceReceiveQueueConsumer(InstanceReceiveQueue queue, InstanceAdder instanceAdder) {
+        this.queue = queue;
+        this.instanceAdder = instanceAdder;
     }
 
     @Override
     public void run() {
         while (true) {
             try {
-                Xlog xlog = xlogReceiveQueue.take();
-                xlogAdder.addXlog(xlog);
+                Instance instance = queue.take();
+                instanceAdder.addInstance(instance);
 
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);

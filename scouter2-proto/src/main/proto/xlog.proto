@@ -6,16 +6,14 @@ option java_outer_classname = "XlogProto";
 
 package scouter2.proto;
 
-service XlogCollector {
+import "common.proto";
+
+service XlogService {
 
   rpc GetXlogByTxid(XlogSearch) returns (Xlog) {}
   rpc GetXlogByGxid(XlogSearch) returns (XlogList) {}
 
   rpc addXlog(stream Xlog) returns (Counting) {}
-}
-
-message Counting {
-  int64 value = 1;
 }
 
 message Xlog {

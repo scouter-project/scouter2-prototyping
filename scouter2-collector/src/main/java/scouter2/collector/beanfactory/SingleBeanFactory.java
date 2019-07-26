@@ -28,7 +28,7 @@ public class SingleBeanFactory {
     public static void addBean(Class<?> clazz, Object object) {
         if (!object.getClass().isAssignableFrom(clazz)) {
             throw new ClassCastException("Can not apply as " + clazz.getName()
-                    + "from object " + object.getClass().getName());
+                    + " from object " + object.getClass().getName());
         }
         beans.put(clazz, object);
     }

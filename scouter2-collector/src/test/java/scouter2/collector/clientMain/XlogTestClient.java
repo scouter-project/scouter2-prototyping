@@ -24,7 +24,7 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import scouter2.proto.Counting;
 import scouter2.proto.Xlog;
-import scouter2.proto.XlogCollectorGrpc;
+import scouter2.proto.XlogServiceGrpc;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -37,8 +37,8 @@ import java.util.concurrent.atomic.AtomicLong;
 public class XlogTestClient {
 
     private final ManagedChannel channel;
-    private final XlogCollectorGrpc.XlogCollectorBlockingStub blockingStub;
-    private final XlogCollectorGrpc.XlogCollectorStub asyncStub;
+    private final XlogServiceGrpc.XlogServiceBlockingStub blockingStub;
+    private final XlogServiceGrpc.XlogServiceStub asyncStub;
 
     public XlogTestClient(String host, int port){
         this(ManagedChannelBuilder.forAddress(host, port).usePlaintext());
@@ -46,8 +46,8 @@ public class XlogTestClient {
 
     public XlogTestClient(ManagedChannelBuilder < ? > channelBuilder){
         channel = channelBuilder.build();
-        blockingStub = XlogCollectorGrpc.newBlockingStub(channel);
-        asyncStub = XlogCollectorGrpc.newStub(channel);
+        blockingStub = XlogServiceGrpc.newBlockingStub(channel);
+        asyncStub = XlogServiceGrpc.newStub(channel);
     }
 
     public void shutdown () throws InterruptedException {

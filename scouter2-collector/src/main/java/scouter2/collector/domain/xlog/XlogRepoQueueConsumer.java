@@ -16,6 +16,7 @@
  */
 package scouter2.collector.domain.xlog;
 
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import scouter2.collector.config.ConfigXlog;
@@ -28,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
+@Slf4j
 public class XlogRepoQueueConsumer extends Thread {
     private static AtomicInteger threadNo = new AtomicInteger();
     private static ImmutableList<XlogRepoQueueConsumer> instances;
@@ -75,12 +77,15 @@ public class XlogRepoQueueConsumer extends Thread {
 
     @Override
     public void run() {
-        try {
-            Xlog xlog = xlogRepoQueue.take();
-            xlogRepo.add(xlog);
+        while (true) {
+            try {
+                Xlog xlog = xlogRepoQueue.take();
+                xlogRepo.add(xlog);
 
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                log.error(e.getMessage(), e);
+            }
         }
     }
 }

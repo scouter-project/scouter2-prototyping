@@ -17,9 +17,10 @@
 package scouter2.collector.main;
 
 import org.jetbrains.annotations.NotNull;
+import org.springframework.stereotype.Component;
 import scouter2.collector.beanfactory.ServerBeanInitializer;
 import scouter2.collector.common.ShutdownManager;
-import scouter2.collector.receiver.grpc.GrpcServer;
+import scouter2.collector.receiver.grpc.GrpcReceiver;
 import scouter2.common.util.SysJMX;
 import scouter2.common.util.ThreadUtil;
 
@@ -29,16 +30,24 @@ import java.io.IOException;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
+@Component
 public class CollectorMain {
 
-    public static void main(String[] args) throws IOException {
+//    public static void main(String[] args) throws IOException {
+//        //TODO logo
+//        System.out.println("System JRE version : " + System.getProperty("java.version"));
+//        ServerBeanInitializer.init();
+//        startServer();
+//    }
+
+    public void start(String[] args) throws IOException {
         //TODO logo
         System.out.println("System JRE version : " + System.getProperty("java.version"));
         ServerBeanInitializer.init();
         startServer();
     }
 
-    private static void startServer() throws IOException {
+    private void startServer() throws IOException {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown()));
 
         //TODO after file DB
@@ -61,7 +70,7 @@ public class CollectorMain {
     }
 
     private static void startGrpcServer() throws IOException {
-        GrpcServer grpcServer = new GrpcServer(6110);
+        GrpcReceiver grpcServer = new GrpcReceiver(6110);
         grpcServer.start();
     }
 

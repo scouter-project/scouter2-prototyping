@@ -17,8 +17,17 @@
 package scouter2.collector.beanfactory;
 
 import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.config.ConfigPublisher;
 import scouter2.collector.config.ConfigWatcher;
+import scouter2.collector.config.ConfigXlog;
+import scouter2.collector.domain.xlog.XlogAdder;
+import scouter2.collector.domain.xlog.XlogReceiveQueue;
+import scouter2.collector.domain.xlog.XlogReceiveQueueConsumer;
+import scouter2.collector.domain.xlog.XlogRepo;
+import scouter2.collector.domain.xlog.XlogRepoQueue;
+import scouter2.collector.domain.xlog.XlogRepoQueueConsumer;
+import scouter2.collector.infrastructure.repository.MutingXlogRepo;
 import scouter2.common.config.ScouterConfigIF;
 
 import java.util.Set;
@@ -31,16 +40,26 @@ public class ServerBeanInitializer {
     private final static String DEFAULT_CONF_DIR = "./conf/";
 
     public static void init() {
-        initConfigBeans();
+        ConfigPublisher configPublisher = registerConfigPublisher();
         registerConfigBeans();
+        startConfigWatcher(configPublisher);
+
+        ConfigCommon configCommon = SingleBeanFactory.getBean(ConfigCommon.class);
+        ConfigXlog configXlog = SingleBeanFactory.getBean(ConfigXlog.class);
+
+        registerAndInitXlogProcessors(configCommon, configXlog);
     }
 
-    private static void initConfigBeans() {
-        ConfigPublisher configPublisher = new ConfigPublisher();
+    private static void startConfigWatcher(ConfigPublisher configPublisher) {
         ConfigWatcher.start(System.getProperty("scouter.config", DEFAULT_CONF_DIR + "scouter.conf"),
                 configPublisher);
+    }
 
+    private static ConfigPublisher registerConfigPublisher() {
+        ConfigPublisher configPublisher = new ConfigPublisher();
         SingleBeanFactory.addBean(ConfigPublisher.class, configPublisher);
+
+        return configPublisher;
     }
 
     private static void registerConfigBeans() {
@@ -63,5 +82,22 @@ public class ServerBeanInitializer {
                 log.error("Exception on loading scouter config classes", e);
             }
         }
+    }
+
+    private static void registerAndInitXlogProcessors(ConfigCommon configCommon, ConfigXlog configXlog) {
+        XlogRepo xlogRepo = new MutingXlogRepo();
+        XlogRepoQueue xlogRepoQueue = new XlogRepoQueue(configXlog);
+
+        XlogRepoQueueConsumer.start(configXlog, xlogRepoQueue, xlogRepo);
+
+        XlogAdder xlogAdder = new XlogAdder(configCommon, xlogRepoQueue);
+        XlogReceiveQueue xlogReceiveQueue = new XlogReceiveQueue(configXlog);
+        XlogReceiveQueueConsumer.start(configCommon, xlogReceiveQueue, xlogAdder);
+
+        SingleBeanFactory.addBean(XlogRepo.class, xlogRepo);
+        SingleBeanFactory.addBean(XlogRepoQueue.class, xlogRepoQueue);
+        SingleBeanFactory.addBean(XlogAdder.class, xlogAdder);
+        SingleBeanFactory.addBean(XlogReceiveQueue.class, xlogReceiveQueue);
+
     }
 }

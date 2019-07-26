@@ -22,9 +22,9 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import scouter2.proto.Counting;
 import scouter2.proto.Xlog;
-import scouter2.proto.XlogCollectorGrpc;
 import scouter2.proto.XlogList;
 import scouter2.proto.XlogSearch;
+import scouter2.proto.XlogServiceGrpc;
 
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -32,10 +32,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-10
  */
 @Slf4j
-public class GrpcXlogCollector extends XlogCollectorGrpc.XlogCollectorImplBase {
+public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
     @Override
     public void getXlogByTxid(XlogSearch request, StreamObserver<Xlog> responseObserver) {
-        super.getXlogByTxid(request, responseObserver);
+        log.info("[getXlogByTxid] start, xlogSearch:" + TextFormat.shortDebugString(request));
+        responseObserver.onNext(Xlog.newBuilder().setTxid(100).setPtxid(1000).build());
+        responseObserver.onCompleted();
     }
 
     @Override
@@ -50,6 +52,7 @@ public class GrpcXlogCollector extends XlogCollectorGrpc.XlogCollectorImplBase {
         return new StreamObserver<Xlog>() {
             @Override
             public void onNext(Xlog xlog) {
+                log.info("id=" + GrpcAuthInterceptor.USER_IDENTITY.get());
                 atomicLong.incrementAndGet();
                 log.debug("received xlog:" + TextFormat.shortDebugString(xlog));
             }
