@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.grpc;
+package scouter2.collector.transport.scouter2;
 
 import com.linecorp.armeria.common.HttpHeaderNames;
 import com.linecorp.armeria.common.HttpResponse;
@@ -35,12 +35,12 @@ import java.util.concurrent.CompletableFuture;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-10
  */
 @Slf4j
-public class GrpcReceiver {
+public class Scouter2Transport {
 
     private final int port;
     private final Server server;
 
-    public GrpcReceiver(int port) {
+    public Scouter2Transport(int port) {
         this.port = port;
         ServerBuilder sb = new ServerBuilder();
         sb.http(port);
@@ -74,7 +74,7 @@ public class GrpcReceiver {
 
         ShutdownManager.getInstance().register(() -> {
             log.info("shutting down gRPC server since JVM is shutting down");
-            GrpcReceiver.this.stop();
+            Scouter2Transport.this.stop();
             log.info("GRPC server shut down");
         });
 

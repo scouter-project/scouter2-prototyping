@@ -17,6 +17,7 @@
 package scouter2.collector.domain.instance;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.proto.Instance;
 
@@ -24,11 +25,26 @@ import scouter2.proto.Instance;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
+@Component
 public class InstanceReceiveQueue {
+    private static InstanceReceiveQueue instance;
     private PurgingQueue<Instance> queue;
 
     public InstanceReceiveQueue() {
-        this.queue = new PurgingQueue<>(100);
+        synchronized (InstanceReceiveQueue.class) {
+            if (instance != null) {
+                throw new IllegalStateException();
+            }
+            this.queue = new PurgingQueue<>(100);
+            instance = this;
+        }
+    }
+
+    /**
+     * for 3rd party receiver support
+     */
+    public static InstanceReceiveQueue getInstance() {
+        return instance;
     }
 
     public void offer(Instance instance) {

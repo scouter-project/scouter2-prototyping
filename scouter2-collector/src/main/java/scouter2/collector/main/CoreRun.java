@@ -14,27 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
 
+package scouter2.collector.main;
+
+import lombok.Getter;
 import org.springframework.stereotype.Component;
-import scouter2.collector.config.ConfigCommon;
-import scouter2.proto.Xlog;
+import scouter2.collector.common.ShutdownManager;
+
+import javax.annotation.PostConstruct;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
 @Component
-public class XlogAdder {
+@Getter
+public class CoreRun {
+    private boolean running = true;
 
-    ConfigCommon conf;
-    XlogRepoQueue repoQueue;
-
-    public XlogAdder(ConfigCommon conf, XlogRepoQueue repoQueue) {
-        this.conf = conf;
-        this.repoQueue = repoQueue;
+    @PostConstruct
+    public void init() {
+        ShutdownManager.getInstance().register(this::shutdown);
     }
 
-    public void addXlog(Xlog xlog) {
-        repoQueue.offer(xlog);
+    public void shutdown() {
+        this.running = false;
     }
 }

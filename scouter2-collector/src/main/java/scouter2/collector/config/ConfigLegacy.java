@@ -18,7 +18,7 @@ package scouter2.collector.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import scouter2.collector.beanfactory.SingleBean;
+import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
 import scouter2.common.config.ScouterConfigIF;
 
@@ -30,11 +30,11 @@ import java.util.Properties;
  */
 @Getter
 @Slf4j
-@SingleBean
+@Component
 public class ConfigLegacy implements ScouterConfigIF {
 
     String netUdpListenIp = "0.0.0.0";
-    int netUdpListenPort = 6100;
+    int netUdpListenPort = 6200;
     int netUdpPacketBufferSize = 65535;
     int netUdpSoRcvbufSize = 1024 * 1024 * 4;
     int _netUdpWorkerThreadCount = 3;

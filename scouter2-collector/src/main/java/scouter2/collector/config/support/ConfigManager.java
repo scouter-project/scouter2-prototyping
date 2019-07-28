@@ -14,35 +14,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.config;
+package scouter2.collector.config.support;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import scouter2.common.config.ConfigItem;
 import scouter2.common.config.ScouterConfigIF;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
-@Getter
-@Slf4j
 @Component
-public class ConfigCommon implements ScouterConfigIF {
-    int netTcpPort = 6200;
+public class ConfigManager {
 
-    String repoType = "mute";
+    private List<ScouterConfigIF> configs;
+    private static Map<Class, ScouterConfigIF> configMap;
 
-    @Override
-    public List<ConfigItem> getAllConfigs() {
-        return null;
+    public ConfigManager(List<ScouterConfigIF> configs) {
+        this.configs = configs;
+        configMap = configs.stream().collect(Collectors.toMap(conf -> conf.getClass(), conf -> conf, (c1, c2) -> c1));
     }
 
-    @Override
-    public void refresh(Properties properties) {
+    public static <T> T getConfig(Class<T> clazz) {
+        return (T) configMap.get(clazz);
+    }
 
+    public void refresh(Properties properties) {
+        configs.forEach(conf -> {
+            conf.refresh(properties);
+        });
+    }
+
+    public void register(ScouterConfigIF configIF) {
+        if (!configs.contains(configIF)) {
+            configs.add(configIF);
+            configMap.put(configIF.getClass(), configIF);
+        }
     }
 }

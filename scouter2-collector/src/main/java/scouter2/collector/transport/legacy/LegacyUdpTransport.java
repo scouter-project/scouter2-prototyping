@@ -15,11 +15,10 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.legacy;
+package scouter2.collector.transport.legacy;
 
 import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.xlog.XlogAdder;
 import scouter2.collector.domain.xlog.XlogReceiveQueue;
 import scouter2.common.util.FileUtil;
 import scouter2.common.util.ThreadUtil;
@@ -33,30 +32,30 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-24
  */
 @Slf4j
-public class LegacyUdpReceiver extends Thread {
+public class LegacyUdpTransport extends Thread {
     private static AtomicInteger threadNo = new AtomicInteger();
-    private static LegacyUdpReceiver instance;
+    private static LegacyUdpTransport instance;
     DatagramSocket udpsocket;
 
     private ConfigLegacy conf;
     private XlogReceiveQueue xlogReceiveQueue;
-    private XlogAdder xlogAdder;
+    private LegacyUdpDataProcessor processor;
 
-    public synchronized static LegacyUdpReceiver start(ConfigLegacy conf,
-                                                       XlogAdder xlogAdder) {
+    public synchronized static LegacyUdpTransport start(ConfigLegacy conf,
+                                                        LegacyUdpDataProcessor processor) {
         if (instance != null) {
             throw new RuntimeException("Already working legacy udp receiver exists.");
         }
-        instance = new LegacyUdpReceiver(conf, xlogAdder);
+        instance = new LegacyUdpTransport(conf, processor);
         instance.setDaemon(true);
         instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
         instance.start();
         return instance;
     }
 
-    private LegacyUdpReceiver(ConfigLegacy conf, XlogAdder xlogAdder) {
+    private LegacyUdpTransport(ConfigLegacy conf, LegacyUdpDataProcessor processor) {
         this.conf = conf;
-        this.xlogAdder = xlogAdder;
+        this.processor = processor;
     }
 
     @Override
@@ -96,14 +95,14 @@ public class LegacyUdpReceiver extends Thread {
         try {
             int bufferSize = conf.getNetUdpPacketBufferSize();
             byte[] rbuf = new byte[bufferSize];
-            DatagramPacket p = new DatagramPacket(rbuf, bufferSize);
+            DatagramPacket packet = new DatagramPacket(rbuf, bufferSize);
 
             // loop until any exception
             while (true) {
-                udpsocket.receive(p);
-                byte[] data = new byte[p.getLength()];
-                System.arraycopy(p.getData(), 0, data, 0, p.getLength());
-                //TODO NetDataProcessor.add(data, p.getAddress());
+                udpsocket.receive(packet);
+                byte[] data = new byte[packet.getLength()];
+                System.arraycopy(packet.getData(), 0, data, 0, packet.getLength());
+                processor.offer(data, packet.getAddress());
             }
         } catch(Throwable t) {
             log.error("S151", 10, t);

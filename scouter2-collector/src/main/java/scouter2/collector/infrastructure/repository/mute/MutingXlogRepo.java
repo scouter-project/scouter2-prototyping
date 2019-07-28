@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.infrastructure.repository;
+package scouter2.collector.infrastructure.repository.mute;
 
 import com.google.protobuf.TextFormat;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import scouter2.proto.Xlog;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
  */
 @Slf4j
-public class MutingXlogRepo implements XlogRepo {
+public class MutingXlogRepo extends MutingRepoAdapter implements XlogRepo {
     @Override
     public void add(Xlog xlog) {
         log.debug("[MutingXlogRepo][add] [{}]", TextFormat.shortDebugString(xlog));

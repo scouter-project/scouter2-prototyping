@@ -19,11 +19,11 @@ package scouter2.collector.domain.xlog;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
+import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.common.util.ThreadUtil;
 import scouter2.proto.Xlog;
 
-import javax.annotation.Nonnull;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -31,35 +31,30 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class XlogRepoQueueConsumer extends Thread {
-    private static AtomicInteger threadNo = new AtomicInteger();
-    private static ImmutableList<XlogRepoQueueConsumer> instances;
+    private static ImmutableList<XlogRepoQueueConsumer> consumerThreads;
 
     ConfigXlog conf;
     XlogRepoQueue xlogRepoQueue;
     XlogRepo xlogRepo;
 
-    public synchronized static ImmutableList<XlogRepoQueueConsumer> start(@Nonnull ConfigXlog conf,
-                                                                          @Nonnull XlogRepoQueue xlogRepoQueue,
-                                                                          @Nonnull XlogRepo xlogRepo) {
+    @Component
+    public static class Runner {
+        private static AtomicInteger threadNo = new AtomicInteger();
 
-        if (instances != null) {
-            throw new RuntimeException("Already working xlog repo queue consumer exists.");
+        public Runner(ConfigXlog conf, XlogRepoQueue xlogRepoQueue, XlogRepo xlogRepo) {
+            consumerThreads = IntInterval.zeroTo(getConsumerCount(conf, xlogRepo) - 1)
+                    .collect(n -> createConsumer(conf, xlogRepoQueue, xlogRepo))
+                    .toImmutable();
         }
 
-        instances = IntInterval.zeroTo(getConsumerCount(conf, xlogRepo) - 1)
-                .collect(n -> createXlogRepoQueueConsumer(conf, xlogRepoQueue, xlogRepo))
-                .toImmutable();
+        private XlogRepoQueueConsumer createConsumer(ConfigXlog conf, XlogRepoQueue xlogRepoQueue, XlogRepo xlogRepo) {
+            XlogRepoQueueConsumer consumer = new XlogRepoQueueConsumer(conf, xlogRepoQueue, xlogRepo);
+            consumer.setDaemon(true);
+            consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
+            consumer.start();
 
-        return instances;
-    }
-
-    private static XlogRepoQueueConsumer createXlogRepoQueueConsumer(ConfigXlog conf, XlogRepoQueue xlogRepoQueue, XlogRepo xlogRepo) {
-        XlogRepoQueueConsumer consumer = new XlogRepoQueueConsumer(conf, xlogRepoQueue, xlogRepo);
-        consumer.setDaemon(true);
-        consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
-        consumer.start();
-
-        return consumer;
+            return consumer;
+        }
     }
 
     /**

@@ -17,7 +17,7 @@
 package scouter2.collector.domain.xlog;
 
 import lombok.extern.slf4j.Slf4j;
-import scouter2.collector.beanfactory.SingleBean;
+import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.proto.Xlog;
@@ -26,14 +26,29 @@ import scouter2.proto.Xlog;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
-@SingleBean
+@Component
 public class XlogRepoQueue {
+    private static XlogRepoQueue instance;
+
     private ConfigXlog conf;
     private PurgingQueue<Xlog> queue;
 
     public XlogRepoQueue(ConfigXlog conf) {
-        this.conf = conf;
-        queue = new PurgingQueue<>(conf.getXlogQueueSize());
+        synchronized (XlogRepoQueue.class) {
+            if (instance != null) {
+                throw new IllegalStateException();
+            }
+            this.conf = conf;
+            queue = new PurgingQueue<>(conf.getXlogQueueSize());
+            instance = this;
+        }
+    }
+
+    /**
+     * for 3rd party receiver support
+     */
+    public static XlogRepoQueue getInstance() {
+        return instance;
     }
 
     public void offer(Xlog xlog) {

@@ -16,11 +16,13 @@
  */
 package scouter2.collector.domain.instance;
 
+import org.springframework.stereotype.Component;
 import scouter2.proto.Instance;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
+@Component
 public class InstanceAdder {
 
     InstanceRepo instanceRepo;

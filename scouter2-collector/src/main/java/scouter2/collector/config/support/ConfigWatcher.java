@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.config;
+package scouter2.collector.config.support;
 
 import lombok.extern.slf4j.Slf4j;
 import scouter2.common.util.ScouterConfigUtil;
@@ -37,9 +37,9 @@ public class ConfigWatcher extends Thread {
     private long lastLoaded = 0L;
     private File confFile;
 
-    private ConfigPublisher publisher;
+    private ConfigManager publisher;
 
-    public synchronized static ConfigWatcher start(String confDir, ConfigPublisher publisher) {
+    public synchronized static ConfigWatcher start(String confDir, ConfigManager publisher) {
         if (instance != null) {
             throw new RuntimeException("Already working ConfigWatcher exists.");
         }
@@ -50,7 +50,7 @@ public class ConfigWatcher extends Thread {
         return instance;
     }
 
-    private ConfigWatcher(String confFileName, ConfigPublisher publisher) {
+    private ConfigWatcher(String confFileName, ConfigManager publisher) {
         confFile = new File(confFileName);
         this.publisher = publisher;
     }

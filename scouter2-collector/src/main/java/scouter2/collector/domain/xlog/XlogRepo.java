@@ -16,11 +16,12 @@
  */
 package scouter2.collector.domain.xlog;
 
+import scouter2.collector.domain.ScouterRepo;
 import scouter2.proto.Xlog;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
-public interface XlogRepo {
+public interface XlogRepo extends ScouterRepo {
     void add(Xlog xlog);
 }

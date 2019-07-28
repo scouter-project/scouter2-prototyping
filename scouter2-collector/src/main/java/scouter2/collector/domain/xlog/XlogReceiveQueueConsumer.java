@@ -17,7 +17,10 @@
 package scouter2.collector.domain.xlog;
 
 import lombok.extern.slf4j.Slf4j;
-import scouter2.collector.config.ConfigCommon;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
+import org.springframework.stereotype.Component;
+import scouter2.collector.config.ConfigXlog;
 import scouter2.common.util.ThreadUtil;
 import scouter2.proto.Xlog;
 
@@ -28,27 +31,35 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class XlogReceiveQueueConsumer extends Thread {
-    private static AtomicInteger threadNo = new AtomicInteger();
-    private static XlogReceiveQueueConsumer instance;
+    private static ImmutableList<XlogReceiveQueueConsumer> consumerThreads;
 
-    private ConfigCommon conf;
+    private ConfigXlog conf;
     private XlogReceiveQueue xlogReceiveQueue;
     private XlogAdder xlogAdder;
 
-    public synchronized static XlogReceiveQueueConsumer start(ConfigCommon conf,
-                                                              XlogReceiveQueue xlogReceiveQueue,
-                                                              XlogAdder xlogAdder) {
-        if (instance != null) {
-            throw new RuntimeException("Already working xlog consumer exists.");
+    @Component
+    public static class Runner {
+        private static AtomicInteger threadNo = new AtomicInteger();
+
+        public Runner(ConfigXlog conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
+            consumerThreads = IntInterval.zeroTo(conf.getXlogReceiverThreadCount() - 1)
+                    .collect(n -> createConsumer(conf, xlogReceiveQueue, xlogAdder))
+                    .toImmutable();
         }
-        instance = new XlogReceiveQueueConsumer(conf, xlogReceiveQueue, xlogAdder);
-        instance.setDaemon(true);
-        instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
-        instance.start();
-        return instance;
+
+        private XlogReceiveQueueConsumer createConsumer(ConfigXlog conf,
+                                                               XlogReceiveQueue xlogReceiveQueue,
+                                                               XlogAdder xlogAdder) {
+            XlogReceiveQueueConsumer consumer = new XlogReceiveQueueConsumer(conf, xlogReceiveQueue, xlogAdder);
+            consumer.setDaemon(true);
+            consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
+            consumer.start();
+
+            return consumer;
+        }
     }
 
-    private XlogReceiveQueueConsumer(ConfigCommon conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
+    private XlogReceiveQueueConsumer(ConfigXlog conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
         this.conf = conf;
         this.xlogReceiveQueue = xlogReceiveQueue;
         this.xlogAdder = xlogAdder;

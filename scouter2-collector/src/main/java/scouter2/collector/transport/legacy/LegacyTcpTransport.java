@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.legacy;
+package scouter2.collector.transport.legacy;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -32,7 +32,7 @@ import io.netty.handler.logging.LoggingHandler;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-24
  */
-public class LegacyTcpReceiver {
+public class LegacyTcpTransport {
     // 서버 소켓 포트 번호를 지정합니다.
     private static final int PORT = 8080;
 

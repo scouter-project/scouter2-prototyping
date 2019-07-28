@@ -14,27 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
 
-import org.springframework.stereotype.Component;
-import scouter2.collector.config.ConfigCommon;
-import scouter2.proto.Xlog;
+package scouter2.collector.infrastructure.repository.mute;
+
+import scouter2.collector.domain.ScouterRepo;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
-@Component
-public class XlogAdder {
-
-    ConfigCommon conf;
-    XlogRepoQueue repoQueue;
-
-    public XlogAdder(ConfigCommon conf, XlogRepoQueue repoQueue) {
-        this.conf = conf;
-        this.repoQueue = repoQueue;
+public class MutingRepoAdapter implements ScouterRepo {
+    @Override
+    public String getRepoType() {
+        return MutingRepoConstant.TYPE_NAME;
     }
 
-    public void addXlog(Xlog xlog) {
-        repoQueue.offer(xlog);
+    @Override
+    public void init() {
+
+    }
+
+    @Override
+    public void destroy() {
+
     }
 }

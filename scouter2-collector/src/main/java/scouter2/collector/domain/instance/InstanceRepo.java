@@ -16,11 +16,12 @@
  */
 package scouter2.collector.domain.instance;
 
+import scouter2.collector.domain.ScouterRepo;
 import scouter2.proto.Instance;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
-public interface InstanceRepo {
+public interface InstanceRepo extends ScouterRepo {
     void add(Instance instance);
 }

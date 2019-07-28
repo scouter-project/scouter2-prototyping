@@ -17,6 +17,9 @@
 package scouter2.collector.domain.instance;
 
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
+import org.springframework.stereotype.Component;
 import scouter2.common.util.ThreadUtil;
 import scouter2.proto.Instance;
 
@@ -27,22 +30,32 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class InstanceReceiveQueueConsumer extends Thread {
-    private static AtomicInteger threadNo = new AtomicInteger();
-    private static InstanceReceiveQueueConsumer instance;
+    private static ImmutableList<InstanceReceiveQueueConsumer> consumerThreads;
 
     private InstanceReceiveQueue queue;
     private InstanceAdder instanceAdder;
 
-    public synchronized static InstanceReceiveQueueConsumer start(InstanceReceiveQueue receiveQueue,
-                                                                  InstanceAdder instanceAdder) {
-        if (instance != null) {
-            throw new RuntimeException("Already working InstanceReceiveQueueConsumer exists.");
+    @Component
+    public static class Runner {
+        private static AtomicInteger threadNo = new AtomicInteger();
+        private static final int instanceReceiveQueueConsumerThreadCount = 1;
+
+        public Runner(InstanceReceiveQueue receiveQueue, InstanceAdder instanceAdder) {
+            consumerThreads = IntInterval.zeroTo(instanceReceiveQueueConsumerThreadCount - 1)
+                    .collect(n -> createConsumer(receiveQueue, instanceAdder))
+                    .toImmutable();
         }
-        instance = new InstanceReceiveQueueConsumer(receiveQueue, instanceAdder);
-        instance.setDaemon(true);
-        instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
-        instance.start();
-        return instance;
+
+        private InstanceReceiveQueueConsumer createConsumer(InstanceReceiveQueue receiveQueue,
+                                                            InstanceAdder instanceAdder) {
+
+            InstanceReceiveQueueConsumer consumer = new InstanceReceiveQueueConsumer(receiveQueue, instanceAdder);
+            consumer.setDaemon(true);
+            consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
+            consumer.start();
+
+            return consumer;
+        }
     }
 
     private InstanceReceiveQueueConsumer(InstanceReceiveQueue queue, InstanceAdder instanceAdder) {

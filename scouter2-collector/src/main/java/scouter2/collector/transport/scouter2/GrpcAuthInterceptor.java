@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.grpc;
+package scouter2.collector.transport.scouter2;
 
 import io.grpc.Context;
 import io.grpc.Contexts;

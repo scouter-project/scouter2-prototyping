@@ -56,7 +56,7 @@ public class XlogTestClient {
 
     public static void main(String[] args) throws InterruptedException {
 
-        XlogTestClient client = new XlogTestClient("localhost", 6110);
+        XlogTestClient client = new XlogTestClient("localhost", 6200);
         client.xlogAdd();
     }
 

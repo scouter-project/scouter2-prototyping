@@ -15,15 +15,17 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.legacy;
+package scouter2.collector.transport.legacy;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import scouter.io.DataInputX;
 import scouter.io.DataOutputX;
 import scouter.lang.TimeTypeEnum;
 import scouter.lang.counters.CounterConstants;
 import scouter.lang.pack.InteractionPerfCounterPack;
+import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.Pack;
 import scouter.lang.pack.PackEnum;
 import scouter.lang.pack.PerfCounterPack;
@@ -32,6 +34,8 @@ import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
 import scouter2.collector.config.ConfigLegacy;
+import scouter2.collector.domain.instance.InstanceReceiveQueue;
+import scouter2.collector.domain.mapper.LegacyMapper;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.common.util.ThreadUtil;
 
@@ -51,7 +55,7 @@ public class LegacyUdpDataProcessor {
     private ConfigLegacy conf;
     private PurgingQueue<NetData> queue = null;
 
-    LegacyUdpDataProcessor(ConfigLegacy conf) {
+    private LegacyUdpDataProcessor(ConfigLegacy conf) {
         this.conf = conf;
         queue = new PurgingQueue<>(2048);
     }
@@ -88,8 +92,11 @@ public class LegacyUdpDataProcessor {
     @Slf4j
     static class LegacyUdpDataProcessorThread extends Thread {
         PurgingQueue<NetData> udpDataQueue;
+        InstanceReceiveQueue instanceReceiveQueue;
+
         public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue) {
             this.udpDataQueue = udpDataQueue;
+            instanceReceiveQueue = InstanceReceiveQueue.getInstance();
         }
 
         @Override
@@ -233,11 +240,15 @@ public class LegacyUdpDataProcessor {
 //                    }
                     break;
                 case PackEnum.OBJECT:
+                    ObjectPack objectPack = (ObjectPack) p;
+                    if (StringUtils.isBlank(objectPack.address)) {
+                        objectPack.address = addr.getHostAddress();
+                    }
+                    if (objectPack.objHash == 0) {
+                        objectPack.objHash = HashUtil.hash(objectPack.objName);
+                    }
+                    instanceReceiveQueue.offer(LegacyMapper.toInstance(objectPack));
                     //TODO
-//                    val h = p.asInstanceOf[ObjectPack]
-//                    if (StringUtil.isEmpty(h.address)) {
-//                        h.address = addr.getHostAddress()
-//                    }
 //                    AgentManager.active(h)
 //                    if (conf.log_udp_object) {
 //                        System.out.println("DEBUG UDP OBJECT: " + p)

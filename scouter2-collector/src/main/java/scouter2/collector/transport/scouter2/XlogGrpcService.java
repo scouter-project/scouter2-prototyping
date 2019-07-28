@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.receiver.grpc;
+package scouter2.collector.transport.scouter2;
 
 import com.google.protobuf.TextFormat;
 import io.grpc.stub.StreamObserver;

@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.infrastructure.repository;
+package scouter2.collector.infrastructure.repository.mute;
 
 import com.google.protobuf.TextFormat;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +26,9 @@ import scouter2.proto.Instance;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
  */
 @Slf4j
-public class MutingIntanceRepo implements InstanceRepo {
+public class MutingInstanceRepo extends MutingRepoAdapter implements InstanceRepo {
     @Override
     public void add(Instance instance) {
-        log.debug("[MutingIntanceRepo][add] [{}]", TextFormat.shortDebugString(instance));
+        log.debug("[MutingInstanceRepo][add] [{}]", TextFormat.shortDebugString(instance));
     }
 }

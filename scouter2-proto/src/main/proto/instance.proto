@@ -14,8 +14,9 @@ service InstanceService {
 
 message Instance {
   string instanceType = 1;
-  int32 instanceName = 2;
-  string address = 3;
-  string version = 4;
+  string instanceName = 2;
+  int32 instanceHash = 3;
+  string address = 4;
+  string version = 5;
 }
 

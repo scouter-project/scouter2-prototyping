@@ -1,5 +1,6 @@
 package scouter2.collector.sandbox;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -9,6 +10,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
+@Ignore
 public class MapDbMapTest {
 
     @Test

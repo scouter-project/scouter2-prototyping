@@ -1,5 +1,6 @@
 package scouter2.collector.sandbox;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -13,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
  * for xlog index - hash with tran
  * for counter index - btree with tran
  */
+@Ignore
 public class MapDbBtreeTest {
 
     @Test

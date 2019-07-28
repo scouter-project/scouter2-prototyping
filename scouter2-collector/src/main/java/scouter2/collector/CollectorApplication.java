@@ -20,7 +20,6 @@ package scouter2.collector;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import scouter2.collector.main.CollectorMain;
 
@@ -30,17 +29,19 @@ import scouter2.collector.main.CollectorMain;
 @SpringBootConfiguration
 @ComponentScan
 public class CollectorApplication implements CommandLineRunner {
+    private final CollectorMain collectorMain;
+
+    public CollectorApplication(CollectorMain collectorMain) {
+        this.collectorMain = collectorMain;
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(CollectorApplication.class, args);
     }
 
+
     @Override
     public void run(String... args) throws Exception {
-        getMain().start(args);
-    }
-
-    @Bean
-    CollectorMain getMain() {
-        return new CollectorMain();
+        collectorMain.start(args);
     }
 }

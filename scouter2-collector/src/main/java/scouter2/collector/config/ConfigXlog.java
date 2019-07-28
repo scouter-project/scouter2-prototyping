@@ -18,6 +18,7 @@ package scouter2.collector.config;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
 import scouter2.common.config.ScouterConfigIF;
 
@@ -29,9 +30,11 @@ import java.util.Properties;
  */
 @Getter
 @Slf4j
+@Component
 public class ConfigXlog implements ScouterConfigIF {
 
     int xlogQueueSize = 10000;
+    int xlogReceiverThreadCount = 1;
     int xlogRepoThreadCount = 1;
 
     @Override

@@ -14,28 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.config;
 
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.factory.Lists;
-import scouter2.common.config.ScouterConfigIF;
-
-import java.util.Properties;
+package scouter2.collector.plugin;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
-public class ConfigPublisher {
-
-    private MutableList<ScouterConfigIF> configs = Lists.mutable.empty();
-
-    public void refresh(Properties properties) {
-        configs.forEach(conf -> {
-            conf.refresh(properties);
-        });
-    }
-
-    public void register(ScouterConfigIF configIF) {
-        configs.add(configIF);
-    }
+public interface Scouter2PluginMeta {
+    String getComponentScanPackage();
 }

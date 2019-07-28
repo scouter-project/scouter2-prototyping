@@ -14,16 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.beanfactory;
+
+package scouter2.collector.transport.legacy;
+
+import scouter2.collector.config.ConfigLegacy;
+import scouter2.collector.config.support.ConfigManager;
+import scouter2.collector.transport.TransportInitializer;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-09
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
-public class NoSuchBeanException extends RuntimeException {
-    public NoSuchBeanException() {
+public class LegacyTransportInitializer implements TransportInitializer {
+
+    @Override
+    public void start() {
+        ConfigLegacy config = ConfigManager.getConfig(ConfigLegacy.class);
+        LegacyUdpDataProcessor legacyUdpDataProcessor = LegacyUdpDataProcessor.start(config);
+        LegacyUdpTransport.start(config, legacyUdpDataProcessor);
     }
 
-    public NoSuchBeanException(String message) {
-        super(message);
+    @Override
+    public void stop() {
+
     }
 }

@@ -14,17 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.beanfactory;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package scouter2.collector.infrastructure.repository.mute;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-09
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface SingleBean {
+public class MutingRepoConstant {
+    public static String TYPE_NAME = "mute";
 }
