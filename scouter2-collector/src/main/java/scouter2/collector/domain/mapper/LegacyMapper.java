@@ -24,11 +24,13 @@ import scouter2.proto.Instance;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
 public class LegacyMapper {
-    public static Instance toInstance(ObjectPack objectPack) {
+    public static Instance toInstance(ObjectPack objectPack, String legacyFamily) {
         return Instance.newBuilder()
+                .setApplicationId(objectPack.objType)
+                .setInstanceType(legacyFamily)
+                .setInstanceLegacyType(objectPack.objType)
                 .setInstanceName(objectPack.objName)
                 .setInstanceHash(objectPack.objHash)
-                .setInstanceType(objectPack.objType)
                 .setAddress(objectPack.address)
                 .setVersion(objectPack.version)
                 .build();

@@ -14,30 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
+package scouter2.common.legacy.util;
 
-import org.springframework.stereotype.Component;
-import scouter2.proto.Instance;
+public class ObjectUtil {
 
-/**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
- */
-@Component
-public class InstanceAdder {
+	public static String toString(Object o) {
+		return o==null?"":o.toString();
+	}
 
-    InstanceRepo instanceRepo;
+	 public static boolean equals(Object o1, Object o2) {
+        if (o1 == o2) {
+            return true;
+        }
+        if ((o1 == null) || (o2 == null)) {
+            return false;
+        }
+        return o1.equals(o2);
+	 }
 
-    public InstanceAdder(InstanceRepo instanceRepo) {
-        this.instanceRepo = instanceRepo;
-    }
-
-    public void addInstance(Instance instance) {
-        addInstanceTypeIfNotExist(instance);
-
-        instanceRepo.add(instance);
-    }
-
-    private void addInstanceTypeIfNotExist(Instance instance) {
-
+    public static boolean objectEquals(Object a, Object b) {
+        return (a == b) || (a != null && a.equals(b));
     }
 }

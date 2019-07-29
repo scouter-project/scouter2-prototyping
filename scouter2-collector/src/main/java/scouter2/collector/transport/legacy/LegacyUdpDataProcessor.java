@@ -36,6 +36,7 @@ import scouter.util.HashUtil;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.domain.instance.InstanceReceiveQueue;
 import scouter2.collector.domain.mapper.LegacyMapper;
+import scouter2.collector.legacy.CounterManager;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.common.util.ThreadUtil;
 
@@ -247,12 +248,11 @@ public class LegacyUdpDataProcessor {
                     if (objectPack.objHash == 0) {
                         objectPack.objHash = HashUtil.hash(objectPack.objName);
                     }
-                    instanceReceiveQueue.offer(LegacyMapper.toInstance(objectPack));
-                    //TODO
-//                    AgentManager.active(h)
-//                    if (conf.log_udp_object) {
-//                        System.out.println("DEBUG UDP OBJECT: " + p)
-//                    }
+                    CounterManager counterManager = CounterManager.getInstance();
+                    counterManager.addObjectTypeIfNotExist(objectPack);
+                    String family = counterManager.getCounterEngine().getFamilyNameFromObjType(objectPack.objType);
+
+                    instanceReceiveQueue.offer(LegacyMapper.toInstance(objectPack, family));
                     break;
                 case PackEnum.PERF_STATUS:
                     //TODO

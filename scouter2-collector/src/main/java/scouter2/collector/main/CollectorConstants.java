@@ -14,30 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
 
-import org.springframework.stereotype.Component;
-import scouter2.proto.Instance;
+package scouter2.collector.main;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-29
  */
-@Component
-public class InstanceAdder {
-
-    InstanceRepo instanceRepo;
-
-    public InstanceAdder(InstanceRepo instanceRepo) {
-        this.instanceRepo = instanceRepo;
-    }
-
-    public void addInstance(Instance instance) {
-        addInstanceTypeIfNotExist(instance);
-
-        instanceRepo.add(instance);
-    }
-
-    private void addInstanceTypeIfNotExist(Instance instance) {
-
-    }
+public class CollectorConstants {
+    public final static String CONF_DIR = "./conf/";
 }
