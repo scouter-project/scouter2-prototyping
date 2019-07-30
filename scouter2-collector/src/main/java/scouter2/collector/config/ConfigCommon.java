@@ -19,11 +19,12 @@ package scouter2.collector.config;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import scouter2.collector.main.CollectorConstants;
 import scouter2.common.config.ConfigItem;
 import scouter2.common.config.ScouterConfigIF;
+import scouter2.common.helper.Props;
 
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -32,9 +33,11 @@ import java.util.Properties;
 @Slf4j
 @Component
 public class ConfigCommon implements ScouterConfigIF {
-    int netTcpPort = 6200;
 
+    int netTcpPort = 6200;
     String repoType = "mute";
+
+    String dbDir = CollectorConstants.DEFAULT_DB_DIR;
 
     @Override
     public List<ConfigItem> getAllConfigs() {
@@ -42,7 +45,9 @@ public class ConfigCommon implements ScouterConfigIF {
     }
 
     @Override
-    public void refresh(Properties properties) {
-
+    public void refresh(Props props) {
+        netTcpPort = props.getInt("netTcpPort", netTcpPort);
+        repoType = props.getString("repoType", repoType);
+        dbDir = props.getString("dbDir", dbDir);
     }
 }

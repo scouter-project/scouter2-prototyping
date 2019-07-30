@@ -39,13 +39,14 @@ public class ConfigWatcher extends Thread {
 
     private ConfigManager publisher;
 
-    public synchronized static ConfigWatcher start(String confDir, ConfigManager publisher) {
+    public synchronized static ConfigWatcher start(String confFileName, ConfigManager publisher) {
         if (instance != null) {
             throw new RuntimeException("Already working ConfigWatcher exists.");
         }
-        instance = new ConfigWatcher(confDir, publisher);
+        instance = new ConfigWatcher(confFileName, publisher);
         instance.setDaemon(true);
         instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
+        instance.reload();
         instance.start();
         return instance;
     }
@@ -58,8 +59,8 @@ public class ConfigWatcher extends Thread {
     @Override
     public void run() {
         while (true) {
-            reload();
             ThreadUtil.sleep(3000);
+            reload();
         }
     }
 

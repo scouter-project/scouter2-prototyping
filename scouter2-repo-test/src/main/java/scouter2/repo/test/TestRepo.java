@@ -14,36 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.config;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+package scouter2.repo.test;
+
 import org.springframework.stereotype.Component;
-import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
-import scouter2.common.helper.Props;
-
-import java.util.List;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
  */
-@Getter
-@Slf4j
 @Component
-public class ConfigXlog implements ScouterConfigIF {
-
-    int xlogQueueSize = 10000;
-    int xlogReceiverThreadCount = 1;
-    int xlogRepoThreadCount = 1;
-
-    @Override
-    public List<ConfigItem> getAllConfigs() {
-        return null;
-    }
-
-    @Override
-    public void refresh(Props props) {
-
-    }
+public class TestRepo {
 }

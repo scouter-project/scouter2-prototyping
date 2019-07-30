@@ -18,6 +18,7 @@ package scouter2.collector.config.support;
 
 import org.springframework.stereotype.Component;
 import scouter2.common.config.ScouterConfigIF;
+import scouter2.common.helper.Props;
 
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class ConfigManager {
 
     public void refresh(Properties properties) {
         configs.forEach(conf -> {
-            conf.refresh(properties);
+            conf.refresh(new Props(properties));
         });
     }
 

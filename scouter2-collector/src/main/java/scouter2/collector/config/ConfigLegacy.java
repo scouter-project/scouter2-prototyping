@@ -21,9 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
 import scouter2.common.config.ScouterConfigIF;
+import scouter2.common.helper.Props;
 
 import java.util.List;
-import java.util.Properties;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -45,7 +45,7 @@ public class ConfigLegacy implements ScouterConfigIF {
     }
 
     @Override
-    public void refresh(Properties properties) {
+    public void refresh(Props props) {
 
     }
 

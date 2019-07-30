@@ -21,6 +21,7 @@
         <module>scouter2-proto</module>
         <module>scouter2-common</module>
         <module>scouter2-collector</module>
+        <module>scouter2-repo-test</module>
     </modules>
 
     <properties>

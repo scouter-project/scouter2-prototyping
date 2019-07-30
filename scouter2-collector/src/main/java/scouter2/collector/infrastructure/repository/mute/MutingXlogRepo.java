@@ -19,13 +19,20 @@ package scouter2.collector.infrastructure.repository.mute;
 
 import com.google.protobuf.TextFormat;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.stereotype.Component;
 import scouter2.collector.domain.xlog.XlogRepo;
+import scouter2.collector.springconfig.RepoTypeMatch;
+import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.proto.Xlog;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
  */
 @Slf4j
+@Component
+@Conditional(RepoTypeSelectorCondition.class)
+@RepoTypeMatch("mute")
 public class MutingXlogRepo extends MutingRepoAdapter implements XlogRepo {
     @Override
     public void add(Xlog xlog) {

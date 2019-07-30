@@ -57,7 +57,7 @@ public class CounterManager {
 	@PostConstruct
 	public void init() {
 		readAndParseXml("/legacy.counters.xml");
-		customFile = new File(CollectorConstants.CONF_DIR + CUSTOM_FILENAME);
+		customFile = new File(CollectorConstants.DEFAULT_CONF_DIR + CUSTOM_FILENAME);
 		if (customFile.canRead()) {
 			xmlCustomContent = FileUtil.readAll(customFile);
 			engine.parse(xmlCustomContent);

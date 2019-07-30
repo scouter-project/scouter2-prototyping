@@ -22,6 +22,16 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import scouter2.collector.main.CollectorMain;
+import scouter2.common.helper.Props;
+import scouter2.common.util.ScouterConfigUtil;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+import static scouter2.collector.main.CollectorConstants.DEFAULT_CONF_DIR;
+import static scouter2.collector.main.CollectorConstants.DEFAULT_CONF_FILE;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-26
@@ -29,19 +39,42 @@ import scouter2.collector.main.CollectorMain;
 @SpringBootConfiguration
 @ComponentScan
 public class CollectorApplication implements CommandLineRunner {
+    private static Props loadProps = new Props(new Properties());
     private final CollectorMain collectorMain;
 
     public CollectorApplication(CollectorMain collectorMain) {
         this.collectorMain = collectorMain;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        preloadConfig();
         SpringApplication.run(CollectorApplication.class, args);
+    }
+
+    private static void preloadConfig() throws IOException {
+        String conFilefName = System.getProperty("scouter2.config", DEFAULT_CONF_DIR + DEFAULT_CONF_FILE);
+        File confFile = new File(conFilefName);
+        if (confFile.canRead()) {
+            Properties configProps = new Properties();
+            try (FileInputStream in = new FileInputStream(confFile)) {
+                configProps.load(in);
+
+            } catch (IOException e) {
+                throw e;
+            }
+
+            Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);
+            loadProps = new Props(configWithSystemProps);
+        }
     }
 
 
     @Override
     public void run(String... args) throws Exception {
         collectorMain.start(args);
+    }
+
+    public static Props getLoadProps() {
+        return loadProps;
     }
 }

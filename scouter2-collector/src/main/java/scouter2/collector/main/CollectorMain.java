@@ -42,7 +42,7 @@ public class CollectorMain {
     public void start(String[] args) throws IOException {
         //TODO logo
         System.out.println("System JRE version : " + System.getProperty("java.version"));
-        serverBeanInitializer.init();
+        //serverBeanInitializer.init();
         startServer();
     }
 

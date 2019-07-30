@@ -15,13 +15,19 @@
  * limitations under the License.
  */
 
-package scouter2.collector.main;
+package scouter2.collector.springconfig;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-29
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
  */
-public class CollectorConstants {
-    public final static String DEFAULT_CONF_DIR = "./conf/";
-    public final static String DEFAULT_CONF_FILE = "scouter2.conf";
-    public final static String DEFAULT_DB_DIR = "./database/";
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface RepoTypeMatch {
+    String value();
 }

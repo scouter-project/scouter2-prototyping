@@ -23,6 +23,7 @@ import scouter2.collector.config.support.ConfigWatcher;
 import scouter2.collector.plugin.Scouter2PluginMeta;
 import scouter2.common.config.ScouterConfigIF;
 
+import javax.annotation.PostConstruct;
 import java.util.ServiceLoader;
 import java.util.Set;
 
@@ -32,14 +33,13 @@ import java.util.Set;
 @Slf4j
 @Component
 public class ServerBeanInitializer {
-    private final static String DEFAULT_CONF_DIR = "./conf/";
-
     ConfigManager configManager;
 
     public ServerBeanInitializer(ConfigManager configPublisher) {
         this.configManager = configPublisher;
     }
 
+    @PostConstruct
     public void init() {
         registerCustomConfigBeans();
         startConfigWatcher();
@@ -69,8 +69,8 @@ public class ServerBeanInitializer {
     }
 
     private void startConfigWatcher() {
-        ConfigWatcher.start(System.getProperty("scouter.config", DEFAULT_CONF_DIR + "scouter.conf"),
-                configManager);
+        ConfigWatcher.start(System.getProperty("scouter2.config",
+                CollectorConstants.DEFAULT_CONF_DIR + CollectorConstants.DEFAULT_CONF_FILE), configManager);
     }
 
 }

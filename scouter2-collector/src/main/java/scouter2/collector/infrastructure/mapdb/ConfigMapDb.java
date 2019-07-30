@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.config;
+package scouter2.collector.infrastructure.mapdb;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,11 +31,9 @@ import java.util.List;
 @Getter
 @Slf4j
 @Component
-public class ConfigXlog implements ScouterConfigIF {
+public class ConfigMapDb implements ScouterConfigIF {
 
-    int xlogQueueSize = 10000;
-    int xlogReceiverThreadCount = 1;
-    int xlogRepoThreadCount = 1;
+    String commonPropsStoreName = "commonProps";
 
     @Override
     public List<ConfigItem> getAllConfigs() {
@@ -44,6 +42,6 @@ public class ConfigXlog implements ScouterConfigIF {
 
     @Override
     public void refresh(Props props) {
-
+        commonPropsStoreName = props.getString("commonPropsStoreName", commonPropsStoreName);
     }
 }
