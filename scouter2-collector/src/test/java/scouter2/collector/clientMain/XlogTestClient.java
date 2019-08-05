@@ -22,8 +22,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
-import scouter2.proto.Counting;
-import scouter2.proto.Xlog;
+import scouter2.proto.CountingP;
+import scouter2.proto.XlogP;
 import scouter2.proto.XlogServiceGrpc;
 
 import java.util.concurrent.CountDownLatch;
@@ -63,9 +63,9 @@ public class XlogTestClient {
     private void xlogAdd() throws InterruptedException {
         log.info("addXlogsTest");
         final CountDownLatch finishLatch = new CountDownLatch(1);
-        StreamObserver<Counting> responseObserver = new StreamObserver<Counting>() {
+        StreamObserver<CountingP> responseObserver = new StreamObserver<CountingP>() {
             @Override
-            public void onNext(Counting counting) {
+            public void onNext(CountingP counting) {
                 System.out.println("onNext counting : " + counting.getValue());
             }
 
@@ -83,7 +83,7 @@ public class XlogTestClient {
             }
         };
 
-        StreamObserver<Xlog> requestObserver = asyncStub.addXlog(responseObserver);
+        StreamObserver<XlogP> requestObserver = asyncStub.addXlog(responseObserver);
         AtomicLong atomicLong = new AtomicLong();
         Stopwatch stopwatch = Stopwatch.createStarted();
 
@@ -91,7 +91,7 @@ public class XlogTestClient {
             try {
                 try {
                     for (int i = 1; i < 100; ++i) {
-                        Xlog xlog = Xlog.newBuilder()
+                        XlogP xlog = XlogP.newBuilder()
                                 .setTxid(atomicLong.getAndIncrement())
                                 .build();
 

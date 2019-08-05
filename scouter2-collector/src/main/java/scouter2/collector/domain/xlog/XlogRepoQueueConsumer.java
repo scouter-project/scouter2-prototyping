@@ -21,8 +21,8 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
-import scouter2.proto.Xlog;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,8 +34,8 @@ public class XlogRepoQueueConsumer extends Thread {
     private static ImmutableList<XlogRepoQueueConsumer> consumerThreads;
 
     ConfigXlog conf;
-    XlogRepoQueue xlogRepoQueue;
-    XlogRepo xlogRepo;
+    XlogRepoQueue repoQueue;
+    XlogRepo repo;
 
     @Component
     public static class Runner {
@@ -64,18 +64,18 @@ public class XlogRepoQueueConsumer extends Thread {
         return xlogRepo instanceof NoneThreadSafeXlogRepo ? 1 : conf.getXlogRepoThreadCount();
     }
 
-    private XlogRepoQueueConsumer(ConfigXlog conf, XlogRepoQueue xlogRepoQueue, XlogRepo xlogRepo) {
+    private XlogRepoQueueConsumer(ConfigXlog conf, XlogRepoQueue repoQueue, XlogRepo repo) {
         this.conf = conf;
-        this.xlogRepoQueue = xlogRepoQueue;
-        this.xlogRepo = xlogRepo;
+        this.repoQueue = repoQueue;
+        this.repo = repo;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (CoreRun.isRunning()) {
             try {
-                Xlog xlog = xlogRepoQueue.take();
-                xlogRepo.add(xlog);
+                Xlog xlog = repoQueue.take();
+                repo.add(xlog);
 
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -1,0 +1,74 @@
+[
+  {
+    "id": "linux",
+    "instanceType": "host",
+    "displayName": "Linux"
+  },
+  {
+    "id": "windows",
+    "instanceType": "host",
+    "displayName": "Windows"
+  },
+  {
+    "id": "osx",
+    "instanceType": "host",
+    "displayName": "OSX"
+  },
+  {
+    "id": "host",
+    "instanceType": "host",
+    "displayName": "Host"
+  },
+  {
+    "id": "tomcat",
+    "instanceType": "javaee",
+    "displayName": "Tomcat"
+  },
+  {
+    "id": "java",
+    "instanceType": "javaee",
+    "displayName": "Java"
+  },
+  {
+    "id": "jboss",
+    "instanceType": "javaee",
+    "displayName": "JBoss"
+  },
+  {
+    "id": "jetty",
+    "instanceType": "javaee",
+    "displayName": "Jetty"
+  },
+  {
+    "id": "resin",
+    "instanceType": "javaee",
+    "displayName": "Resin"
+  },
+  {
+    "id": "batch",
+    "instanceType": "batch",
+    "displayName": "Batch"
+  },
+  {
+    "id": "aws",
+    "instanceType": "aws",
+    "displayName": "AWS"
+  },
+  {
+    "id": "zipkin",
+    "instanceType": "tracing",
+    "displayName": "Zipkin"
+  },
+  {
+    "id": "datasource",
+    "instanceType": "datasource",
+    "displayName": "DataSource",
+    "subObject": "true"
+  },
+  {
+    "id": "reqproc",
+    "instanceType": "reqproc",
+    "displayName": "RequestProc",
+    "subObject": "true"
+  }
+]

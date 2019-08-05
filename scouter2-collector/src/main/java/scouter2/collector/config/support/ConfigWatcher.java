@@ -17,6 +17,7 @@
 package scouter2.collector.config.support;
 
 import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ScouterConfigUtil;
 import scouter2.common.util.ThreadUtil;
 
@@ -58,7 +59,7 @@ public class ConfigWatcher extends Thread {
 
     @Override
     public void run() {
-        while (true) {
+        while (CoreRun.isRunning()) {
             ThreadUtil.sleep(3000);
             reload();
         }

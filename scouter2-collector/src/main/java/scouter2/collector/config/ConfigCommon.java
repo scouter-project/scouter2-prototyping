@@ -35,7 +35,7 @@ import java.util.List;
 public class ConfigCommon implements ScouterConfigIF {
 
     int netTcpPort = 6200;
-    String repoType = "mute";
+    String repoType = "local";
 
     String dbDir = CollectorConstants.DEFAULT_DB_DIR;
 

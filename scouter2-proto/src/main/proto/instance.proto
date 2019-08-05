@@ -8,17 +8,18 @@ package scouter2.proto;
 
 import "common.proto";
 
-service InstanceService {
-  rpc heartbeat(stream Instance) returns (Counting) {}
+service InstanceServiceP {
+  rpc heartbeat (stream InstanceP) returns (CountingP) {}
 }
 
-message Instance {
+message InstanceP {
   string applicationId = 1;
   string instanceType = 2; //host, java, redis ... etc
   string instanceLegacyType = 3; //for legacy support. scouter1's user defined objType
-  string instanceName = 4;
-  int32 instanceHash = 5;
+  string instanceFullName = 4;
+  int32 legacyInstanceHash = 5;
   string address = 6;
   string version = 7;
+  map<string, string> tags = 8;
 }
 

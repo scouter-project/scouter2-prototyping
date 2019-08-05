@@ -14,12 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package scouter2.collector.domain.metric;
 
-package scouter2.collector.infrastructure.repository.mute;
+import org.springframework.stereotype.Component;
+import scouter2.collector.config.ConfigMetric;
+import scouter2.proto.MetricP;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
-public class MutingRepoConstant {
-    public static String TYPE_NAME = "mute";
+@Component
+public class MetricAdder {
+
+    ConfigMetric conf;
+    MetricRepoQueue repoQueue;
+
+    public MetricAdder(ConfigMetric conf, MetricRepoQueue repoQueue) {
+        this.conf = conf;
+        this.repoQueue = repoQueue;
+    }
+
+    public void addMetric(Metric metric) {
+        MetricP metricP = metric.getProto();
+
+        repoQueue.offer(metric);
+    }
 }

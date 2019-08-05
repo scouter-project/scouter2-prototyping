@@ -6,6 +6,23 @@ option java_outer_classname = "CommonProto";
 
 package scouter2.proto;
 
-message Counting {
+message CountingP {
   int64 value = 1;
+}
+
+enum MetricTypeP {
+  MEASURE = 0;
+  COUNTER = 1;
+  SUMMARY = 2;
+  HISTOGRAM = 3;
+}
+
+message TestObj {
+  int64 timestamp = 1;
+  int32 instanceHash = 2;
+  int64 instanceHash64 = 3;
+  sint64 instanceHashS64 = 4;
+  MetricTypeP metricType = 5;
+  map<int32, string> tags32 = 6;
+  map<int64, string> tags64 = 7;
 }

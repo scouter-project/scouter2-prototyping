@@ -17,11 +17,37 @@
 package scouter2.collector.domain.instance;
 
 import scouter2.collector.domain.ScouterRepo;
-import scouter2.proto.Instance;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
 public interface InstanceRepo extends ScouterRepo {
+    /**
+     * persist instance
+     * @param instance
+     */
     void add(Instance instance);
+
+    /**
+     * find instance id by instance full name
+     * @param instanceFullName
+     * @return
+     */
+    long findIdByName(String instanceFullName);
+
+    /**
+     * generate (unique) instance id of the instance full name if not exists.
+     *  - less value is better for serialization.
+     * if exists return it.
+     * @param instanceFullName
+     * @return
+     */
+    long generateUniqueIdByName(String instanceFullName);
+
+    /**
+     * find instance by id
+     * @param instanceId
+     * @return
+     */
+    Instance findById(long instanceId);
 }

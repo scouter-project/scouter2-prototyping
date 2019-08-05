@@ -15,27 +15,31 @@
  * limitations under the License.
  */
 
-package scouter2.collector.infrastructure.repository.mute;
+package scouter2.collector.domain.metric;
 
-import com.google.protobuf.TextFormat;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
-import scouter2.collector.domain.instance.InstanceRepo;
-import scouter2.collector.springconfig.RepoTypeMatch;
-import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.proto.Instance;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-05
  */
-@Slf4j
 @Component
-@Conditional(RepoTypeSelectorCondition.class)
-@RepoTypeMatch("mute")
-public class MutingInstanceRepo extends MutingRepoAdapter implements InstanceRepo {
-    @Override
-    public void add(Instance instance) {
-        log.debug("[MutingInstanceRepo][add] [{}]", TextFormat.shortDebugString(instance));
+@Slf4j
+public class MetricService {
+
+    private MetricRepo repo;
+    private MetricServiceCache cache;
+
+    public MetricService(MetricRepo repo, MetricServiceCache cache) {
+        this.repo = repo;
+        this.cache = cache;
+    }
+
+    public long findMetricIdAbsentGen(String metricName) {
+        return cache.findMetricIdAbsentGen(metricName);
+    }
+
+    public long findTagIdAbsentGen(String tagName) {
+        return cache.findTagIdAbsentGen(tagName);
     }
 }

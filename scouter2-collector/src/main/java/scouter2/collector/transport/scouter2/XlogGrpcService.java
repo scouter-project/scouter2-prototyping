@@ -20,10 +20,10 @@ package scouter2.collector.transport.scouter2;
 import com.google.protobuf.TextFormat;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
-import scouter2.proto.Counting;
-import scouter2.proto.Xlog;
-import scouter2.proto.XlogList;
-import scouter2.proto.XlogSearch;
+import scouter2.proto.CountingP;
+import scouter2.proto.XlogListP;
+import scouter2.proto.XlogP;
+import scouter2.proto.XlogSearchP;
 import scouter2.proto.XlogServiceGrpc;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,24 +34,24 @@ import java.util.concurrent.atomic.AtomicLong;
 @Slf4j
 public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
     @Override
-    public void getXlogByTxid(XlogSearch request, StreamObserver<Xlog> responseObserver) {
+    public void getXlogByTxid(XlogSearchP request, StreamObserver<XlogP> responseObserver) {
         log.info("[getXlogByTxid] start, xlogSearch:" + TextFormat.shortDebugString(request));
-        responseObserver.onNext(Xlog.newBuilder().setTxid(100).setPtxid(1000).build());
+        responseObserver.onNext(XlogP.newBuilder().setTxid(100).setPtxid(1000).build());
         responseObserver.onCompleted();
     }
 
     @Override
-    public void getXlogByGxid(XlogSearch request, StreamObserver<XlogList> responseObserver) {
+    public void getXlogByGxid(XlogSearchP request, StreamObserver<XlogListP> responseObserver) {
         super.getXlogByGxid(request, responseObserver);
     }
 
     @Override
-    public StreamObserver<Xlog> addXlog(StreamObserver<Counting> responseObserver) {
+    public StreamObserver<XlogP> addXlog(StreamObserver<CountingP> responseObserver) {
         AtomicLong atomicLong = new AtomicLong();
 
-        return new StreamObserver<Xlog>() {
+        return new StreamObserver<XlogP>() {
             @Override
-            public void onNext(Xlog xlog) {
+            public void onNext(XlogP xlog) {
                 log.info("id=" + GrpcAuthInterceptor.USER_IDENTITY.get());
                 atomicLong.incrementAndGet();
                 log.debug("received xlog:" + TextFormat.shortDebugString(xlog));
@@ -64,7 +64,7 @@ public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
 
             @Override
             public void onCompleted() {
-                Counting counting = Counting.newBuilder()
+                CountingP counting = CountingP.newBuilder()
                         .setValue(atomicLong.get())
                         .build();
                 responseObserver.onNext(counting);

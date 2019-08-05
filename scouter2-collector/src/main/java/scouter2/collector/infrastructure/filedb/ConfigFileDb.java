@@ -14,28 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package scouter2.collector.infrastructure.filedb;
 
-package scouter2.collector.infrastructure.repository.mute;
-
-import com.google.protobuf.TextFormat;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
-import scouter2.collector.domain.xlog.XlogRepo;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.proto.Xlog;
+import scouter2.common.config.ConfigItem;
+import scouter2.common.config.ScouterConfigIF;
+import scouter2.common.helper.Props;
+
+import java.util.List;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
+@Getter
 @Slf4j
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
-@RepoTypeMatch("mute")
-public class MutingXlogRepo extends MutingRepoAdapter implements XlogRepo {
+@RepoTypeMatch("local")
+public class ConfigFileDb implements ScouterConfigIF {
+
     @Override
-    public void add(Xlog xlog) {
-        log.debug("[MutingXlogRepo][add] [{}]", TextFormat.shortDebugString(xlog));
+    public List<ConfigItem> getAllConfigs() {
+        return null;
+    }
+
+    @Override
+    public void refresh(Props props) {
     }
 }

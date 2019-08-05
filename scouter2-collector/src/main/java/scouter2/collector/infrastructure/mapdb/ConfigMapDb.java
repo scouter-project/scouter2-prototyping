@@ -33,8 +33,6 @@ import java.util.List;
 @Component
 public class ConfigMapDb implements ScouterConfigIF {
 
-    String commonPropsStoreName = "commonProps";
-
     @Override
     public List<ConfigItem> getAllConfigs() {
         return null;
@@ -42,6 +40,5 @@ public class ConfigMapDb implements ScouterConfigIF {
 
     @Override
     public void refresh(Props props) {
-        commonPropsStoreName = props.getString("commonPropsStoreName", commonPropsStoreName);
     }
 }

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "scouter2.proto";
+option java_outer_classname = "MetricProto";
+
+package scouter2.proto;
+
+import "common.proto";
+
+service MetricServiceP {
+  rpc addMeasure (stream MetricP) returns (CountingP) {}
+}
+
+message MetricP {
+  int64 timestamp = 1;
+  string instanceFullName = 2;
+  MetricTypeP metricType = 3;
+  map<string, string> metrics = 5;
+  map<string, string> tags = 6;
+}
+
+message Metric4RepoP {
+  int64 timestamp = 1;
+  int64 instanceId = 2;
+  MetricTypeP metricType = 3;
+  map<int64, string> metrics = 5;
+  map<int64, string> tags = 6;
+}

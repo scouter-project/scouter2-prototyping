@@ -17,7 +17,6 @@
 package scouter2.collector.domain.instance;
 
 import org.springframework.stereotype.Component;
-import scouter2.proto.Instance;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -25,16 +24,20 @@ import scouter2.proto.Instance;
 @Component
 public class InstanceAdder {
 
-    InstanceRepo instanceRepo;
+    InstanceService service;
+    InstanceRepo repo;
 
-    public InstanceAdder(InstanceRepo instanceRepo) {
-        this.instanceRepo = instanceRepo;
+    public InstanceAdder(InstanceService service, InstanceRepo repo) {
+        this.service = service;
+        this.repo = repo;
+
     }
 
     public void addInstance(Instance instance) {
         addInstanceTypeIfNotExist(instance);
 
-        instanceRepo.add(instance);
+        Instance byId = service.findById(instance.getInstanceId());
+        repo.add(instance);
     }
 
     private void addInstanceTypeIfNotExist(Instance instance) {

@@ -20,8 +20,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
-import scouter2.proto.Instance;
+import scouter2.proto.InstanceP;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -33,23 +34,30 @@ public class InstanceReceiveQueueConsumer extends Thread {
     private static ImmutableList<InstanceReceiveQueueConsumer> consumerThreads;
 
     private InstanceReceiveQueue queue;
-    private InstanceAdder instanceAdder;
+    private InstanceAdder adder;
+    private InstanceService service;
+    private InstanceRepo repo;
 
     @Component
     public static class Runner {
         private static AtomicInteger threadNo = new AtomicInteger();
         private static final int instanceReceiveQueueConsumerThreadCount = 1;
 
-        public Runner(InstanceReceiveQueue receiveQueue, InstanceAdder instanceAdder) {
+        public Runner(InstanceReceiveQueue receiveQueue,
+                      InstanceAdder adder,
+                      InstanceService service,
+                      InstanceRepo repo) {
             consumerThreads = IntInterval.zeroTo(instanceReceiveQueueConsumerThreadCount - 1)
-                    .collect(n -> createConsumer(receiveQueue, instanceAdder))
+                    .collect(n -> createConsumer(receiveQueue, adder, service, repo))
                     .toImmutable();
         }
 
         private InstanceReceiveQueueConsumer createConsumer(InstanceReceiveQueue receiveQueue,
-                                                            InstanceAdder instanceAdder) {
+                                                            InstanceAdder adder,
+                                                            InstanceService service,
+                                                            InstanceRepo repo) {
 
-            InstanceReceiveQueueConsumer consumer = new InstanceReceiveQueueConsumer(receiveQueue, instanceAdder);
+            InstanceReceiveQueueConsumer consumer = new InstanceReceiveQueueConsumer(receiveQueue, adder, service, repo);
             consumer.setDaemon(true);
             consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
             consumer.start();
@@ -58,22 +66,40 @@ public class InstanceReceiveQueueConsumer extends Thread {
         }
     }
 
-    private InstanceReceiveQueueConsumer(InstanceReceiveQueue queue, InstanceAdder instanceAdder) {
+    private InstanceReceiveQueueConsumer(InstanceReceiveQueue queue,
+                                         InstanceAdder adder,
+                                         InstanceService service,
+                                         InstanceRepo repo) {
         this.queue = queue;
-        this.instanceAdder = instanceAdder;
+        this.adder = adder;
+        this.service = service;
+        this.repo = repo;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (CoreRun.isRunning()) {
             try {
-                Instance instance = queue.take();
-                instanceAdder.addInstance(instance);
+                InstanceP instanceProto = queue.take();
+                long instanceId = instanceProto.getLegacyInstanceHash() != 0 ?
+                        instanceProto.getLegacyInstanceHash()
+                        : getInstanceHash(instanceProto.getInstanceFullName());
 
-            } catch (InterruptedException e) {
+                Instance instance =  new Instance(instanceId, instanceProto) ;
+                adder.addInstance(instance);
+
+            } catch (Exception e) {
                 log.error(e.getMessage(), e);
                 e.printStackTrace();
             }
         }
+    }
+
+    private long getInstanceHash(String instanceFullName) {
+        long instanceId = service.findIdByName(instanceFullName);
+        if (instanceId == 0) {
+            instanceId = repo.generateUniqueIdByName(instanceFullName);
+        }
+        return instanceId;
     }
 }

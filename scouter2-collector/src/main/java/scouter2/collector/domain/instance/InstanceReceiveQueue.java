@@ -19,7 +19,7 @@ package scouter2.collector.domain.instance;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.collection.PurgingQueue;
-import scouter2.proto.Instance;
+import scouter2.proto.InstanceP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -28,7 +28,7 @@ import scouter2.proto.Instance;
 @Component
 public class InstanceReceiveQueue {
     private static InstanceReceiveQueue instance;
-    private PurgingQueue<Instance> queue;
+    private PurgingQueue<InstanceP> queue;
 
     public InstanceReceiveQueue() {
         synchronized (InstanceReceiveQueue.class) {
@@ -47,14 +47,14 @@ public class InstanceReceiveQueue {
         return instance;
     }
 
-    public void offer(Instance instance) {
+    public void offer(InstanceP instance) {
         boolean success = queue.offerOverflowClear(instance);
         if (!success) {
             //TODO logging
         }
     }
 
-    public Instance take() throws InterruptedException {
+    public InstanceP take() throws InterruptedException {
         return queue.take();
     }
 }

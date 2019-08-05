@@ -18,7 +18,6 @@ package scouter2.collector.domain.xlog;
 
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigCommon;
-import scouter2.proto.Xlog;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07

@@ -15,26 +15,16 @@
  * limitations under the License.
  */
 
-package scouter2.collector.infrastructure.repository.mute;
-
-import scouter2.collector.domain.ScouterRepo;
+package scouter2.common.meta;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
-public class MutingRepoAdapter implements ScouterRepo {
-    @Override
-    public String getRepoType() {
-        return MutingRepoConstant.TYPE_NAME;
-    }
+public enum MetricType {
+    MEASURE,
+    COUNTER,
+    SUMMARY,
+    HISTOGRAM,
+    ;
 
-    @Override
-    public void init() {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 }

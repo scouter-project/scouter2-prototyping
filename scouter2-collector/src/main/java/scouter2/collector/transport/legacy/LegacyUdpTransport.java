@@ -20,6 +20,7 @@ package scouter2.collector.transport.legacy;
 import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.domain.xlog.XlogReceiveQueue;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.util.FileUtil;
 import scouter2.common.util.ThreadUtil;
 
@@ -61,7 +62,7 @@ public class LegacyUdpTransport extends Thread {
     @Override
     public void run() {
         try {
-            while (true) {
+            while (CoreRun.isRunning()) {
                 open(conf.getNetUdpListenIp(), conf.getNetUdpListenPort());
                 recv();
                 FileUtil.close(udpsocket);
@@ -76,7 +77,7 @@ public class LegacyUdpTransport extends Thread {
         log.info("legacy udp_buffer " + conf.getNetUdpPacketBufferSize());
         log.info("legacy udp_so_rcvbuf " + conf.getNetUdpSoRcvbufSize());
 
-        while (true) {
+        while (CoreRun.isRunning()) {
             try {
                 udpsocket = new DatagramSocket(port, InetAddress.getByName(host));
                 int buf = conf.getNetUdpSoRcvbufSize();
@@ -98,7 +99,7 @@ public class LegacyUdpTransport extends Thread {
             DatagramPacket packet = new DatagramPacket(rbuf, bufferSize);
 
             // loop until any exception
-            while (true) {
+            while (CoreRun.isRunning()) {
                 udpsocket.receive(packet);
                 byte[] data = new byte[packet.getLength()];
                 System.arraycopy(packet.getData(), 0, data, 0, packet.getLength());

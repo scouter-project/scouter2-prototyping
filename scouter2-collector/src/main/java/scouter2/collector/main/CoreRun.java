@@ -29,14 +29,24 @@ import javax.annotation.PostConstruct;
 @Component
 @Getter
 public class CoreRun {
+    private static CoreRun instance;
+
     private boolean running = true;
 
     @PostConstruct
     public void init() {
         ShutdownManager.getInstance().register(this::shutdown);
+        instance = this;
     }
 
     public void shutdown() {
         this.running = false;
+    }
+
+    public static boolean isRunning() {
+        if (instance == null) {
+            return true;
+        }
+        return instance.running;
     }
 }

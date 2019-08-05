@@ -10,29 +10,29 @@ import "common.proto";
 
 service XlogService {
 
-  rpc GetXlogByTxid(XlogSearch) returns (Xlog) {}
-  rpc GetXlogByGxid(XlogSearch) returns (XlogList) {}
+  rpc GetXlogByTxid (XlogSearchP) returns (XlogP) {}
+  rpc GetXlogByGxid (XlogSearchP) returns (XlogListP) {}
 
-  rpc addXlog(stream Xlog) returns (Counting) {}
+  rpc addXlog (stream XlogP) returns (CountingP) {}
 }
 
-message Xlog {
+message XlogP {
   int64 gxid = 1;
   int64 txid = 2;
   int64 ptxid = 3;
   string partitionKey = 4;
 }
 
-message IDWithTimeoutRequest {
+message IDWithTimeoutRequestP {
   int32 value = 1;
   int64 timeout = 2;
 }
 
-message XlogSearch {
+message XlogSearchP {
   int64 id = 1;
   string partitionKey = 2;
 }
 
-message XlogList {
-  repeated Xlog xlogs = 1;
+message XlogListP {
+  repeated XlogP xlogs = 1;
 }

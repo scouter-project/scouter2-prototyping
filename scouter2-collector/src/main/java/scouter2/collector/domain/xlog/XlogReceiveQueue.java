@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.common.collection.PurgingQueue;
-import scouter2.proto.Xlog;
+import scouter2.proto.XlogP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -30,7 +30,7 @@ import scouter2.proto.Xlog;
 public class XlogReceiveQueue {
     private static XlogReceiveQueue instance;
     private ConfigXlog conf;
-    private PurgingQueue<Xlog> queue;
+    private PurgingQueue<XlogP> queue;
 
     public XlogReceiveQueue(ConfigXlog conf) {
         synchronized (XlogReceiveQueue.class) {
@@ -50,14 +50,14 @@ public class XlogReceiveQueue {
         return instance;
     }
 
-    public void offer(Xlog xlog) {
+    public void offer(XlogP xlog) {
         boolean success = queue.offerOverflowClear(xlog);
         if (!success) {
             //TODO logging
         }
     }
 
-    public Xlog take() throws InterruptedException {
+    public XlogP take() throws InterruptedException {
         return queue.take();
     }
 }

@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.common.collection.PurgingQueue;
-import scouter2.proto.Xlog;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07

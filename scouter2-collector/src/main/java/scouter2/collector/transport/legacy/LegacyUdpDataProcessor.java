@@ -35,8 +35,8 @@ import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.domain.instance.InstanceReceiveQueue;
-import scouter2.collector.domain.mapper.LegacyMapper;
 import scouter2.collector.legacy.CounterManager;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.common.util.ThreadUtil;
 
@@ -103,7 +103,7 @@ public class LegacyUdpDataProcessor {
         @Override
         public void run() {
             try {
-                while (true) {
+                while (CoreRun.isRunning()) {
                     try {
                         NetData data = udpDataQueue.take();
                         process(data);
@@ -248,6 +248,7 @@ public class LegacyUdpDataProcessor {
                     if (objectPack.objHash == 0) {
                         objectPack.objHash = HashUtil.hash(objectPack.objName);
                     }
+                    //TODO 옮기자. 메인으로
                     CounterManager counterManager = CounterManager.getInstance();
                     counterManager.addObjectTypeIfNotExist(objectPack);
                     String family = counterManager.getCounterEngine().getFamilyNameFromObjType(objectPack.objType);

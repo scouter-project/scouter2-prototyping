@@ -21,8 +21,9 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
-import scouter2.proto.Xlog;
+import scouter2.proto.XlogP;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,23 +35,23 @@ public class XlogReceiveQueueConsumer extends Thread {
     private static ImmutableList<XlogReceiveQueueConsumer> consumerThreads;
 
     private ConfigXlog conf;
-    private XlogReceiveQueue xlogReceiveQueue;
-    private XlogAdder xlogAdder;
+    private XlogReceiveQueue receiveQueue;
+    private XlogAdder adder;
 
     @Component
     public static class Runner {
         private static AtomicInteger threadNo = new AtomicInteger();
 
-        public Runner(ConfigXlog conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
+        public Runner(ConfigXlog conf, XlogReceiveQueue receiveQueue, XlogAdder adder) {
             consumerThreads = IntInterval.zeroTo(conf.getXlogReceiverThreadCount() - 1)
-                    .collect(n -> createConsumer(conf, xlogReceiveQueue, xlogAdder))
+                    .collect(n -> createConsumer(conf, receiveQueue, adder))
                     .toImmutable();
         }
 
         private XlogReceiveQueueConsumer createConsumer(ConfigXlog conf,
-                                                               XlogReceiveQueue xlogReceiveQueue,
-                                                               XlogAdder xlogAdder) {
-            XlogReceiveQueueConsumer consumer = new XlogReceiveQueueConsumer(conf, xlogReceiveQueue, xlogAdder);
+                                                               XlogReceiveQueue receiveQueue,
+                                                               XlogAdder adder) {
+            XlogReceiveQueueConsumer consumer = new XlogReceiveQueueConsumer(conf, receiveQueue, adder);
             consumer.setDaemon(true);
             consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
             consumer.start();
@@ -59,18 +60,19 @@ public class XlogReceiveQueueConsumer extends Thread {
         }
     }
 
-    private XlogReceiveQueueConsumer(ConfigXlog conf, XlogReceiveQueue xlogReceiveQueue, XlogAdder xlogAdder) {
+    private XlogReceiveQueueConsumer(ConfigXlog conf, XlogReceiveQueue receiveQueue, XlogAdder adder) {
         this.conf = conf;
-        this.xlogReceiveQueue = xlogReceiveQueue;
-        this.xlogAdder = xlogAdder;
+        this.receiveQueue = receiveQueue;
+        this.adder = adder;
     }
 
     @Override
     public void run() {
-        while (true) {
+        while (CoreRun.isRunning()) {
             try {
-                Xlog xlog = xlogReceiveQueue.take();
-                xlogAdder.addXlog(xlog);
+                XlogP xlogProto = receiveQueue.take();
+                Xlog xlog = new Xlog(xlogProto);
+                adder.addXlog(xlog);
 
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), e);
