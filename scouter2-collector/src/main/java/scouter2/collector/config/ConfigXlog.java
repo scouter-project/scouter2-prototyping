@@ -16,7 +16,10 @@
  */
 package scouter2.collector.config;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
@@ -31,6 +34,9 @@ import java.util.List;
 @Getter
 @Slf4j
 @Component
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ConfigXlog implements ScouterConfigIF {
 
     int xlogQueueSize = 10000;

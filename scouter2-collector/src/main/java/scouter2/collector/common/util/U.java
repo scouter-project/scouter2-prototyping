@@ -17,11 +17,22 @@
 
 package scouter2.collector.common.util;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
 public class U {
     public static long now() {
         return System.currentTimeMillis();
+    }
+
+    public static long toMillis(LocalDateTime localDateTime) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    public static String systemTmpDir() {
+        return System.getProperty("java.io.tmpdir");
     }
 }

@@ -1,7 +1,5 @@
 package scouter2.common.util;
 
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
@@ -278,7 +276,7 @@ public class DateTimeHelper {
 		return String.format("%02d%02d", hh, mm);
 	}
 
-	public int getDateMillis(long time) {
+	public int getDayMillis(long time) {
 		if (time < BASE_TIME)
 			return 0;
 		long dtime = (time - BASE_TIME) % MILLIS_PER_DAY;
@@ -286,11 +284,11 @@ public class DateTimeHelper {
 	}
 
 	public int getHour(long time) {
-		return getDateMillis(time) / MILLIS_PER_HOUR;
+		return getDayMillis(time) / MILLIS_PER_HOUR;
 	}
 
 	public int getMM(long time) {
-		int dtime = getDateMillis(time) % MILLIS_PER_HOUR;
+		int dtime = getDayMillis(time) % MILLIS_PER_HOUR;
 		return (dtime / MILLIS_PER_MINUTE);
 	}
 
@@ -298,15 +296,11 @@ public class DateTimeHelper {
 		return (time - BASE_TIME);
 	}
 
-	public long getDateUnit(long time) {
+	public long getDayUnit(long time) {
 		return (time - BASE_TIME) / MILLIS_PER_DAY;
 	}
 
-	public long getTenMinUnit(long time) {
-		return (time - BASE_TIME) / MILLIS_PER_TEN_MINUTE;
-	}
-
-	public long getMinUnit(long time) {
+	public long getMinuteUnit(long time) {
 		return (time - BASE_TIME) / MILLIS_PER_MINUTE;
 	}
 
@@ -314,12 +308,20 @@ public class DateTimeHelper {
 		return (time - BASE_TIME) / MILLIS_PER_HOUR;
 	}
 
+	public long reverseDayUnit(long dayUnit) {
+		return dayUnit * MILLIS_PER_DAY + BASE_TIME;
+	}
+
 	public long reverseHourUnit(long unit) {
 		return (unit * MILLIS_PER_HOUR) + BASE_TIME;
 	}
 
+	public long reverseMinuteUnit(long unit) {
+		return (unit * MILLIS_PER_MINUTE) + BASE_TIME;
+	}
+
 	public long getDateUnit() {
-		return getDateUnit(System.currentTimeMillis());
+		return getDayUnit(System.currentTimeMillis());
 	}
 
 	private static Map<String, DateTimeHelper> _table = new HashMap<String, DateTimeHelper>();
@@ -337,37 +339,4 @@ public class DateTimeHelper {
 		}
 		return helper;
 	}
-
-	public long xxx() {
-		return -10956L * MILLIS_PER_DAY + BASE_TIME;
-	}
-
-	public long dateUnitToTimeMillis(long dateUnit) {
-		return dateUnit * MILLIS_PER_DAY + BASE_TIME;
-	}
-
-	public static void main(String[] args) throws Exception {
-
-		System.out.println(new Timestamp(DateTimeHelper.getDefault().xxx()));
-		System.out.println(DateTimeHelper.getDefault().yyyymmdd(0));
-		long m = System.currentTimeMillis();
-		long yesterday = System.currentTimeMillis() - 24*60*60*1000L;
-		System.out.println(DateTimeHelper.getDefault().getDateUnit(m));
-		System.out.println(DateTimeHelper.getDefault().getDateUnit(yesterday));
-	}
-
-	private static void c1(DateTimeHelper dh) throws ParseException {
-		long t1 = new SimpleDateFormat("yyyyMMdd").parse("20000101").getTime();
-		long t2 = dh.yyyymmdd("20000101");
-		System.out.println(t1);
-		System.out.println(t2);
-	}
-
-	private static void c2(DateTimeHelper dh) throws ParseException {
-		long t1 = new SimpleDateFormat("yyyyMMddHHmm").parse("201502241212").getTime();
-		long t2 = dh.yyyymmdd("20150224") + dh.hhmm("1212");
-		System.out.println(t1);
-		System.out.println(t2);
-	}
-
 }

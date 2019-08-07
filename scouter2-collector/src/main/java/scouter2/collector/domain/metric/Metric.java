@@ -39,37 +39,33 @@ public class Metric {
         this.timestamp = timestamp;
     }
 
-    public Metric4RepoP toRepoType(InstanceService instanceService, MetricService metricService) {
-        MetricP p = this.getProto();
+    public Metric4RepoP toRepoType(long instanceId, MetricService metricService) {
         Metric4RepoP forRepo = Metric4RepoP.newBuilder()
-                .setInstanceId(toInstanceId(p.getInstanceFullName(), instanceService))
-                .setMetricType(p.getMetricType())
+                .setInstanceId(instanceId)
+                .setMetricType(this.getProto().getMetricType())
                 .build();
-        forRepo.getMetricsMap().putAll(toEncodedKeyMetricsMap(p.getMetricsMap(), metricService));
-        forRepo.getTagsMap().putAll(toEncodedKeyTagMap(p.getTagsMap(), metricService));
+
+        forRepo.getMetricsMap().putAll(toEncodedKeyMetricsMap(this.getProto().getMetricsMap(), metricService));
+        forRepo.getTagsMap().putAll(toEncodedKeyTagMap(this.getProto().getTagsMap(), metricService));
 
         return forRepo;
     }
 
     private long toInstanceId(String instanceFullName, InstanceService instanceService) {
-        long idByName = instanceService.findIdByName(instanceFullName);
-        if (idByName == 0) {
-            return instanceService.generateUniqueIdByName(instanceFullName);
-        }
-        return idByName;
+        return instanceService.findIdByName(instanceFullName);
     }
 
-    private Map<Long, String> toEncodedKeyMetricsMap(Map<String, String> metricsMap,
+    protected static Map<Long, Double> toEncodedKeyMetricsMap(Map<String, Double> metricsMap,
                                                      MetricService metricService) {
 
-        Map<Long, String> newMap = new HashMap<>();
-        for (Map.Entry<String, String> e : metricsMap.entrySet()) {
+        Map<Long, Double> newMap = new HashMap<>();
+        for (Map.Entry<String, Double> e : metricsMap.entrySet()) {
             newMap.put(metricService.findMetricIdAbsentGen(e.getKey()), e.getValue());
         }
         return newMap;
     }
 
-    private Map<Long, String> toEncodedKeyTagMap(Map<String, String> tagsMap,
+    protected static Map<Long, String> toEncodedKeyTagMap(Map<String, String> tagsMap,
                                                                      MetricService metricService) {
         Map<Long, String> newMap = new HashMap<>();
         for (Map.Entry<String, String> e : tagsMap.entrySet()) {

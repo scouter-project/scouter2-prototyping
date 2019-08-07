@@ -30,18 +30,6 @@ public class DateUtil {
 		return helper.yyyymmdd(time);
 	}
 
-	public static long getDateUnit() {
-		return helper.getDateUnit();
-	}
-
-	public static long dateUnitToTimeMillis(long dateUnit) {
-		return helper.dateUnitToTimeMillis(dateUnit);
-	}
-
-	public static long getDateUnit(long time) {
-		return helper.getDateUnit(time);
-	}
-
 	public static String ymdhms(long time) {
 		return helper.yyyymmdd(time) + helper.hhmmss(time);
 	}
@@ -136,11 +124,19 @@ public class DateUtil {
 	}
 
 	public static boolean isSameDay(Date date, Date date2) {
-		return helper.getDateUnit(date.getTime()) == helper.getDateUnit(date2.getTime());
+		return helper.getDayUnit(date.getTime()) == helper.getDayUnit(date2.getTime());
 	}
 
 	public static boolean isToday(long time) {
-		return helper.getDateUnit(time) == helper.getDateUnit(System.currentTimeMillis());
+		return helper.getDayUnit(time) == helper.getDayUnit(System.currentTimeMillis());
+	}
+
+	public static long truncDay(long timestamp) {
+		return reverseDayUnit(helper.getDayUnit(timestamp));
+	}
+
+	public static long truncHour(long timestamp) {
+		return reverseHourUnit(helper.getHourUnit(timestamp));
 	}
 
 	public static int getHour(Date date) {
@@ -168,27 +164,35 @@ public class DateUtil {
 	}
 
 	public static int getDateMillis(long time) {
-		return helper.getDateMillis(time);
+		return helper.getDayMillis(time);
 	}
 
 	public static long getTimeUnit(long time) {
 		return helper.getTimeUnit(time);
 	}
 
+	public static long getDayUnit(long time) {
+		return helper.getDayUnit(time);
+	}
+
+	public static long reverseDayUnit(long dateUnit) {
+		return helper.reverseDayUnit(dateUnit);
+	}
+
 	public static long getHourUnit(long time) {
 		return helper.getHourUnit(time);
 	}
 
-	public static long getTenMinUnit(long time) {
-		return helper.getTenMinUnit(time);
-	}
-
-	public static long getMinUnit(long time) {
-		return helper.getMinUnit(time);
-	}
-
 	public static long reverseHourUnit(long unit) {
 		return helper.reverseHourUnit(unit);
+	}
+
+	public static long getMinuteUnit(long time) {
+		return helper.getMinuteUnit(time);
+	}
+
+	public static long reverseMinuteUnit(long unit) {
+		return helper.reverseMinuteUnit(unit);
 	}
 
 	public static long now() {

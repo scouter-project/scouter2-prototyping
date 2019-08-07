@@ -23,13 +23,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.common.util.RafUtil;
 import scouter2.collector.common.util.U;
-import scouter2.collector.domain.metric.Metric;
+import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.FileUtil;
 import scouter2.proto.Metric4RepoP;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -37,6 +41,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
@@ -50,13 +55,29 @@ public class MetricFileDb {
 
     private final Map<String, Table> partitionTableMap = new HashMap<>();
 
-    public long add(String pKey, Metric4RepoP metric) throws FileNotFoundException {
+    private ConfigCommon configCommon;
+
+    public MetricFileDb(ConfigCommon configCommon) {
+        this.configCommon = configCommon;
+        ShutdownManager.getInstance().register(this::closeAll);
+    }
+
+    public long add(String pKey, Metric4RepoP metric) throws IOException {
         Table table = partitionTableMap.get(pKey);
         if (table == null) {
             table = open(pKey);
         }
-        //todo
-        return 0;
+        return table.add(metric);
+    }
+
+    public void readPeriod(String pKey, long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
+            throws IOException {
+
+        Table table = partitionTableMap.get(pKey);
+        if (table == null) {
+            table = open(pKey);
+        }
+        table.readPeriod(startOffset, toMillis, metric4RepoPConsumer);
     }
 
     private Table open(String pKey) throws FileNotFoundException {
@@ -93,9 +114,6 @@ public class MetricFileDb {
         }
     }
 
-    /*
-    TODO add shutdown hook
-     */
     private void closeAll() {
         synchronized (partitionTableMap) {
             for (Map.Entry<String, Table> entry : partitionTableMap.entrySet()) {
@@ -108,6 +126,8 @@ public class MetricFileDb {
     @Getter
     @Setter
     class Table {
+        public static final String DB_NAME = "metric.filedb";
+
         int reference;
         String pKey;
         RandomAccessFile dataFile;
@@ -115,9 +135,10 @@ public class MetricFileDb {
 
         Table(String pKey) throws FileNotFoundException {
             this.pKey = pKey;
-            //TODO fileName
-            String fileName = pKey + "";
-            this.dataFile = new RandomAccessFile(fileName, "rw");
+            String directory = configCommon.getDbDir() + "/" + pKey + "/";
+            FileUtil.mkdirs(directory);
+            String dbFileName = directory + DB_NAME;
+            this.dataFile = new RandomAccessFile(dbFileName, "rw");
             this.lastAccess = U.now();
         }
 
@@ -126,20 +147,73 @@ public class MetricFileDb {
             FileUtil.close(dataFile);
         }
 
-        private long add(Metric metric) throws IOException {
+        private long add(Metric4RepoP metric) throws IOException {
             if (metric == null) {
-                return 0;
+                return -1;
             }
-
             synchronized (this) {
-
                 long offset = dataFile.length();
                 dataFile.seek(offset);
-                dataFile.write(metric.getProto().toByteArray());
+                byte[] bytes = metric.toByteArray();
+                dataFile.writeInt(bytes.length);
+                dataFile.write(bytes);
+                return offset;
             }
+        }
 
-            //TODO
-            return 0;
+        private void readPeriod(long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
+                throws IOException {
+
+            long offset = startOffset;
+            long loop = 0;
+            while (true) {
+                loop++;
+                if (loop > 1000000) {
+                    //to many loops
+                    break;
+                }
+                byte[] part = readOfSize(offset, 4 * 1024);
+                long partSize = part.length;
+                long partOffset = 0;
+
+                if (partSize <= 4) {
+                    if (partSize > 0) {
+                        log.error("something wrong.(partSize is less than 4)");
+                    }
+                    break;
+                }
+
+                DataInputStream data = new DataInputStream(new ByteArrayInputStream(part));
+                while (true) {
+                    if (partOffset + 4 >= partSize) {
+                        break;
+                    }
+
+                    int size = data.readInt();
+                    if (size == 0 || partOffset + 4 + size > partSize) {
+                        break;
+                    }
+
+                    partOffset = partOffset + 4 + size;
+
+                    byte[] buffer = new byte[size];
+                    data.read(buffer);
+                    Metric4RepoP metric = Metric4RepoP.parseFrom(buffer);
+                    if (metric.getTimestamp() > toMillis) {
+                        partOffset = (Long.MAX_VALUE) / 2L;
+                        break;
+                    }
+                    metric4RepoPConsumer.accept(metric);
+                }
+
+                offset += partOffset;
+            }
+        }
+
+        private byte[] readOfSize(long startOffset, int size) throws IOException {
+            synchronized (this) {
+                return RafUtil.readOfSize(dataFile, startOffset, size);
+            }
         }
     }
 }

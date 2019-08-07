@@ -23,7 +23,7 @@ import scouter2.proto.Metric4RepoP;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
 public interface MetricRepo extends ScouterRepo {
-    void add(Metric4RepoP metric);
+    void add(String applicationId, Metric4RepoP metric);
 
     /**
      * get unique metric name's id, if absent generate it.

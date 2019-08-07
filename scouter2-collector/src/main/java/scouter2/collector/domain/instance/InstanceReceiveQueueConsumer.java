@@ -83,7 +83,7 @@ public class InstanceReceiveQueueConsumer extends Thread {
                 InstanceP instanceProto = queue.take();
                 long instanceId = instanceProto.getLegacyInstanceHash() != 0 ?
                         instanceProto.getLegacyInstanceHash()
-                        : getInstanceHash(instanceProto.getInstanceFullName());
+                        : findInstanceId(instanceProto.getInstanceFullName());
 
                 Instance instance =  new Instance(instanceId, instanceProto) ;
                 adder.addInstance(instance);
@@ -95,10 +95,10 @@ public class InstanceReceiveQueueConsumer extends Thread {
         }
     }
 
-    private long getInstanceHash(String instanceFullName) {
+    private long findInstanceId(String instanceFullName) {
         long instanceId = service.findIdByName(instanceFullName);
         if (instanceId == 0) {
-            instanceId = repo.generateUniqueIdByName(instanceFullName);
+            instanceId = service.generateUniqueIdByName(instanceFullName);
         }
         return instanceId;
     }

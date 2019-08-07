@@ -17,6 +17,7 @@
 
 package scouter2.collector;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
@@ -52,8 +53,8 @@ public class CollectorApplication implements CommandLineRunner {
     }
 
     private static void preloadConfig() throws IOException {
-        String conFilefName = System.getProperty("scouter2.config", DEFAULT_CONF_DIR + DEFAULT_CONF_FILE);
-        File confFile = new File(conFilefName);
+        String confFileName = System.getProperty("scouter2.config", DEFAULT_CONF_DIR + DEFAULT_CONF_FILE);
+        File confFile = new File(confFileName);
         if (confFile.canRead()) {
             Properties configProps = new Properties();
             try (FileInputStream in = new FileInputStream(confFile)) {
@@ -65,6 +66,11 @@ public class CollectorApplication implements CommandLineRunner {
 
             Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);
             loadProps = new Props(configWithSystemProps);
+
+            String repoType = System.getProperty("repoType");
+            if (StringUtils.isBlank(repoType)) {
+                System.setProperty("repoType", loadProps.getString("repoType"));
+            }
         }
     }
 

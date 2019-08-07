@@ -20,8 +20,6 @@ package scouter2.collector.springconfig;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
 import org.springframework.core.type.AnnotatedTypeMetadata;
-import scouter2.collector.CollectorApplication;
-import scouter2.common.helper.Props;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
@@ -34,8 +32,7 @@ public class RepoTypeSelectorCondition implements Condition {
                 .getAnnotationAttributes("scouter2.collector.springconfig.RepoTypeMatch")
                 .get("value");
 
-        Props loadProps = CollectorApplication.getLoadProps();
-        if (repoType.equals(loadProps.getString("repoType"))) {
+        if (repoType.equals(System.getProperty("repoType"))) {
             return true;
         }
 

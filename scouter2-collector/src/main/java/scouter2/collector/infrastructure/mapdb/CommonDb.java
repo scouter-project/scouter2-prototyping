@@ -19,7 +19,6 @@ package scouter2.collector.infrastructure.mapdb;
 
 import lombok.Getter;
 import org.mapdb.Atomic;
-import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
@@ -31,8 +30,6 @@ import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.FileUtil;
 
-import java.util.Map;
-
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
  */
@@ -42,7 +39,8 @@ import java.util.Map;
 @Conditional(RepoTypeSelectorCondition.class)
 public class CommonDb {
 
-    public static final String SYS_PROPS_DB = "/common/sysProps.db";
+    public static final String SYS_PROPS_DB_DIR = "/common/";
+    public static final String SYS_PROPS_DB = SYS_PROPS_DB_DIR + "sysProps.db";
     public static final String COUNTER_INDEX = "/%s/counter.idx";
 
     private ConfigCommon configCommon;
@@ -62,12 +60,6 @@ public class CommonDb {
     private HTreeMap<String, Long> metricReverseDict;
     private HTreeMap<String, Long> metricTagReverseDict;
 
-
-    //Counter는 매분 최초 요청에 대해서만 저장하자.
-    //XLog도 그렇게 하면 될 듯.. 구지 초까지는...
-    Map<String, BTreeMap<Long, Long>> metricHourIndex;
-    Map<String, BTreeMap<Long, Long>> metricMinIndex;
-
     public CommonDb(ConfigCommon configCommon, ConfigMapDb configMapDb) {
         this.configCommon = configCommon;
         this.configMapDb = configMapDb;
@@ -81,6 +73,7 @@ public class CommonDb {
     }
 
     private void defineSysPropDb(ConfigCommon configCommon) {
+        FileUtil.mkdirs(configCommon.getDbDir() + SYS_PROPS_DB_DIR);
         sysPropDb = DBMaker.fileDB(configCommon.getDbDir() + SYS_PROPS_DB)
                 .fileChannelEnable()
                 .fileMmapEnableIfSupported()

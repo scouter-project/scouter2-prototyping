@@ -21,6 +21,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigMetric;
+import scouter2.collector.domain.instance.Instance;
 import scouter2.collector.domain.instance.InstanceService;
 import scouter2.collector.domain.xlog.NoneThreadSafeXlogRepo;
 import scouter2.collector.main.CoreRun;
@@ -96,7 +97,14 @@ public class MetricRepoQueueConsumer extends Thread {
         while (CoreRun.isRunning()) {
             try {
                 Metric metric = repoQueue.take();
-                repo.add(metric.toRepoType(instanceService, metricService));
+
+                long instanceId = instanceService.findIdByName(metric.getProto().getInstanceFullName());
+                if (instanceId == 0) continue;
+
+                Instance instance = instanceService.findById(instanceId);
+                if (instance == null) continue;
+
+                repo.add(instance.getProto().getApplicationId(), metric.toRepoType(instanceId, metricService));
 
             } catch (Throwable t) {
                 t.printStackTrace();
