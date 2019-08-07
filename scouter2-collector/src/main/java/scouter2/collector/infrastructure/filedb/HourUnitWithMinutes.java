@@ -17,11 +17,10 @@
 
 package scouter2.collector.infrastructure.filedb;
 
+import com.esotericsoftware.kryo.serializers.TaggedFieldSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import scouter2.collector.common.util.JsonUtil;
 
-import java.io.Serializable;
 import java.util.TreeSet;
 
 /**
@@ -29,19 +28,14 @@ import java.util.TreeSet;
  */
 @Data
 @NoArgsConstructor
-public class HourUnitWithMinutes implements Serializable {
+public class HourUnitWithMinutes {
+    @TaggedFieldSerializer.Tag(10)
     long hourUnit;
+    @TaggedFieldSerializer.Tag(11)
     TreeSet<Long> minuteUnits = new TreeSet<>();
 
     public HourUnitWithMinutes(long hourUnit) {
         this.hourUnit = hourUnit;
     }
 
-    public String toJson() {
-        return JsonUtil.toString(this);
-    }
-
-    public static HourUnitWithMinutes fromJson(String json) {
-        return JsonUtil.toObject(json, HourUnitWithMinutes.class);
-    }
 }

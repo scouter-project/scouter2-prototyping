@@ -17,13 +17,18 @@
 
 package scouter2.collector.infrastructure.filedb;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Maps;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigCommon;
 import scouter2.proto.Metric4RepoP;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
@@ -35,12 +40,34 @@ import static scouter2.proto.Metric4RepoPFixture.getMetric4RepoP;
  */
 public class MetricFileDbTest {
 
-    String tempDir = System.getProperty("java.io.tmpdir");
-    String dbDir = tempDir + "/scouter/database";
-    ConfigCommon configCommon = ConfigCommon.builder().dbDir(dbDir).build();
+    public static final String DB_DIR = U.systemTmpDir() + "scouter2/database";
+    ConfigCommon configCommon = ConfigCommon.builder().dbDir(DB_DIR).build();
 
     long instanceId = 1;
     String pKey = "20190101";
+
+
+
+    @BeforeClass
+    public static void beforeClass() {
+        System.setProperty("repoType", "local");
+        File file = new File(DB_DIR);
+        try {
+            FileUtils.deleteDirectory(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        File file = new File(DB_DIR);
+        try {
+            FileUtils.deleteDirectory(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Test
     public void add() throws IOException {

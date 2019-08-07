@@ -73,7 +73,7 @@ public class MetricDbDaily {
 
         hourUnitMap = db.hashMap("hourUnitMap")
                 .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.ELSA)
+                .valueSerializer(new MapDbObjectSerializer())
                 .createOrOpen();
 
         minuteIndex = db.hashMap("minuteIndex")

@@ -47,16 +47,15 @@ public abstract class LocalRepoTest {
     @BeforeClass
     public static void beforeClass() {
         System.setProperty("repoType", "local");
-        File file = new File(DB_DIR);
-        try {
-            FileUtils.deleteDirectory(file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        clearDb();
     }
 
     @AfterClass
     public static void afterClass() {
+        clearDb();
+    }
+
+    private static void clearDb() {
         File file = new File(DB_DIR);
         try {
             FileUtils.deleteDirectory(file);
