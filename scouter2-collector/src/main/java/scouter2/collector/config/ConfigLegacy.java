@@ -45,6 +45,8 @@ public class ConfigLegacy implements ScouterConfigIF {
     int netUdpSoRcvbufSize = 1024 * 1024 * 4;
     int _netUdpWorkerThreadCount = 3;
 
+    boolean logExpiredMultipacket = false;
+
     @Override
     public List<ConfigItem> getAllConfigs() {
         return null;

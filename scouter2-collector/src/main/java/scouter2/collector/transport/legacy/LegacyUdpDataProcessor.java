@@ -66,9 +66,11 @@ public class LegacyUdpDataProcessor {
             throw new RuntimeException("Already working legacy udp processor exists.");
         }
         instance = new LegacyUdpDataProcessor(conf);
+        UdpMultipacketProcessor udpMultipacketProcessor = new UdpMultipacketProcessor(conf);
 
         for (int i = 0; i < conf.get_netUdpWorkerThreadCount(); i++) {
-            LegacyUdpDataProcessorThread processorThread = new LegacyUdpDataProcessorThread(instance.getQueue());
+            LegacyUdpDataProcessorThread processorThread =
+                    new LegacyUdpDataProcessorThread(instance.getQueue(), udpMultipacketProcessor);
             processorThread.setDaemon(true);
             processorThread.setName(ThreadUtil.getName(processorThread.getClass(), threadNo.getAndIncrement()));
             processorThread.start();
@@ -94,10 +96,13 @@ public class LegacyUdpDataProcessor {
     static class LegacyUdpDataProcessorThread extends Thread {
         PurgingQueue<NetData> udpDataQueue;
         InstanceReceiveQueue instanceReceiveQueue;
+        UdpMultipacketProcessor udpMultipacketProcessor;
 
-        public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue) {
+        public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue,
+                                            UdpMultipacketProcessor udpMultipacketProcessor) {
             this.udpDataQueue = udpDataQueue;
             instanceReceiveQueue = InstanceReceiveQueue.getInstance();
+            this.udpMultipacketProcessor = udpMultipacketProcessor;
         }
 
         @Override
@@ -155,8 +160,7 @@ public class LegacyUdpDataProcessor {
             short total = in.readShort();
             short num = in.readShort();
             byte[] data = in.readBlob();
-            //TODO val done = MultiPacketProcessor.add(pkid, total, num, data, objHash, addr)
-            byte[] done = null;
+            byte[] done = udpMultipacketProcessor.add(pkid, total, num, data, objHash, addr);
             if (done != null) {
                 Pack pack = new DataInputX(done).readPack();
                 process0(pack, addr);
