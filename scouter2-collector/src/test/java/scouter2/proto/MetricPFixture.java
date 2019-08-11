@@ -20,36 +20,25 @@ package scouter2.proto;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-07
  */
-public class Metric4RepoPFixture {
+public class MetricPFixture {
 
-    public static Metric4RepoP getMetric4RepoP(long instanceId, long timestamp, double counterValue1,
-                                               double counterValue2) {
-        return Metric4RepoP.newBuilder()
-                .setObjId(instanceId)
-                .setMetricType(MetricTypeP.MEASURE)
-                .setTimestamp(timestamp)
-                .putMetrics(1L, counterValue1)
-                .putMetrics(2L, counterValue2)
-                .build();
-    }
-
-    public static Metric4RepoP getCurrentAny() {
-        return Metric4RepoP.newBuilder()
-                .setObjId(1)
+    public static MetricP getCurrentAny() {
+        return MetricP.newBuilder()
+                .setObjFullName("test/test")
                 .setMetricType(MetricTypeP.MEASURE)
                 .setTimestamp(System.currentTimeMillis())
-                .putMetrics(1L, 100)
-                .putMetrics(2L, 200)
+                .putMetrics("Cpu", 99.5)
+                .putMetrics("Mem", 55.0)
                 .build();
     }
 
-    public static Metric4RepoP getAny(long instanceId, long timestamp) {
-        return Metric4RepoP.newBuilder()
-                .setObjId(instanceId)
+    public static MetricP getCurrentWith(String key1, double value1, String key2, double value2) {
+        return MetricP.newBuilder()
+                .setObjFullName("test/test")
                 .setMetricType(MetricTypeP.MEASURE)
-                .setTimestamp(timestamp)
-                .putMetrics(1L, 100)
-                .putMetrics(2L, 200)
+                .setTimestamp(System.currentTimeMillis())
+                .putMetrics(key1, value1)
+                .putMetrics(key2, value2)
                 .build();
     }
 }

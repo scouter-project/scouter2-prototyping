@@ -17,12 +17,12 @@ enum MetricTypeP {
   HISTOGRAM = 3;
 }
 
-message TestObj {
-  int64 timestamp = 1;
-  int32 instanceHash = 2;
-  int64 instanceHash64 = 3;
-  sint64 instanceHashS64 = 4;
-  MetricTypeP metricType = 5;
-  map<int32, string> tags32 = 6;
-  map<int64, string> tags64 = 7;
+enum TimeTypeP {
+  REALTIME = 0;
+  ONE_MIN = 1;
+  FIVE_MIN = 2;
+  TEN_MIN = 3;
+  HOUR = 4;
+  DAY = 5;
 }
+

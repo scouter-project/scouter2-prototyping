@@ -21,9 +21,9 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigMetric;
-import scouter2.collector.domain.instance.Instance;
-import scouter2.collector.domain.instance.InstanceService;
-import scouter2.collector.domain.xlog.NoneThreadSafeXlogRepo;
+import scouter2.collector.domain.NonThreadSafeRepo;
+import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
 
@@ -40,7 +40,7 @@ public class MetricRepoQueueConsumer extends Thread {
     MetricRepoQueue repoQueue;
     MetricRepo repo;
     MetricService metricService;
-    InstanceService instanceService;
+    ObjService objService;
 
     @Component
     public static class Runner {
@@ -50,10 +50,10 @@ public class MetricRepoQueueConsumer extends Thread {
                       MetricRepoQueue metricRepoQueue,
                       MetricRepo repo,
                       MetricService metricService,
-                      InstanceService instanceService) {
+                      ObjService objService) {
 
             consumerThreads = IntInterval.zeroTo(getConsumerCount(conf, repo) - 1)
-                    .collect(n -> createConsumer(conf, metricRepoQueue, repo, metricService, instanceService))
+                    .collect(n -> createConsumer(conf, metricRepoQueue, repo, metricService, objService))
                     .toImmutable();
         }
 
@@ -61,10 +61,10 @@ public class MetricRepoQueueConsumer extends Thread {
                                                        MetricRepoQueue repoQueue,
                                                        MetricRepo repo,
                                                        MetricService metricService,
-                                                       InstanceService instanceService) {
+                                                       ObjService objService) {
 
             MetricRepoQueueConsumer consumer =
-                    new MetricRepoQueueConsumer(conf, repoQueue, repo, metricService, instanceService);
+                    new MetricRepoQueueConsumer(conf, repoQueue, repo, metricService, objService);
             consumer.setDaemon(true);
             consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
             consumer.start();
@@ -77,19 +77,19 @@ public class MetricRepoQueueConsumer extends Thread {
      * always 1 on NoneThreadSafeXlogRepo type
      */
     private static int getConsumerCount(ConfigMetric conf, MetricRepo repo) {
-        return repo instanceof NoneThreadSafeXlogRepo ? 1 : conf.getMetricRepoThreadCount();
+        return repo instanceof NonThreadSafeRepo ? 1 : conf.getMetricRepoThreadCount();
     }
 
     private MetricRepoQueueConsumer(ConfigMetric conf,
                                     MetricRepoQueue repoQueue,
                                     MetricRepo repo,
                                     MetricService metricService,
-                                    InstanceService instanceService) {
+                                    ObjService objService) {
         this.conf = conf;
         this.repoQueue = repoQueue;
         this.repo = repo;
         this.metricService = metricService;
-        this.instanceService = instanceService;
+        this.objService = objService;
     }
 
     @Override
@@ -98,18 +98,24 @@ public class MetricRepoQueueConsumer extends Thread {
             try {
                 Metric metric = repoQueue.take();
 
-                long instanceId = instanceService.findIdByName(metric.getProto().getInstanceFullName());
-                if (instanceId == 0) continue;
-
-                Instance instance = instanceService.findById(instanceId);
-                if (instance == null) continue;
-
-                repo.add(instance.getProto().getApplicationId(), metric.toRepoType(instanceId, metricService));
+                addToRepo(metric);
+                continue;
 
             } catch (Throwable t) {
                 t.printStackTrace();
                 log.error(t.getMessage(), t);
             }
         }
+    }
+
+    private void addToRepo(Metric metric) {
+        long objId = objService.findIdByName(metric.getProto().getObjFullName());
+        if (objId == 0) return;
+
+        Obj obj = objService.findById(objId);
+        if (obj == null) return;
+
+        repo.add(obj.getProto().getApplicationId(),
+                metric.toRepoType(objId, metricService, repo instanceof NonThreadSafeRepo));
     }
 }

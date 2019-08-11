@@ -20,6 +20,7 @@ package scouter2.collector.infrastructure.repository.local;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.xlog.Xlog;
 import scouter2.collector.domain.xlog.XlogRepo;
 import scouter2.collector.springconfig.RepoTypeMatch;
@@ -32,7 +33,7 @@ import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class LocalXlogRepo extends LocalRepoAdapter implements XlogRepo {
+public class LocalXlogRepo extends LocalRepoAdapter implements XlogRepo, NonThreadSafeRepo {
     @Override
     public void add(Xlog xlog) {
         log.debug("[LocalXlogRepo][add] [{}]", xlog);

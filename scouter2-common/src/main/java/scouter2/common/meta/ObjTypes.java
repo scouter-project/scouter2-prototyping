@@ -14,10 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
+
+package scouter2.common.meta;
+
+import java.util.List;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
-public interface NoneThreadSafeXlogRepo extends XlogRepo {
+public class ObjTypes {
+    List<ObjType> objTypes;
+
+    public List<ObjType> getObjTypes() {
+        return objTypes;
+    }
+
+    public void setObjTypes(List<ObjType> objTypes) {
+        this.objTypes = objTypes;
+    }
+
+    @Override
+    public String toString() {
+        return "objTypes{" +
+                "objTypes=" + objTypes +
+                '}';
+    }
 }

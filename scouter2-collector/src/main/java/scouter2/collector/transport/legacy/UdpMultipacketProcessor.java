@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 import scouter.util.LongEnumer;
 import scouter.util.LongKeyLinkedMap;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.instance.InstanceReceiveQueue;
+import scouter2.collector.domain.obj.ObjReceiveQueue;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -41,7 +41,7 @@ public class UdpMultipacketProcessor {
     private ConfigLegacy configLegacy;
 
     public UdpMultipacketProcessor(ConfigLegacy configLegacy) {
-        synchronized (InstanceReceiveQueue.class) {
+        synchronized (ObjReceiveQueue.class) {
             if (instance != null) {
                 throw new IllegalStateException();
             }

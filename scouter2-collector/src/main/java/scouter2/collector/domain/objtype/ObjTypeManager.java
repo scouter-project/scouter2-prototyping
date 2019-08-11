@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.domain.instancetype;
+package scouter2.collector.domain.objtype;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import org.springframework.stereotype.Component;
 import scouter.lang.counters.CounterEngine;
 import scouter.util.FileUtil;
 import scouter2.collector.common.util.JsonUtil;
-import scouter2.common.meta.InstanceType;
+import scouter2.common.meta.ObjType;
 import scouter2.common.meta.MetricDef;
 
 import javax.annotation.PostConstruct;
@@ -41,12 +41,12 @@ import java.io.InputStream;
  */
 @Component
 @Slf4j
-public class InstanceTypeManager {
+public class ObjTypeManager {
 
-    public static final String INSTANCE_TYPES_FILE_NAME = "/instanceTypes.json";
+    public static final String OBJ_TYPES_FILE_NAME = "/objTypes.json";
 
-    private ImmutableList<InstanceType> instanceTypeList = Lists.immutable.empty();
-    private ImmutableMap<String, InstanceType> instanceTypeMap = Maps.immutable.empty();
+    private ImmutableList<ObjType> objTypeList = Lists.immutable.empty();
+    private ImmutableMap<String, ObjType> objTypeMap = Maps.immutable.empty();
 
     @PostConstruct
     public void init() {
@@ -59,39 +59,39 @@ public class InstanceTypeManager {
     }
 
     private void reload() {
-        InputStream in  = CounterEngine.class.getResourceAsStream(INSTANCE_TYPES_FILE_NAME);
+        InputStream in  = CounterEngine.class.getResourceAsStream(OBJ_TYPES_FILE_NAME);
         try {
             byte[] contents = FileUtil.readAll(in);
-            String jsonInstanceTypes = new String(contents);
+            String jsonObjTypes = new String(contents);
 
-            MutableList<InstanceType> types = JsonUtil.toObjectList(jsonInstanceTypes,
-                    new TypeReference<MutableList<InstanceType>>() {});
+            MutableList<ObjType> types = JsonUtil.toObjectList(jsonObjTypes,
+                    new TypeReference<MutableList<ObjType>>() {});
 
             //TODO add custom
-            instanceTypeList = types.toImmutable();
+            objTypeList = types.toImmutable();
 
-            MutableMap<String, InstanceType> byType = types.toMap(InstanceType::getId, v -> v);
+            MutableMap<String, ObjType> byType = types.toMap(ObjType::getId, v -> v);
             //TODO add custom
-            instanceTypeMap = byType.toImmutable();
+            objTypeMap = byType.toImmutable();
 
         } catch (Exception e) {
-            log.error("Failed read " + INSTANCE_TYPES_FILE_NAME, e);
+            log.error("Failed read " + OBJ_TYPES_FILE_NAME, e);
 
         } finally {
             FileUtil.close(in);
         }
     }
 
-    public InstanceType getInstanceType(String instanceTypeId) {
-        return instanceTypeMap.get(instanceTypeId);
+    public ObjType getObjType(String objTypeId) {
+        return objTypeMap.get(objTypeId);
     }
 
-    public ImmutableList<MetricDef> getMetricDefsByInstanceType(String instanceTypeId) {
-        InstanceType instanceType = instanceTypeMap.get(instanceTypeId);
-        if (instanceType == null) {
+    public ImmutableList<MetricDef> getMetricDefsByObjType(String objTypeId) {
+        ObjType objType = objTypeMap.get(objTypeId);
+        if (objType == null) {
             return Lists.immutable.empty();
         }
 
-        return Lists.immutable.ofAll(instanceType.getMetricDefs());
+        return Lists.immutable.ofAll(objType.getMetricDefs());
     }
 }

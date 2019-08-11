@@ -14,40 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
+package scouter2.collector.domain.obj;
 
 import scouter2.collector.domain.ScouterRepo;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
-public interface InstanceRepo extends ScouterRepo {
+public interface ObjRepo extends ScouterRepo {
     /**
-     * persist instance
-     * @param instance
+     * persist obj
+     * @param obj
      */
-    void add(Instance instance);
+    void add(Obj obj);
 
     /**
-     * find instance id by instance full name
-     * @param instanceFullName
+     * find object id by object full name
+     * @param objFullName
      * @return
      */
-    long findIdByName(String instanceFullName);
+    long findIdByName(String objFullName);
 
     /**
-     * generate (unique) instance id of the instance full name if not exists.
+     * generate (unique) object id of the object full name if not exists.
      *  - less value is better for serialization.
      * if exists return it.
-     * @param instanceFullName
+     * @param objFullName
      * @return
      */
-    long generateUniqueIdByName(String instanceFullName);
+    long generateUniqueIdByName(String objFullName);
 
     /**
-     * find instance by id
-     * @param instanceId
+     * find object by id
+     * @param objId
      * @return
      */
-    Instance findById(long instanceId);
+    Obj findById(long objId);
 }

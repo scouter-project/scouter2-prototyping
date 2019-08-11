@@ -18,8 +18,11 @@
 package scouter2.collector.transport.legacy;
 
 import scouter.lang.pack.ObjectPack;
+import scouter.lang.pack.PerfCounterPack;
 import scouter.lang.value.Value;
-import scouter2.proto.InstanceP;
+import scouter2.proto.MetricP;
+import scouter2.proto.ObjP;
+import scouter2.proto.TimeTypeP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,21 +31,62 @@ import java.util.Map;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
 public class LegacyMapper {
-    public static InstanceP toInstance(ObjectPack objectPack, String legacyFamily) {
+
+    public static ObjP toObjP(ObjectPack objectPack, String legacyFamily) {
         Map<String, String> tagMap = new HashMap<>();
         for (Map.Entry<String, Value> e : objectPack.tags.toMap().entrySet()) {
             tagMap.put(e.getKey(), e.getValue() == null ? "" : e.getValue().toString());
         }
 
-        return InstanceP.newBuilder()
+        return ObjP.newBuilder()
                 .setApplicationId(objectPack.objType)
-                .setInstanceType(legacyFamily)
-                .setInstanceLegacyType(objectPack.objType)
-                .setInstanceFullName(objectPack.objName)
-                .setLegacyInstanceHash(objectPack.objHash)
+                .setObjType(legacyFamily)
+                .setObjLegacyType(objectPack.objType)
+                .setObjFullName(objectPack.objName)
+                .setLegacyObjHash(objectPack.objHash)
                 .setAddress(objectPack.address)
                 .setVersion(objectPack.version)
                 .putAllTags(tagMap)
                 .build();
+    }
+
+    public static MetricP toMetric(PerfCounterPack counterPack) {
+        MetricP.Builder builder = MetricP.newBuilder()
+                .setTimestamp(counterPack.time)
+                .setObjFullName(counterPack.objName)
+                .setTimeType(toTimeTypeP(counterPack.timetype));
+
+        counterPack.data.toMap().forEach((key, value) -> builder.putMetrics(key, doubleValueOf(value)));
+
+        return builder.build();
+    }
+
+    private static double doubleValueOf(Value value) {
+        if (value instanceof Number) {
+            return ((Number) value).doubleValue();
+        }
+        return 0.0d;
+    }
+
+    public static TimeTypeP toTimeTypeP(byte legacyTimeType) {
+        if (legacyTimeType == 1) {
+            return TimeTypeP.REALTIME;
+        }
+        if (legacyTimeType == 2) {
+            return TimeTypeP.ONE_MIN;
+        }
+        if (legacyTimeType == 3) {
+            return TimeTypeP.FIVE_MIN;
+        }
+        if (legacyTimeType == 4) {
+            return TimeTypeP.TEN_MIN;
+        }
+        if (legacyTimeType == 5) {
+            return TimeTypeP.HOUR;
+        }
+        if (legacyTimeType == 6) {
+            return TimeTypeP.DAY;
+        }
+        return TimeTypeP.REALTIME;
     }
 }

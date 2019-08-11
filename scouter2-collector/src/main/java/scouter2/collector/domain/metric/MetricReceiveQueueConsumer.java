@@ -72,8 +72,7 @@ public class MetricReceiveQueueConsumer extends Thread {
             try {
                 MetricP metricProto = receiveQueue.take();
                 long serverTimestamp = System.currentTimeMillis();
-                Metric metric = new Metric(metricProto.toBuilder().setTimestamp(serverTimestamp).build(),
-                        serverTimestamp);
+                Metric metric = new Metric(metricProto, serverTimestamp);
                 adder.addMetric(metric);
 
             } catch (InterruptedException e) {

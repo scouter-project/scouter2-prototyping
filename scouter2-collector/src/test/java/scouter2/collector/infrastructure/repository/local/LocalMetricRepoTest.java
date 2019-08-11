@@ -30,11 +30,11 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import scouter2.collector.LocalRepoTest;
 import scouter2.collector.common.util.U;
-import scouter2.collector.domain.instance.Instance;
-import scouter2.collector.domain.instance.InstanceService;
+import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.domain.obj.Obj;
 import scouter2.common.util.DateUtil;
-import scouter2.proto.InstanceP;
 import scouter2.proto.Metric4RepoP;
+import scouter2.proto.ObjP;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,7 +57,7 @@ public class LocalMetricRepoTest extends LocalRepoTest {
     LocalMetricRepo repo;
 
     @Mock
-    InstanceService instanceService;
+    ObjService instanceService;
 
     String applicationId = "testapp";
     long instanceId = 1;
@@ -67,7 +67,7 @@ public class LocalMetricRepoTest extends LocalRepoTest {
     public void init() {
         MockitoAnnotations.initMocks(this);
 
-        Instance instance = new Instance(instanceId, InstanceP.newBuilder().setApplicationId(applicationId).build());
+        Obj instance = new Obj(instanceId, ObjP.newBuilder().setApplicationId(applicationId).build());
         when(instanceService.findById(anyLong())).thenReturn(instance);
     }
 

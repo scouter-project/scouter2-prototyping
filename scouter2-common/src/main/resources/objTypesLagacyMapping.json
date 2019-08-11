@@ -1,73 +1,73 @@
 [
   {
     "id": "linux",
-    "instanceType": "host",
+    "objType": "host",
     "displayName": "Linux"
   },
   {
     "id": "windows",
-    "instanceType": "host",
+    "objType": "host",
     "displayName": "Windows"
   },
   {
     "id": "osx",
-    "instanceType": "host",
+    "objType": "host",
     "displayName": "OSX"
   },
   {
     "id": "host",
-    "instanceType": "host",
+    "objType": "host",
     "displayName": "Host"
   },
   {
     "id": "tomcat",
-    "instanceType": "javaee",
+    "objType": "javaee",
     "displayName": "Tomcat"
   },
   {
     "id": "java",
-    "instanceType": "javaee",
+    "objType": "javaee",
     "displayName": "Java"
   },
   {
     "id": "jboss",
-    "instanceType": "javaee",
+    "objType": "javaee",
     "displayName": "JBoss"
   },
   {
     "id": "jetty",
-    "instanceType": "javaee",
+    "objType": "javaee",
     "displayName": "Jetty"
   },
   {
     "id": "resin",
-    "instanceType": "javaee",
+    "objType": "javaee",
     "displayName": "Resin"
   },
   {
     "id": "batch",
-    "instanceType": "batch",
+    "objType": "batch",
     "displayName": "Batch"
   },
   {
     "id": "aws",
-    "instanceType": "aws",
+    "objType": "aws",
     "displayName": "AWS"
   },
   {
     "id": "zipkin",
-    "instanceType": "tracing",
+    "objType": "tracing",
     "displayName": "Zipkin"
   },
   {
     "id": "datasource",
-    "instanceType": "datasource",
+    "objType": "datasource",
     "displayName": "DataSource",
     "subObject": "true"
   },
   {
     "id": "reqproc",
-    "instanceType": "reqproc",
+    "objType": "reqproc",
     "displayName": "RequestProc",
     "subObject": "true"
   }

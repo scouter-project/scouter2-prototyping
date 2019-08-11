@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "scouter2.proto";
+option java_outer_classname = "ObjectProto";
+
+package scouter2.proto;
+
+import "common.proto";
+
+service ObjServiceP {
+  rpc heartbeat (stream ObjP) returns (CountingP) {}
+}
+
+message ObjP {
+  string applicationId = 1;
+  string objType = 2; //host, java, redis ... etc
+  string objLegacyType = 3; //for legacy support. scouter1's user defined objType
+  string objFullName = 4;
+  int32 legacyObjHash = 5;
+  string address = 6;
+  string version = 7;
+  map<string, string> tags = 8;
+}
+

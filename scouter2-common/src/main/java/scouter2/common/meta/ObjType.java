@@ -22,13 +22,13 @@ import java.util.List;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
-public class InstanceType {
+public class ObjType {
     private String id;
     private String masterMetricName;
     private List<MetricDef> metricDefs;
 
-    public static InstanceType empty() {
-        return new InstanceType();
+    public static ObjType empty() {
+        return new ObjType();
     }
 
     public String getId() {
@@ -61,7 +61,7 @@ public class InstanceType {
 
     @Override
     public String toString() {
-        return "InstanceType{" +
+        return "ObjType{" +
                 "id='" + id + '\'' +
                 ", masterMetric='" + masterMetricName + '\'' +
                 ", metrics=" + metricDefs +

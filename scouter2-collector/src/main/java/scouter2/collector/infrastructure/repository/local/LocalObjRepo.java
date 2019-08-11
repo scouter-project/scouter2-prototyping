@@ -23,12 +23,12 @@ import org.mapdb.Atomic;
 import org.mapdb.HTreeMap;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
-import scouter2.collector.domain.instance.Instance;
-import scouter2.collector.domain.instance.InstanceRepo;
+import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjRepo;
 import scouter2.collector.infrastructure.mapdb.CommonDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.proto.InstanceP;
+import scouter2.proto.ObjP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
@@ -37,40 +37,40 @@ import scouter2.proto.InstanceP;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class LocalInstanceRepo extends LocalRepoAdapter implements InstanceRepo {
+public class LocalObjRepo extends LocalRepoAdapter implements ObjRepo {
 
     private CommonDb mapDb;
     HTreeMap<Long, byte[]> instanceMap;
     HTreeMap<String, Long> instanceNameIdMap;
     Atomic.Long instanceIdGenerator;
 
-    public LocalInstanceRepo(CommonDb mapDb) {
+    public LocalObjRepo(CommonDb mapDb) {
         this.mapDb = mapDb;
-        instanceMap = mapDb.getInstanceMap();
-        instanceNameIdMap = mapDb.getInstanceNameIdMap();
-        instanceIdGenerator = mapDb.getInstanceIdGenerator();
+        instanceMap = mapDb.getObjMap();
+        instanceNameIdMap = mapDb.getObjNameIdMap();
+        instanceIdGenerator = mapDb.getObjIdGenerator();
     }
 
     @Override
-    public void add(Instance instance) {
-        instanceMap.put(instance.getInstanceId(), instance.getProto().toByteArray());
-        instanceNameIdMap.put(instance.getProto().getInstanceFullName(), instance.getInstanceId());
+    public void add(Obj obj) {
+        instanceMap.put(obj.getObjId(), obj.getProto().toByteArray());
+        instanceNameIdMap.put(obj.getProto().getObjFullName(), obj.getObjId());
     }
 
     @Override
-    public long findIdByName(String instanceFullName) {
-        Long id = instanceNameIdMap.get(instanceFullName);
+    public long findIdByName(String objFullName) {
+        Long id = instanceNameIdMap.get(objFullName);
         return id == null ? 0 : id;
     }
 
     @Override
-    public long generateUniqueIdByName(String instanceFullName) {
-        Long id = instanceNameIdMap.get(instanceFullName);
+    public long generateUniqueIdByName(String objFullName) {
+        Long id = instanceNameIdMap.get(objFullName);
         if (id == null) {
             long newId = instanceIdGenerator.incrementAndGet();
             //There can exist something of legacy objHash.
             if (instanceMap.containsKey(newId)) {
-                return generateUniqueIdByName(instanceFullName);
+                return generateUniqueIdByName(objFullName);
             }
             return newId;
         } else {
@@ -79,16 +79,16 @@ public class LocalInstanceRepo extends LocalRepoAdapter implements InstanceRepo 
     }
 
     @Override
-    public Instance findById(long instanceId) {
-        byte[] instanceProto = instanceMap.get(instanceId);
+    public Obj findById(long objId) {
+        byte[] instanceProto = instanceMap.get(objId);
         if (instanceProto == null) {
             return null;
         }
         try {
-            return new Instance(instanceId, InstanceP.parseFrom(instanceProto));
+            return new Obj(objId, ObjP.parseFrom(instanceProto));
 
         } catch (InvalidProtocolBufferException e) {
-            log.error("Error on parse instance proto from local db. id:{}", instanceId, e);
+            log.error("Error on parse instance proto from local db. id:{}", objId, e);
             return null;
         }
     }

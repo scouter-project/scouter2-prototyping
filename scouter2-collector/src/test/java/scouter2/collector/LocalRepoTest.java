@@ -73,7 +73,7 @@ public abstract class LocalRepoTest {
             "scouter2.collector.infrastructure.mapdb",
             "scouter2.collector.infrastructure.repository.local",
             "scouter2.collector.config",
-            "scouter2.collector.domain.instance"
+            "scouter2.collector.domain.obj"
     })
     public static class LocalRepoTestConfig {
 

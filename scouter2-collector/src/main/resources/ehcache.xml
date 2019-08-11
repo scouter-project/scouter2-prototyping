@@ -34,13 +34,13 @@
     </defaultCache>
 
     <cache
-            name="instanceName"
+            name="objName"
             maxElementsInMemory="10000"
             timeToLiveSeconds="300"
     />
 
     <cache
-            name="instance"
+            name="obj"
             maxElementsInMemory="10000"
             timeToLiveSeconds="300"
     />

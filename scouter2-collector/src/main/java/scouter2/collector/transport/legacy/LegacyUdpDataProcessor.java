@@ -23,18 +23,17 @@ import org.apache.commons.lang3.StringUtils;
 import scouter.io.DataInputX;
 import scouter.io.DataOutputX;
 import scouter.lang.TimeTypeEnum;
-import scouter.lang.counters.CounterConstants;
 import scouter.lang.pack.InteractionPerfCounterPack;
 import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.Pack;
 import scouter.lang.pack.PackEnum;
 import scouter.lang.pack.PerfCounterPack;
-import scouter.lang.value.DecimalValue;
 import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.instance.InstanceReceiveQueue;
+import scouter2.collector.domain.obj.ObjReceiveQueue;
+import scouter2.collector.domain.metric.MetricReceiveQueue;
 import scouter2.collector.legacy.CounterManager;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.collection.PurgingQueue;
@@ -95,13 +94,15 @@ public class LegacyUdpDataProcessor {
     @Slf4j
     static class LegacyUdpDataProcessorThread extends Thread {
         PurgingQueue<NetData> udpDataQueue;
-        InstanceReceiveQueue instanceReceiveQueue;
+        ObjReceiveQueue objReceiveQueue;
+        MetricReceiveQueue metricReceiveQueue;
         UdpMultipacketProcessor udpMultipacketProcessor;
 
         public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue,
                                             UdpMultipacketProcessor udpMultipacketProcessor) {
             this.udpDataQueue = udpDataQueue;
-            instanceReceiveQueue = InstanceReceiveQueue.getInstance();
+            objReceiveQueue = ObjReceiveQueue.getInstance();
+            metricReceiveQueue = MetricReceiveQueue.getInstance();
             this.udpMultipacketProcessor = udpMultipacketProcessor;
         }
 
@@ -191,17 +192,13 @@ public class LegacyUdpDataProcessor {
             switch (p.getPackType()) {
                 case PackEnum.PERF_COUNTER:
                     PerfCounterPack counterPack = (PerfCounterPack) p;
-                    int objHash = HashUtil.hash(counterPack.objName);
                     if (counterPack.time == 0) {
                         counterPack.time = System.currentTimeMillis();
                     }
                     if (counterPack.timetype == 0) {
                         counterPack.timetype = TimeTypeEnum.REALTIME;
                     }
-                    counterPack.data.put(CounterConstants.COMMON_OBJHASH, new DecimalValue(objHash)); //add objHash into datafile
-                    counterPack.data.put(CounterConstants.COMMON_TIME, new DecimalValue(counterPack.time)); //add time into datafile
-
-                    //TODO PerfCountCore.add(counterPack)
+                    metricReceiveQueue.offer(LegacyMapper.toMetric(counterPack));
 //                    if (conf.log_udp_counter) {
 //                        System.out.println("DEBUG UDP COUNTER: " + p)
 //                    }
@@ -257,7 +254,7 @@ public class LegacyUdpDataProcessor {
                     counterManager.addObjectTypeIfNotExist(objectPack);
                     String family = counterManager.getCounterEngine().getFamilyNameFromObjType(objectPack.objType);
 
-                    instanceReceiveQueue.offer(LegacyMapper.toInstance(objectPack, family));
+                    objReceiveQueue.offer(LegacyMapper.toObjP(objectPack, family));
                     break;
                 case PackEnum.PERF_STATUS:
                     //TODO

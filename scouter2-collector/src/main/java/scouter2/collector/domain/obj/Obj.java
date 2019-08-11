@@ -14,33 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
 
-import org.springframework.stereotype.Component;
+package scouter2.collector.domain.obj;
+
+import com.google.protobuf.TextFormat;
+import lombok.Getter;
+import scouter2.proto.ObjP;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
-@Component
-public class InstanceAdder {
+@Getter
+public class Obj {
+    long objId;
+    ObjP proto;
 
-    InstanceService service;
-    InstanceRepo repo;
-
-    public InstanceAdder(InstanceService service, InstanceRepo repo) {
-        this.service = service;
-        this.repo = repo;
-
+    public Obj(long objId, ObjP proto) {
+        this.objId = objId;
+        this.proto = proto;
     }
 
-    public void addInstance(Instance instance) {
-        addInstanceTypeIfNotExist(instance);
-
-        Instance byId = service.findById(instance.getInstanceId());
-        repo.add(instance);
-    }
-
-    private void addInstanceTypeIfNotExist(Instance instance) {
-
+    @Override
+    public String toString() {
+        return "Instance{" +
+                "instanceId=" + objId +
+                ", proto=" + TextFormat.shortDebugString(proto) +
+                '}';
     }
 }

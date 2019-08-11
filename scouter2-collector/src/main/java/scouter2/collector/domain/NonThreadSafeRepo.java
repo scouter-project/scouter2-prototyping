@@ -14,10 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.metric;
+
+package scouter2.collector.domain;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-10
  */
-public interface NoneThreadSafeMetricRepo extends MetricRepo {
+public interface NonThreadSafeRepo {
 }

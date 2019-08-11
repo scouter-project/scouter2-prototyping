@@ -49,9 +49,9 @@ public class CommonDb {
 
     private HTreeMap<String, String> commonPropMap;
 
-    Atomic.Long instanceIdGenerator;
-    private HTreeMap<Long, byte[]> instanceMap;
-    private HTreeMap<String, Long> instanceNameIdMap;
+    Atomic.Long objIdGenerator;
+    private HTreeMap<Long, byte[]> objMap;
+    private HTreeMap<String, Long> objNameIdMap;
 
     Atomic.Long metricKeyGenerator;
     Atomic.Long metricTagKeyGenerator;
@@ -68,7 +68,7 @@ public class CommonDb {
         defineSysPropDb(configCommon);
 
         commonCollections();
-        instanceCollections();
+        objCollections();
         metricCollections();
     }
 
@@ -110,18 +110,18 @@ public class CommonDb {
                 .createOrOpen();
     }
 
-    private void instanceCollections() {
-        instanceMap = sysPropDb.hashMap("instance")
+    private void objCollections() {
+        objMap = sysPropDb.hashMap("obj")
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .createOrOpen();
 
-        instanceNameIdMap = sysPropDb.hashMap("instanceNameId")
+        objNameIdMap = sysPropDb.hashMap("objNameId")
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.LONG)
                 .createOrOpen();
 
-        instanceIdGenerator = sysPropDb.atomicLong("instanceId")
+        objIdGenerator = sysPropDb.atomicLong("objId")
                 .createOrOpen();
     }
 

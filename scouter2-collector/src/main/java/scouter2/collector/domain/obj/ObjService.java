@@ -15,30 +15,32 @@
  * limitations under the License.
  */
 
-package scouter2.collector.domain.instance;
+package scouter2.collector.domain.obj;
 
-import com.google.protobuf.TextFormat;
-import lombok.Getter;
-import scouter2.proto.InstanceP;
+import org.springframework.stereotype.Service;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
  */
-@Getter
-public class Instance {
-    long instanceId;
-    InstanceP proto;
+@Service
+public class ObjService {
+    ObjRepo repo;
+    ObjServiceCache cache;
 
-    public Instance(long instanceId, InstanceP proto) {
-        this.instanceId = instanceId;
-        this.proto = proto;
+    public ObjService(ObjRepo repo, ObjServiceCache cache) {
+        this.repo = repo;
+        this.cache = cache;
     }
 
-    @Override
-    public String toString() {
-        return "Instance{" +
-                "instanceId=" + instanceId +
-                ", proto=" + TextFormat.shortDebugString(proto) +
-                '}';
+    public long findIdByName(String objFullName) {
+        return cache.findIdByName(objFullName);
+    }
+
+    public Obj findById(long objId) {
+        return cache.findById(objId);
+    }
+
+    public long generateUniqueIdByName(String objFullName) {
+        return cache.generateUniqueIdByName(objFullName);
     }
 }

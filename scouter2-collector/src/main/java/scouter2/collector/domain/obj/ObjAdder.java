@@ -14,29 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package scouter2.collector.domain.obj;
 
-package scouter2.common.meta;
-
-import java.util.List;
+import org.springframework.stereotype.Component;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
-public class InstanceTypes {
-    List<InstanceType> instanceTypes;
+@Component
+public class ObjAdder {
 
-    public List<InstanceType> getInstanceTypes() {
-        return instanceTypes;
+    ObjService service;
+    ObjRepo repo;
+
+    public ObjAdder(ObjService service, ObjRepo repo) {
+        this.service = service;
+        this.repo = repo;
+
     }
 
-    public void setInstanceTypes(List<InstanceType> instanceTypes) {
-        this.instanceTypes = instanceTypes;
+    public void addObj(Obj obj) {
+        addInstanceTypeIfNotExist(obj);
+
+        Obj byId = service.findById(obj.getObjId());
+        repo.add(obj);
     }
 
-    @Override
-    public String toString() {
-        return "InstanceTypes{" +
-                "instanceTypes=" + instanceTypes +
-                '}';
+    private void addInstanceTypeIfNotExist(Obj obj) {
+
     }
 }

@@ -21,6 +21,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigXlog;
+import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
 
@@ -61,7 +62,7 @@ public class XlogRepoQueueConsumer extends Thread {
      * always 1 on NoneThreadSafeXlogRepo type
      */
     private static int getConsumerCount(ConfigXlog conf, XlogRepo xlogRepo) {
-        return xlogRepo instanceof NoneThreadSafeXlogRepo ? 1 : conf.getXlogRepoThreadCount();
+        return xlogRepo instanceof NonThreadSafeRepo ? 1 : conf.getXlogRepoThreadCount();
     }
 
     private XlogRepoQueueConsumer(ConfigXlog conf, XlogRepoQueue repoQueue, XlogRepo repo) {

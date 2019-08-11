@@ -23,8 +23,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
-import scouter2.collector.domain.instance.Instance;
-import scouter2.collector.domain.instance.InstanceService;
+import scouter2.collector.domain.NonThreadSafeRepo;
+import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.metric.MetricRepo;
 import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
 import scouter2.collector.infrastructure.filedb.MetricFileDb;
@@ -50,17 +51,17 @@ import static scouter2.common.util.DateUtil.MILLIS_PER_HOUR;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo {
+public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, NonThreadSafeRepo {
 
     HourUnitWithMinutes currentHourBucket;
 
     private CommonDb commonDb;
     private MetricFileDb metricFileDb;
     private MetricDb metricDb;
-    private InstanceService instanceService;
+    private ObjService instanceService;
 
     public LocalMetricRepo(CommonDb commonDb, MetricFileDb metricFileDb, MetricDb metricDb,
-                           InstanceService instanceService) {
+                           ObjService instanceService) {
         this.commonDb = commonDb;
         this.metricFileDb = metricFileDb;
         this.metricDb = metricDb;
@@ -121,7 +122,7 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo {
 
     private void publishMatched(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream,
                                 Metric4RepoP metric) {
-        Instance instance = instanceService.findById(metric.getInstanceId());
+        Obj instance = instanceService.findById(metric.getObjId());
         if (instance == null) return;
 
         if (metric.getTimestamp() >= from
@@ -136,13 +137,13 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo {
                                              long from, long to,
                                              StreamObserver<Metric4RepoP> stream, Metric4RepoP metric) {
 
-        Instance instance = instanceService.findById(metric.getInstanceId());
+        Obj instance = instanceService.findById(metric.getObjId());
         if (instance == null) return;
 
         if (metric.getTimestamp() >= from
                 && metric.getTimestamp() <= to
                 && applicationId.equals(instance.getProto().getApplicationId())
-                && instanceIds.contains(metric.getInstanceId())) {
+                && instanceIds.contains(metric.getObjId())) {
 
             stream.onNext(metric);
         }

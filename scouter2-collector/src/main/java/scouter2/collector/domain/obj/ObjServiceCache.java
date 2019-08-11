@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package scouter2.collector.domain.instance;
+package scouter2.collector.domain.obj;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,27 +25,27 @@ import org.springframework.context.annotation.Configuration;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
  */
 @Configuration
-public class InstanceServiceCache {
-    InstanceRepo instanceRepo;
+public class ObjServiceCache {
+    ObjRepo repo;
 
-    public InstanceServiceCache(InstanceRepo instanceRepo) {
-        this.instanceRepo = instanceRepo;
+    public ObjServiceCache(ObjRepo repo) {
+        this.repo = repo;
     }
 
-    @Cacheable(cacheNames = "instanceName")
-    public long findIdByName(String instanceFullName) {
-        return instanceRepo.findIdByName(instanceFullName);
+    @Cacheable(cacheNames = "objName")
+    public long findIdByName(String objFullName) {
+        return repo.findIdByName(objFullName);
     }
 
-    @CacheEvict(cacheNames = "instanceName")
-    public long generateUniqueIdByName(String instanceFullName) {
-        return instanceRepo.generateUniqueIdByName(instanceFullName);
+    @CacheEvict(cacheNames = "objName")
+    public long generateUniqueIdByName(String objFullName) {
+        return repo.generateUniqueIdByName(objFullName);
     }
 
 
-    @Cacheable(cacheNames = "instance")
-    public Instance findById(long instanceId) {
-        return instanceRepo.findById(instanceId);
+    @Cacheable(cacheNames = "obj")
+    public Obj findById(long objId) {
+        return repo.findById(objId);
     }
 
 

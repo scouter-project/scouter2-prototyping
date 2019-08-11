@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
+package scouter2.collector.domain.obj;
 
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
@@ -22,7 +22,7 @@ import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
-import scouter2.proto.InstanceP;
+import scouter2.proto.ObjP;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -30,34 +30,34 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
-public class InstanceReceiveQueueConsumer extends Thread {
-    private static ImmutableList<InstanceReceiveQueueConsumer> consumerThreads;
+public class ObjReceiveQueueConsumer extends Thread {
+    private static ImmutableList<ObjReceiveQueueConsumer> consumerThreads;
 
-    private InstanceReceiveQueue queue;
-    private InstanceAdder adder;
-    private InstanceService service;
-    private InstanceRepo repo;
+    private ObjReceiveQueue queue;
+    private ObjAdder adder;
+    private ObjService service;
+    private ObjRepo repo;
 
     @Component
     public static class Runner {
         private static AtomicInteger threadNo = new AtomicInteger();
         private static final int instanceReceiveQueueConsumerThreadCount = 1;
 
-        public Runner(InstanceReceiveQueue receiveQueue,
-                      InstanceAdder adder,
-                      InstanceService service,
-                      InstanceRepo repo) {
+        public Runner(ObjReceiveQueue receiveQueue,
+                      ObjAdder adder,
+                      ObjService service,
+                      ObjRepo repo) {
             consumerThreads = IntInterval.zeroTo(instanceReceiveQueueConsumerThreadCount - 1)
                     .collect(n -> createConsumer(receiveQueue, adder, service, repo))
                     .toImmutable();
         }
 
-        private InstanceReceiveQueueConsumer createConsumer(InstanceReceiveQueue receiveQueue,
-                                                            InstanceAdder adder,
-                                                            InstanceService service,
-                                                            InstanceRepo repo) {
+        private ObjReceiveQueueConsumer createConsumer(ObjReceiveQueue receiveQueue,
+                                                       ObjAdder adder,
+                                                       ObjService service,
+                                                       ObjRepo repo) {
 
-            InstanceReceiveQueueConsumer consumer = new InstanceReceiveQueueConsumer(receiveQueue, adder, service, repo);
+            ObjReceiveQueueConsumer consumer = new ObjReceiveQueueConsumer(receiveQueue, adder, service, repo);
             consumer.setDaemon(true);
             consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
             consumer.start();
@@ -66,10 +66,10 @@ public class InstanceReceiveQueueConsumer extends Thread {
         }
     }
 
-    private InstanceReceiveQueueConsumer(InstanceReceiveQueue queue,
-                                         InstanceAdder adder,
-                                         InstanceService service,
-                                         InstanceRepo repo) {
+    private ObjReceiveQueueConsumer(ObjReceiveQueue queue,
+                                    ObjAdder adder,
+                                    ObjService service,
+                                    ObjRepo repo) {
         this.queue = queue;
         this.adder = adder;
         this.service = service;
@@ -80,13 +80,13 @@ public class InstanceReceiveQueueConsumer extends Thread {
     public void run() {
         while (CoreRun.isRunning()) {
             try {
-                InstanceP instanceProto = queue.take();
-                long instanceId = instanceProto.getLegacyInstanceHash() != 0 ?
-                        instanceProto.getLegacyInstanceHash()
-                        : findInstanceId(instanceProto.getInstanceFullName());
+                ObjP objP = queue.take();
+                long instanceId = objP.getLegacyObjHash() != 0 ?
+                        objP.getLegacyObjHash()
+                        : findInstanceId(objP.getObjFullName());
 
-                Instance instance =  new Instance(instanceId, instanceProto) ;
-                adder.addInstance(instance);
+                Obj obj =  new Obj(instanceId, objP) ;
+                adder.addObj(obj);
 
             } catch (Exception e) {
                 log.error(e.getMessage(), e);
@@ -95,11 +95,11 @@ public class InstanceReceiveQueueConsumer extends Thread {
         }
     }
 
-    private long findInstanceId(String instanceFullName) {
-        long instanceId = service.findIdByName(instanceFullName);
-        if (instanceId == 0) {
-            instanceId = service.generateUniqueIdByName(instanceFullName);
+    private long findInstanceId(String objFullName) {
+        long objId = service.findIdByName(objFullName);
+        if (objId == 0) {
+            objId = service.generateUniqueIdByName(objFullName);
         }
-        return instanceId;
+        return objId;
     }
 }

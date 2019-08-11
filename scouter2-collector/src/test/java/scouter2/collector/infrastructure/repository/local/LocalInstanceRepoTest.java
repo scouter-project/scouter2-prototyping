@@ -29,7 +29,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public class LocalInstanceRepoTest extends LocalRepoTest {
 
     @Autowired
-    LocalInstanceRepo repo;
+    LocalObjRepo repo;
 
     @Test
     public void generateUniqueIdByName() {

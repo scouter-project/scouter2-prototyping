@@ -14,24 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.instance;
+package scouter2.collector.domain.obj;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.collection.PurgingQueue;
-import scouter2.proto.InstanceP;
+import scouter2.proto.ObjP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
 @Component
-public class InstanceReceiveQueue {
-    private static InstanceReceiveQueue instance;
-    private PurgingQueue<InstanceP> queue;
+public class ObjReceiveQueue {
+    private static ObjReceiveQueue instance;
+    private PurgingQueue<ObjP> queue;
 
-    public InstanceReceiveQueue() {
-        synchronized (InstanceReceiveQueue.class) {
+    public ObjReceiveQueue() {
+        synchronized (ObjReceiveQueue.class) {
             if (instance != null) {
                 throw new IllegalStateException();
             }
@@ -43,18 +43,18 @@ public class InstanceReceiveQueue {
     /**
      * for 3rd party receiver support
      */
-    public static InstanceReceiveQueue getInstance() {
+    public static ObjReceiveQueue getInstance() {
         return instance;
     }
 
-    public void offer(InstanceP instance) {
-        boolean success = queue.offerOverflowClear(instance);
+    public void offer(ObjP obj) {
+        boolean success = queue.offerOverflowClear(obj);
         if (!success) {
             //TODO logging
         }
     }
 
-    public InstanceP take() throws InterruptedException {
+    public ObjP take() throws InterruptedException {
         return queue.take();
     }
 }

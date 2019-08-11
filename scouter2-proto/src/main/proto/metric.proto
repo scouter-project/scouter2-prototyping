@@ -14,16 +14,16 @@ service MetricServiceP {
 
 message MetricP {
   int64 timestamp = 1;
-  string instanceFullName = 2;
+  string objFullName = 2;
   MetricTypeP metricType = 3;
+  TimeTypeP timeType = 4;
   map<string, double> metrics = 5;
-  map<string, string> tags = 6;
 }
 
 message Metric4RepoP {
   int64 timestamp = 1;
-  int64 instanceId = 2;
+  int64 objId = 2;
   MetricTypeP metricType = 3;
+  TimeTypeP timeType = 4;
   map<int64, double> metrics = 5;
-  map<int64, string> tags = 6;
 }

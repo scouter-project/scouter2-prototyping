@@ -106,7 +106,7 @@ public class LegacyUdpTransport extends Thread {
                 processor.offer(data, packet.getAddress());
             }
         } catch(Throwable t) {
-            log.error("S151", 10, t);
+            log.error("S151 {}", 10, t);
         }
     }
 }
