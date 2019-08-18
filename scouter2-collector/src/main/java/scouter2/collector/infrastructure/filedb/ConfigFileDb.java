@@ -20,10 +20,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.config.ScouterConfigAdapter;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
 import scouter2.common.helper.Props;
 
 import java.util.List;
@@ -36,14 +36,16 @@ import java.util.List;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class ConfigFileDb implements ScouterConfigIF {
+public class ConfigFileDb extends ScouterConfigAdapter {
+    static ConfigFileDb initValuedConfig = new ConfigFileDb();
 
     @Override
     public List<ConfigItem> getAllConfigs() {
-        return null;
+        return super.getAllConfigs(initValuedConfig);
     }
 
     @Override
     public void refresh(Props props) {
+        super.refresh(initValuedConfig, props);
     }
 }

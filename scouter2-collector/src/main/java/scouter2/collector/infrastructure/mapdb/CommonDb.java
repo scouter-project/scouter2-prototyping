@@ -18,17 +18,20 @@
 package scouter2.collector.infrastructure.mapdb;
 
 import lombok.Getter;
-import org.mapdb.Atomic;
+import lombok.extern.slf4j.Slf4j;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.FileUtil;
+
+import java.io.Closeable;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
@@ -37,98 +40,58 @@ import scouter2.common.util.FileUtil;
 @Component
 @RepoTypeMatch("local")
 @Conditional(RepoTypeSelectorCondition.class)
-public class CommonDb {
+@Slf4j
+public class CommonDb implements Closeable {
 
-    public static final String SYS_PROPS_DB_DIR = "/common/";
-    public static final String SYS_PROPS_DB = SYS_PROPS_DB_DIR + "sysProps.db";
-    public static final String COUNTER_INDEX = "/%s/counter.idx";
+    public static final String COMMON_DB_DIR = "/common/";
+    public static final String SYS_PROPS_DB = COMMON_DB_DIR + "sys_prop.db";
 
     private ConfigCommon configCommon;
     private ConfigMapDb configMapDb;
-    private DB sysPropDb;
+    private DB db;
 
     private HTreeMap<String, String> commonPropMap;
-
-    Atomic.Long objIdGenerator;
-    private HTreeMap<Long, byte[]> objMap;
-    private HTreeMap<String, Long> objNameIdMap;
-
-    Atomic.Long metricKeyGenerator;
-    Atomic.Long metricTagKeyGenerator;
-    private HTreeMap<Long, String> metricDict;
-    private HTreeMap<Long, String> metricTagDict;
-    private HTreeMap<String, Long> metricReverseDict;
-    private HTreeMap<String, Long> metricTagReverseDict;
 
     public CommonDb(ConfigCommon configCommon, ConfigMapDb configMapDb) {
         this.configCommon = configCommon;
         this.configMapDb = configMapDb;
 
         FileUtil.mkdirs(configCommon.getDbDir());
-        defineSysPropDb(configCommon);
+        defineDb(configCommon);
 
         commonCollections();
-        objCollections();
-        metricCollections();
+
+        log.info("[CommonDb] open.");
+        ShutdownManager.getInstance().register(this::close);
     }
 
-    private void defineSysPropDb(ConfigCommon configCommon) {
-        FileUtil.mkdirs(configCommon.getDbDir() + SYS_PROPS_DB_DIR);
-        sysPropDb = DBMaker.fileDB(configCommon.getDbDir() + SYS_PROPS_DB)
+    @Override
+    public synchronized void close() {
+        if (!db.isClosed()) {
+            log.info("[CommonDb] closing.");
+            db.commit();
+            db.close();
+        }
+    }
+
+    private void defineDb(ConfigCommon configCommon) {
+        FileUtil.mkdirs(configCommon.getDbDir() + COMMON_DB_DIR);
+        db = DBMaker.fileDB(configCommon.getDbDir() + SYS_PROPS_DB)
                 .fileChannelEnable()
                 .fileMmapEnableIfSupported()
                 .closeOnJvmShutdown()
                 .transactionEnable()
+                .checksumHeaderBypass()
                 .allocateStartSize(1 * 1024 * 1024)
-                .allocateIncrement(5 * 1024 * 1024)
+                .allocateIncrement(3 * 1024 * 1024)
                 .make();
     }
 
-    private void metricCollections() {
-        metricDict = sysPropDb.hashMap("metricDict")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.STRING)
-                .counterEnable()
-                .createOrOpen();
-
-        metricTagDict = sysPropDb.hashMap("metricTagDict")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.STRING)
-                .counterEnable()
-                .createOrOpen();
-
-        metricReverseDict = sysPropDb.hashMap("metricReverseDict")
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(Serializer.LONG)
-                .counterEnable()
-                .createOrOpen();
-
-        metricTagReverseDict = sysPropDb.hashMap("metricTagReverseDict")
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(Serializer.LONG)
-                .counterEnable()
-                .createOrOpen();
-    }
-
-    private void objCollections() {
-        objMap = sysPropDb.hashMap("obj")
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.BYTE_ARRAY)
-                .createOrOpen();
-
-        objNameIdMap = sysPropDb.hashMap("objNameId")
-                .keySerializer(Serializer.STRING)
-                .valueSerializer(Serializer.LONG)
-                .createOrOpen();
-
-        objIdGenerator = sysPropDb.atomicLong("objId")
-                .createOrOpen();
-    }
-
     private void commonCollections() {
-        commonPropMap = sysPropDb.hashMap("commonProp")
+        commonPropMap = db.hashMap("commonProp")
                 .keySerializer(Serializer.STRING)
                 .valueSerializer(Serializer.STRING)
+                .counterEnable()
                 .createOrOpen();
     }
 }

@@ -19,6 +19,7 @@ package scouter2.collector.main;
 
 import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.plugin.Scouter2PluginMeta;
 import scouter2.collector.transport.TransportInitializer;
 
@@ -30,6 +31,9 @@ import java.util.Set;
  */
 @Slf4j
 public class TransportLauncher {
+
+    public static final ThrottleConfig S_0006 = ThrottleConfig.of("S0006");
+
     public static void startTransports() {
         startScouterTransport();
         start3rdPartyTransport();
@@ -63,7 +67,7 @@ public class TransportLauncher {
                 ShutdownManager.getInstance().register(transport::stop);
 
             } catch (Exception e) {
-                log.error("Exception on loading scouter transport classes", e);
+                log.error("Exception on loading scouter transport classes", S_0006, e);
             }
         }
     }

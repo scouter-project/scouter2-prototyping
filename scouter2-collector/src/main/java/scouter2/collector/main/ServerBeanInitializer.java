@@ -18,6 +18,7 @@ package scouter2.collector.main;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.support.ConfigManager;
 import scouter2.collector.config.support.ConfigWatcher;
 import scouter2.collector.plugin.Scouter2PluginMeta;
@@ -33,6 +34,7 @@ import java.util.Set;
 @Slf4j
 @Component
 public class ServerBeanInitializer {
+    public static final ThrottleConfig S_0007 = ThrottleConfig.of("S0007");
     ConfigManager configManager;
 
     public ServerBeanInitializer(ConfigManager configPublisher) {
@@ -62,7 +64,7 @@ public class ServerBeanInitializer {
                     configManager.register(config);
 
                 } catch (Exception e) {
-                    log.error("Exception on loading scouter config classes", e);
+                    log.error("Exception on loading scouter config classes", S_0007, e);
                 }
             }
         }

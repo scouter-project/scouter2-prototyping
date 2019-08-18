@@ -23,6 +23,7 @@ import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -119,6 +120,22 @@ public class ThreadUtil {
 		for (int i = 0; i < se.length; i++) {
 			buff.add("\t" + se[i]);
 		}
+	}
+
+	public static ThreadPoolExecutor createExecutor(final String name, int min, int max, int keepAlive, final boolean isDaemon) {
+		ThreadPoolExecutor executor = new ThreadPoolExecutor(min, max, keepAlive, TimeUnit.MILLISECONDS,
+				new SynchronousQueue<Runnable>(), new ThreadFactory() {
+
+			private int threadNum = 1;
+
+			public Thread newThread(Runnable r) {
+				Thread t = new Thread(r, name + (threadNum++));
+				t.setDaemon(isDaemon);
+				return t;
+			}
+
+		});
+		return executor;
 	}
 
 	public static ThreadPoolExecutor createExecutor(final String name, int count, int keepAlive, final boolean isDaemon) {

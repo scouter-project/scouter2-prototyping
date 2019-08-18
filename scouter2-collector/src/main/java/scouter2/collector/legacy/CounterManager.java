@@ -29,6 +29,7 @@ import scouter.lang.counters.CounterEngine;
 import scouter.lang.pack.MapPack;
 import scouter.lang.pack.ObjectPack;
 import scouter.util.FileUtil;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.legacy.util.XmlUtil;
 import scouter2.collector.main.CollectorConstants;
 
@@ -46,6 +47,11 @@ import static scouter.lang.constants.ScouterConstants.TAG_OBJ_DETECTED_TYPE;
 public class CounterManager {
 
 	private static final String CUSTOM_FILENAME = "legacy.counters.site.xml";
+	public static final ThrottleConfig S_0014 = ThrottleConfig.of("S0014");
+	public static final ThrottleConfig S_0016 = ThrottleConfig.of("S0016");
+	public static final ThrottleConfig S_0017 = ThrottleConfig.of("S0017");
+	public static final ThrottleConfig S_0018 = ThrottleConfig.of("S0018");
+	public static final ThrottleConfig S_0019 = ThrottleConfig.of("S0019");
 	private static CounterManager instance;
 
 	CounterEngine engine = new CounterEngine();
@@ -75,7 +81,7 @@ public class CounterManager {
 			xmlContent = FileUtil.readAll(in);
 			engine.parse(xmlContent);
 		} catch (Exception e) {
-			log.error("Failed read " + path);
+			log.error("Failed read " + path, S_0014);
 		} finally {
 			FileUtil.close(in);
 		}
@@ -320,7 +326,7 @@ public class CounterManager {
 			setObjectTypeAttribute(doc, objElement, objType);
 			typesElements.appendChild(objElement);
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(e.getMessage(), S_0016, e);
 			return null;
 		}
 		return doc;
@@ -369,7 +375,7 @@ public class CounterManager {
 				return doc;
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(e.getMessage(), S_0017, e);
 			return null;
 		}
 		return null;
@@ -420,7 +426,7 @@ public class CounterManager {
 				familyElement.appendChild(counterElement);
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(e.getMessage(), S_0018, e);
 			return null;
 		}
 		return doc;
@@ -438,7 +444,7 @@ public class CounterManager {
 				doc = builder.newDocument();
 			}
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(e.getMessage(), S_0019, e);
 		}
 		return doc;
 	}

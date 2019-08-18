@@ -66,6 +66,11 @@
             <artifactId>slf4j-api</artifactId>
             <version>1.7.26</version>
         </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast</artifactId>
+            <version>3.12.2</version>
+        </dependency>
 
         <!-- logback -->
         <dependency>

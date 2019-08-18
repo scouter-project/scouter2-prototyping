@@ -21,6 +21,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.StringUtils;
 import scouter2.collector.common.DefaultObjectMapper;
+import scouter2.collector.common.log.ThrottleConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import java.util.Map;
 public class JsonUtil {
 
     private static final DefaultObjectMapper objectMapper;
+    public static final ThrottleConfig S_0008 = ThrottleConfig.of("S0008");
 
     static {
         objectMapper = new DefaultObjectMapper();
@@ -82,7 +84,7 @@ public class JsonUtil {
         try {
             stringObjectMap = toObject(json, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
-            log.error("[ERROR] JsonUtil.toMapWithoutException(), msg: {}, json: {}", e.getMessage(), json);
+            log.error("[ERROR] JsonUtil.toMapWithoutException(), msg: {}, json: {}", e.getMessage(), json, S_0008);
         }
         return stringObjectMap;
     }

@@ -23,7 +23,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
 import scouter2.common.helper.Props;
 
 import java.util.List;
@@ -37,19 +36,20 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConfigMetric implements ScouterConfigIF {
+public class ConfigMetric extends ScouterConfigAdapter {
+    static ConfigMetric initValuedConfig = new ConfigMetric();
 
-    int metricQueueSize = 10000;
-    int metricReceiverThreadCount = 1;
-    int metricRepoThreadCount = 1;
+    @Configurable int metricQueueSize = 10000;
+    @Configurable int metricReceiverThreadCount = 1;
+    @Configurable int metricRepoThreadCount = 1;
 
     @Override
     public List<ConfigItem> getAllConfigs() {
-        return null;
+        return super.getAllConfigs(initValuedConfig);
     }
 
     @Override
     public void refresh(Props props) {
-
+        super.refresh(initValuedConfig, props);
     }
 }

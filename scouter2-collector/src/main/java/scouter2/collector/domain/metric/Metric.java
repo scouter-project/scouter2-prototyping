@@ -54,7 +54,7 @@ public class Metric {
         return builder.build();
     }
 
-    private long toObjId(String objFullName, ObjService objService) {
+    private Long toObjId(String objFullName, ObjService objService) {
         return objService.findIdByName(objFullName);
     }
 
@@ -64,15 +64,6 @@ public class Metric {
         Map<Long, Double> newMap = new HashMap<>();
         for (Map.Entry<String, Double> e : metricsMap.entrySet()) {
             newMap.put(metricService.findMetricIdAbsentGen(e.getKey()), e.getValue());
-        }
-        return newMap;
-    }
-
-    protected static Map<Long, String> toEncodedKeyTagMap(Map<String, String> tagsMap,
-                                                          MetricService metricService) {
-        Map<Long, String> newMap = new HashMap<>();
-        for (Map.Entry<String, String> e : tagsMap.entrySet()) {
-            newMap.put(metricService.findTagIdAbsentGen(e.getKey()), e.getValue());
         }
         return newMap;
     }

@@ -17,14 +17,13 @@
 
 package scouter2.collector.domain.obj;
 
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Service;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
  */
-@Configuration
+@Service
 public class ObjServiceCache {
     ObjRepo repo;
 
@@ -32,21 +31,14 @@ public class ObjServiceCache {
         this.repo = repo;
     }
 
-    @Cacheable(cacheNames = "objName")
-    public long findIdByName(String objFullName) {
+    @Cacheable(cacheNames = "objId", unless="#result == null")
+    public Long findIdByName(String objFullName) {
         return repo.findIdByName(objFullName);
     }
-
-    @CacheEvict(cacheNames = "objName")
-    public long generateUniqueIdByName(String objFullName) {
-        return repo.generateUniqueIdByName(objFullName);
-    }
-
 
     @Cacheable(cacheNames = "obj")
     public Obj findById(long objId) {
         return repo.findById(objId);
     }
-
 
 }

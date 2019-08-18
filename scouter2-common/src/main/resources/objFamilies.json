@@ -1,0 +1,642 @@
+[
+  {
+    "id": "host",
+    "masterMetricName": "Cpu",
+    "metricsDefs": [
+      {
+        "id": "Cpu",
+        "displayName": "CPU",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "cpu.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "SysCpu",
+        "displayName": "CPU | Sys",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "cpu.png",
+        "displayAll": "false",
+        "displayTotal": "false"
+      },
+      {
+        "id": "UserCpu",
+        "displayName": "CPU | User",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "cpu.png",
+        "displayAll": "false",
+        "displayTotal": "false"
+      },
+      {
+        "id": "Mem",
+        "displayName": "Memory",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "MemA",
+        "displayName": "Memory | Available",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "MemU",
+        "displayName": "Memory | ActualUsed",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "MemT",
+        "displayName": "Memory | Total",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "PageIn",
+        "displayName": "Swap | PageIn",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "page",
+          "format": "REAL"
+        },
+        "icon4Legacy": "swap.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "PageOut",
+        "displayName": "Swap | PageOut",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "page",
+          "format": "REAL"
+        },
+        "icon4Legacy": "swap.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "Swap",
+        "displayName": "Swap",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "swap.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "SwapT",
+        "displayName": "Swap | Total",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "swap.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "SwapU",
+        "displayName": "Swap | Used",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "swap.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "NetInBound",
+        "displayName": "Net | InBound",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "bytes_recv.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "NetOutBound",
+        "displayName": "Net | OutBound",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "bytes_recv.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "TcpStatCLS",
+        "displayName": "Net | CLOSE_WAIT",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "drop.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "TcpStatTIM",
+        "displayName": "Net | TIME_WAIT",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time_read.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "TcpStatFIN",
+        "displayName": "Net | FIN_WAIT",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time_read.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "TcpStatEST",
+        "displayName": "Net | ESTABLISHED",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time_read.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "NetRxBytes",
+        "displayName": "Net | RX Bytes",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes/sec",
+          "format": "REAL"
+        },
+        "icon4Legacy": "packet_recv.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "NetTxBytes",
+        "displayName": "Net | TX Bytes",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes/sec",
+          "format": "REAL"
+        },
+        "icon4Legacy": "packet_sent.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "DiskReadBytes",
+        "displayName": "Disk | ReadBytes",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes/sec",
+          "format": "REAL"
+        },
+        "icon4Legacy": "disk_read.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "DiskWriteBytes",
+        "displayName": "Disk | WriteBytes",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes/sec",
+          "format": "REAL"
+        },
+        "icon4Legacy": "disk_write.png",
+        "displayTotal": "false"
+      }
+    ]
+  },
+  {
+    "id": "javaee",
+    "masterMetricName": "ActiveService",
+    "metricsDefs": [
+      {
+        "id": "RecentUser",
+        "displayName": "Recent User",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "visitor.png"
+      },
+      {
+        "id": "HeapTotUsage",
+        "displayName": "Heap Total Usage",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayAll": "false",
+        "displayTotal": "false"
+      },
+      {
+        "id": "GcCount",
+        "displayName": "GC Count",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "gc.png"
+      },
+      {
+        "id": "ServiceCount",
+        "displayName": "Service Count",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt/min",
+          "format": "REAL"
+        },
+        "icon4Legacy": "service_count.png"
+      },
+      {
+        "id": "ErrorRate",
+        "displayName": "Error Rate",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "rate.png"
+      },
+      {
+        "id": "HeapUsed",
+        "displayName": "Heap Used",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "HeapTotal",
+        "displayName": "Heap Total",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "ElapsedTime",
+        "displayName": "Elapsed Time",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "SqlTimeByService",
+        "displayName": "SQL Time by service",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "ApiTimeByService",
+        "displayName": "API Time by service",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "Elapsed90%",
+        "displayName": "Elapsed 90%",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "QueuingTime",
+        "displayName": "Queuing Time",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "time.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "ActiveService",
+        "displayName": "Active Service",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "act_service.png"
+      },
+      {
+        "id": "GcTime",
+        "displayName": "GC Time",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "ms",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "gc.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "TPS",
+        "displayName": "TPS",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "tps",
+          "format": "REAL"
+        },
+        "icon4Legacy": "transaction.png"
+      },
+      {
+        "id": "ProcCpu",
+        "displayName": "ProcessCpu",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "cpu.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "PermUsed",
+        "displayName": "Perm Used",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "MB",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "PermPercent",
+        "displayName": "Perm %",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "FdUsage",
+        "displayName": "File Descriptor",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "memory.png",
+        "displayAll": "false",
+        "displayTotal": "false"
+      }
+    ]
+  },
+  {
+    "id": "datasource",
+    "masterMetricName": "ConnActive",
+    "metricsDefs": [
+      {
+        "id": "ConnIdle",
+        "displayName": "Conn Idle",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "conn_idle.png"
+      },
+      {
+        "id": "ConnActive",
+        "displayName": "Conn Active",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "conn_act.png"
+      },
+      {
+        "id": "ConnMax",
+        "displayName": "Conn Max",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "database_go.png"
+      }
+    ]
+  },
+  {
+    "id": "reqproc",
+    "masterMetricName": "BytesSent",
+    "metricsDefs": [
+      {
+        "id": "ErrorCount",
+        "displayName": "Error Count",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "error_count.png"
+      },
+      {
+        "id": "BytesSent",
+        "displayName": "Bytes Sent",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes",
+          "format": "REAL"
+        },
+        "icon4Legacy": "bytes_sent.png"
+      },
+      {
+        "id": "RequestCount",
+        "displayName": "Request Count",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "req_count.gif"
+      },
+      {
+        "id": "ProcessingTime",
+        "displayName": "Processing Time",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "sec",
+          "format": "REAL"
+        },
+        "icon4Legacy": "proc_time.png"
+      },
+      {
+        "id": "BytesReceived",
+        "displayName": "Bytes Received",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "bytes",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "bytes_recv.png"
+      }
+    ]
+  },
+  {
+    "id": "batch",
+    "masterMetricName": "RunCount",
+    "metricsDefs": [
+      {
+        "id": "BatchService",
+        "displayName": "Batch Service",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "service_count.png"
+      },
+      {
+        "id": "BatchStart",
+        "displayName": "Batch Accumulate Start",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "service_count.png"
+      },
+      {
+        "id": "BatchEnd",
+        "displayName": "Batch Accumulate End",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "service_count.png"
+      },
+      {
+        "id": "BatchEndNoSignal",
+        "displayName": "Batch Accumulate End(No Signal)",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "service_count.png"
+      }
+    ]
+  },
+  {
+    "id": "aws",
+    "masterMetricName": "Cpu",
+    "metricsDefs": [
+      {
+        "id": "Cpu",
+        "displayName": "CPU",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "cpu.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "Mem",
+        "displayName": "Memory",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "%",
+          "format": "REAL"
+        },
+        "icon4Legacy": "memory.png",
+        "displayTotal": "false"
+      },
+      {
+        "id": "RequestCount",
+        "displayName": "Request Count",
+        "metricType": "MEASURE",
+        "unit": {
+          "display": "cnt",
+          "format": "INTEGER"
+        },
+        "icon4Legacy": "req_count.gif"
+      }
+    ]
+  },
+  {
+    "id": "tracing"
+  }
+]

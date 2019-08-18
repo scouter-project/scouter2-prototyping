@@ -19,9 +19,9 @@ package scouter2.collector.transport.legacy;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 import scouter.util.LongEnumer;
 import scouter.util.LongKeyLinkedMap;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.domain.obj.ObjReceiveQueue;
 
@@ -32,9 +32,9 @@ import java.net.InetAddress;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-10
  */
 @Slf4j
-@Component
 public class UdpMultipacketProcessor {
     private static final int CAPACITY = 1000;
+    public static final ThrottleConfig S_0013 = ThrottleConfig.of("S0013");
     private static UdpMultipacketProcessor instance;
 
     private LongKeyLinkedMap<UdpMultipacket> buffer;
@@ -60,7 +60,7 @@ public class UdpMultipacketProcessor {
             try {
                 checkExpired();
             } catch (Exception e) {
-                log.error(e.getMessage(), e);
+                log.error(e.getMessage(), S_0013, e);
             }
         }
     }
@@ -90,7 +90,7 @@ public class UdpMultipacketProcessor {
             UdpMultipacket p = buffer.get(key);
             if (p.isExpired()) {
                 buffer.remove(key);
-                if (configLegacy.isLogExpiredMultipacket()) {
+                if (configLegacy.isLegacyLogExpiredMultipacket()) {
                     log.debug("S150 {}", p.toString());
                 }
             }

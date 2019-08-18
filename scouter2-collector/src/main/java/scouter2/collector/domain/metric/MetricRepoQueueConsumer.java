@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigMetric;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class MetricRepoQueueConsumer extends Thread {
+    public static final ThrottleConfig S_0003 = ThrottleConfig.of("S0003");
     private static ImmutableList<MetricRepoQueueConsumer> consumerThreads;
 
     ConfigMetric conf;
@@ -97,25 +99,22 @@ public class MetricRepoQueueConsumer extends Thread {
         while (CoreRun.isRunning()) {
             try {
                 Metric metric = repoQueue.take();
-
                 addToRepo(metric);
-                continue;
 
             } catch (Throwable t) {
-                t.printStackTrace();
-                log.error(t.getMessage(), t);
+                log.error(t.getMessage(), S_0003, t);
             }
         }
     }
 
     private void addToRepo(Metric metric) {
-        long objId = objService.findIdByName(metric.getProto().getObjFullName());
-        if (objId == 0) return;
+        Long objId = objService.findIdByName(metric.getProto().getObjFullName());
+        if (objId == null) return;
 
         Obj obj = objService.findById(objId);
         if (obj == null) return;
 
-        repo.add(obj.getProto().getApplicationId(),
+        repo.add(obj.getApplicationId(),
                 metric.toRepoType(objId, metricService, repo instanceof NonThreadSafeRepo));
     }
 }

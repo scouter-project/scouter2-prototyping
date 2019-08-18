@@ -8,4 +8,16 @@ public class ConfigItem {
     String value;
     String defaultValue;
     String description;
+    int configValueType;
+
+    public ConfigItem() {
+    }
+
+    public ConfigItem(String key, String value, String defaultValue, String description, int configValueType) {
+        this.key = key;
+        this.value = value;
+        this.defaultValue = defaultValue;
+        this.description = description;
+        this.configValueType = configValueType;
+    }
 }

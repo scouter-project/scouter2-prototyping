@@ -17,18 +17,23 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.extern.slf4j.Slf4j;
 import org.mapdb.Atomic;
 import org.mapdb.HTreeMap;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjRepo;
-import scouter2.collector.infrastructure.mapdb.CommonDb;
+import scouter2.collector.domain.obj.ObjRepoAdapter;
+import scouter2.collector.infrastructure.mapdb.ObjDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.proto.ObjP;
+import scouter2.common.collection.LruMap;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
@@ -37,42 +42,90 @@ import scouter2.proto.ObjP;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class LocalObjRepo extends LocalRepoAdapter implements ObjRepo {
+public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSafeRepo {
 
-    private CommonDb mapDb;
-    HTreeMap<Long, byte[]> instanceMap;
-    HTreeMap<String, Long> instanceNameIdMap;
-    Atomic.Long instanceIdGenerator;
+    private ObjDb db;
+    private HTreeMap<Long, Obj> objMap;
+    private HTreeMap<String, Long> objNameIdMap;
+    private Atomic.Long objIdGenerator;
 
-    public LocalObjRepo(CommonDb mapDb) {
-        this.mapDb = mapDb;
-        instanceMap = mapDb.getObjMap();
-        instanceNameIdMap = mapDb.getObjNameIdMap();
-        instanceIdGenerator = mapDb.getObjIdGenerator();
+    private Map<Long, Obj> objCache = LruMap.newOfMax(2000);
+    private Map<String, Long> objNameIdCache = LruMap.newOfMax(2000);
+
+    public LocalObjRepo(ObjDb objDb) {
+        this.db = objDb;
+        objMap = objDb.getObjMap();
+        objNameIdMap = objDb.getObjNameIdMap();
+        objIdGenerator = objDb.getObjIdGenerator();
+
+        for (Obj obj : findAllFromPersistence()) {
+            objCache.put(obj.getObjId(), obj);
+            objNameIdCache.put(obj.getObjFullName(), obj.getObjId());
+        }
     }
+
+    @Override
+    public String getRepoType() {
+        return LocalRepoConstant.TYPE_NAME;
+    }
+
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public void destroy() {
+    }
+
 
     @Override
     public void add(Obj obj) {
-        instanceMap.put(obj.getObjId(), obj.getProto().toByteArray());
-        instanceNameIdMap.put(obj.getProto().getObjFullName(), obj.getObjId());
+        boolean renew = true;
+        Obj cached = objCache.get(obj.getObjId());
+        if (cached != null) {
+            renew = !cached.equals(obj);
+        }
+
+        if (renew) {
+            objMap.put(obj.getObjId(), obj);
+            objNameIdMap.put(obj.getFullNameOrLegacyHash(), obj.getObjId());
+
+            objCache.put(obj.getObjId(), obj);
+            objNameIdCache.put(obj.getFullNameOrLegacyHash(), obj.getObjId());
+        }
     }
 
     @Override
-    public long findIdByName(String objFullName) {
-        Long id = instanceNameIdMap.get(objFullName);
-        return id == null ? 0 : id;
+    public void remove(long objId) {
+        objMap.remove(objId);
+        objCache.remove(objId);
     }
 
     @Override
-    public long generateUniqueIdByName(String objFullName) {
-        Long id = instanceNameIdMap.get(objFullName);
-        if (id == null) {
-            long newId = instanceIdGenerator.incrementAndGet();
-            //There can exist something of legacy objHash.
-            if (instanceMap.containsKey(newId)) {
-                return generateUniqueIdByName(objFullName);
+    public Long findIdByName(String objFullName) {
+        Long objId = objNameIdCache.get(objFullName);
+        if (objId == null) {
+            objId =  objNameIdMap.get(objFullName);
+            if (objId != null) {
+                objNameIdCache.put(objFullName, objId);
             }
+        }
+        return objId;
+    }
+
+    @Override
+    public Long generateUniqueIdByName(String fullNameOrLegacyHash) {
+        Long id = objNameIdMap.get(fullNameOrLegacyHash);
+        if (id == null) {
+            long newId = objIdGenerator.incrementAndGet();
+            //There can exist something of legacy objHash.
+            if (objMap.containsKey(newId)) {
+                return generateUniqueIdByName(fullNameOrLegacyHash);
+            }
+            objNameIdMap.put(fullNameOrLegacyHash, newId);
+            objNameIdCache.put(fullNameOrLegacyHash, newId);
             return newId;
+
         } else {
             return id;
         }
@@ -80,16 +133,41 @@ public class LocalObjRepo extends LocalRepoAdapter implements ObjRepo {
 
     @Override
     public Obj findById(long objId) {
-        byte[] instanceProto = instanceMap.get(objId);
-        if (instanceProto == null) {
-            return null;
+        Obj obj = objCache.get(objId);
+        if (obj == null) {
+            obj = objMap.get(objId);
+            if (obj != null) {
+                objCache.put(objId, obj);
+            }
         }
-        try {
-            return new Obj(objId, ObjP.parseFrom(instanceProto));
+        return obj;
+    }
 
-        } catch (InvalidProtocolBufferException e) {
-            log.error("Error on parse instance proto from local db. id:{}", objId, e);
-            return null;
+    @Override
+    public List<Obj> findByApplicationId(String applicationId) {
+        return objCache.values().stream()
+                .filter(obj -> !obj.isDeleted())
+                .filter(obj -> applicationId.equals(obj.getApplicationId()))
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public List<Obj> findAll() {
+        return objCache.values().stream()
+                .filter(obj -> !obj.isDeleted())
+                .collect(Collectors.toList());
+    }
+
+    protected List<Obj> findAllFromPersistence() {
+        return objMap.values().stream()
+                .filter(obj -> !obj.isDeleted())
+                .collect(Collectors.toList());
+    }
+
+    public void commit() {
+        if (!db.getDb().isClosed()) {
+            db.getDb().commit();
         }
     }
 }

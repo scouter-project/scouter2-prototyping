@@ -18,6 +18,7 @@ message MetricP {
   MetricTypeP metricType = 3;
   TimeTypeP timeType = 4;
   map<string, double> metrics = 5;
+  int32 legacyObjHash = 6;
 }
 
 message Metric4RepoP {

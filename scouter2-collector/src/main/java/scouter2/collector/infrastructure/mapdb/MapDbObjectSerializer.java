@@ -24,11 +24,13 @@ import org.mapdb.DataInput2;
 import org.mapdb.DataOutput2;
 import org.mapdb.Serializer;
 import scouter2.collector.common.kryo.KryoSupport;
+import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -43,21 +45,25 @@ public class MapDbObjectSerializer<T> implements Serializer<T>, Serializable {
         List<Pair<Class<?>, Integer>> classAndIdList = new ArrayList<>();
         classAndIdList.add(Tuples.pair(TreeSet.class, 21));
         classAndIdList.add(Tuples.pair(HourUnitWithMinutes.class, 22));
+        classAndIdList.add(Tuples.pair(Obj.class, 23));
+        classAndIdList.add(Tuples.pair(HashMap.class, 24));
 
         kryoSupport = new KryoSupport(classAndIdList);
     }
 
     @Override
     public void serialize(@NotNull DataOutput2 out, @NotNull T value) throws IOException {
-        out.write(kryoSupport.writeClassAndObject(value));
+        byte[] bytes = kryoSupport.writeClassAndObject(value);
+        out.packInt(bytes.length);
+        out.write(bytes);
+
     }
 
     @Override
     public T deserialize(@NotNull DataInput2 input, int available) throws IOException {
-        byte[] bytes = input.internalByteArray();
-        if (bytes == null || bytes.length == 0) {
-            return null;
-        }
+        int size = input.unpackInt();
+        byte[] bytes = new byte[size];
+        input.readFully(bytes);
         return (T) kryoSupport.readClassAndObject(bytes);
     }
 }

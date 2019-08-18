@@ -43,7 +43,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static scouter2.proto.Metric4RepoPFixture.getAny;
+import static scouter2.fixture.Metric4RepoPFixture.getAny;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-06
@@ -57,25 +57,25 @@ public class LocalMetricRepoTest extends LocalRepoTest {
     LocalMetricRepo repo;
 
     @Mock
-    ObjService instanceService;
+    ObjService objService;
 
     String applicationId = "testapp";
-    long instanceId = 1;
-    long anotherInstanceId = 2;
+    long objId = 1;
+    long anotherObjId = 2;
 
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
 
-        Obj instance = new Obj(instanceId, ObjP.newBuilder().setApplicationId(applicationId).build());
-        when(instanceService.findById(anyLong())).thenReturn(instance);
+        Obj obj = new Obj(objId, ObjP.newBuilder().setApplicationId(applicationId).build());
+        when(objService.findById(anyLong())).thenReturn(obj);
     }
 
     @Test
     public void add_and_stream() {
         long testTime = U.now() - dayFlag.incrementAndGet() * DateUtil.MILLIS_PER_DAY;
-        Metric4RepoP metric1 = getAny(instanceId, testTime - 2000);
-        Metric4RepoP metric2 = getAny(instanceId, testTime);
+        Metric4RepoP metric1 = getAny(objId, testTime - 2000);
+        Metric4RepoP metric2 = getAny(objId, testTime);
 
         repo.add(applicationId, metric1);
         repo.add(applicationId, metric2);
@@ -92,10 +92,10 @@ public class LocalMetricRepoTest extends LocalRepoTest {
     @Test
     public void add_and_stream_in_specific_period() {
         long testTime = U.now() - dayFlag.incrementAndGet() * DateUtil.MILLIS_PER_DAY;
-        Metric4RepoP metric1 = getAny(instanceId, testTime - 10000);
-        Metric4RepoP metric2 = getAny(instanceId, testTime - 8000);
-        Metric4RepoP metric3 = getAny(instanceId, testTime - 6000);
-        Metric4RepoP metric4 = getAny(instanceId, testTime - 3000);
+        Metric4RepoP metric1 = getAny(objId, testTime - 10000);
+        Metric4RepoP metric2 = getAny(objId, testTime - 8000);
+        Metric4RepoP metric3 = getAny(objId, testTime - 6000);
+        Metric4RepoP metric4 = getAny(objId, testTime - 3000);
 
         repo.add(applicationId, metric1);
         repo.add(applicationId, metric2);
@@ -119,10 +119,10 @@ public class LocalMetricRepoTest extends LocalRepoTest {
     @Test
     public void add_and_stream_with_instance_ids() {
         long testTime = U.now() - dayFlag.incrementAndGet() * DateUtil.MILLIS_PER_DAY;
-        Metric4RepoP metric1 = getAny(instanceId, testTime - 2000);
-        Metric4RepoP metric2 = getAny(anotherInstanceId, testTime - 2000);
-        Metric4RepoP metric3 = getAny(instanceId, testTime);
-        Metric4RepoP metric4 = getAny(anotherInstanceId, testTime);
+        Metric4RepoP metric1 = getAny(objId, testTime - 2000);
+        Metric4RepoP metric2 = getAny(anotherObjId, testTime - 2000);
+        Metric4RepoP metric3 = getAny(objId, testTime);
+        Metric4RepoP metric4 = getAny(anotherObjId, testTime);
 
         repo.add(applicationId, metric1);
         repo.add(applicationId, metric2);
@@ -132,8 +132,8 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         List<Metric4RepoP> metrics = Lists.mutable.empty();
         AtomicInteger onCompletedCount = new AtomicInteger();
 
-        LongSet instanceIds = LongSets.mutable.with(instanceId);
-        repo.streamListByPeriodAndInstances(applicationId, instanceIds,testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        LongSet instanceIds = LongSets.mutable.with(objId);
+        repo.streamListByPeriodAndObjs(applicationId, instanceIds,testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
 
         assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);

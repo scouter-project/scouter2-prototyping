@@ -18,35 +18,34 @@
 package scouter2.collector.main;
 
 import lombok.Getter;
-import org.springframework.stereotype.Component;
-import scouter2.collector.common.ShutdownManager;
-
-import javax.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
-@Component
 @Getter
+@Slf4j
 public class CoreRun {
-    private static CoreRun instance;
+    private static CoreRun instance = new CoreRun();
 
     private boolean running = true;
-
-    @PostConstruct
-    public void init() {
-        ShutdownManager.getInstance().register(this::shutdown);
-        instance = this;
+    private CoreRun() {
     }
 
     public void shutdown() {
         this.running = false;
+        log.info("[CoreRun] shutdown.");
+    }
+
+    public static CoreRun init() {
+        return instance;
+    }
+
+    public static CoreRun getInstance() {
+        return instance;
     }
 
     public static boolean isRunning() {
-        if (instance == null) {
-            return true;
-        }
         return instance.running;
     }
 }

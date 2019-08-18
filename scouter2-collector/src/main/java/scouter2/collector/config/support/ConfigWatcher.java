@@ -17,6 +17,7 @@
 package scouter2.collector.config.support;
 
 import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ScouterConfigUtil;
 import scouter2.common.util.ThreadUtil;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ConfigWatcher extends Thread {
 
+    public static final ThrottleConfig S_0025 = ThrottleConfig.of("S0025");
     private static AtomicInteger threadNo = new AtomicInteger();
     private static ConfigWatcher instance;
 
@@ -76,7 +78,7 @@ public class ConfigWatcher extends Thread {
             try (FileInputStream in = new FileInputStream(confFile)) {
                 configProps.load(in);
             } catch (Exception e) {
-                log.error("Error on reading config file. file: {}", confFile.getAbsolutePath(), e);
+                log.error("Error on reading config file. file: {}", confFile.getAbsolutePath(), S_0025, e);
             }
 
             Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);

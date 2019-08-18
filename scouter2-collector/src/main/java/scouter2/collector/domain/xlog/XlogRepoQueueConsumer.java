@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.main.CoreRun;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class XlogRepoQueueConsumer extends Thread {
+    public static final ThrottleConfig S_0010 = ThrottleConfig.of("S0010");
     private static ImmutableList<XlogRepoQueueConsumer> consumerThreads;
 
     ConfigXlog conf;
@@ -79,8 +81,7 @@ public class XlogRepoQueueConsumer extends Thread {
                 repo.add(xlog);
 
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                log.error(e.getMessage(), e);
+                log.error(e.getMessage(), S_0010, e);
             }
         }
     }

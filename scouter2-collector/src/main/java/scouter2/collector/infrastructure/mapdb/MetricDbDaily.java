@@ -18,19 +18,24 @@
 package scouter2.collector.infrastructure.mapdb;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
+import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
 import scouter2.common.util.FileUtil;
+
+import java.io.Closeable;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
  */
 @Getter
-public class MetricDbDaily {
+@Slf4j
+public class MetricDbDaily implements Closeable {
 
     public static final String METRIC_INDEX_DIR = "/%s/";
     public static final String METRIC_INDEX_FILE = "metric.idx";
@@ -51,12 +56,20 @@ public class MetricDbDaily {
 
         FileUtil.mkdirs(configCommon.getDbDir());
         defineDayIndex(ymd);
+
+        log.info("[MetricDbDaily] open.");
+        ShutdownManager.getInstance().register(this::close);
     }
 
-    public void close() {
-        hourUnitMap.close();
-        minuteIndex.close();
-        db.close();
+    @Override
+    public synchronized void close() {
+        if (!db.isClosed()) {
+            log.info("[MetricDbDaily] closing.");
+            db.commit();
+            hourUnitMap.close();
+            minuteIndex.close();
+            db.close();
+        }
     }
 
     private void defineDayIndex(String ymd) {
@@ -67,6 +80,7 @@ public class MetricDbDaily {
                 .fileMmapEnableIfSupported()
                 .closeOnJvmShutdown()
                 .transactionEnable()
+                .checksumHeaderBypass()
                 .allocateStartSize(1 * 1024 * 1024)
                 .allocateIncrement(3 * 1024 * 1024)
                 .make();

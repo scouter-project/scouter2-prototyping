@@ -32,10 +32,4 @@ public interface MetricRepo extends ScouterRepo {
      */
     long findMetricIdAbsentGen(String metricName);
 
-    /**
-     * get unique metric tag's id, if absent generate it.
-     *  - less value is better for serialization.
-     * @return
-     */
-    long findTagIdAbsentGen(String tagName);
 }

@@ -19,6 +19,8 @@ package scouter2.collector.domain.obj;
 
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
  */
@@ -32,7 +34,7 @@ public class ObjService {
         this.cache = cache;
     }
 
-    public long findIdByName(String objFullName) {
+    public Long findIdByName(String objFullName) {
         return cache.findIdByName(objFullName);
     }
 
@@ -40,7 +42,15 @@ public class ObjService {
         return cache.findById(objId);
     }
 
-    public long generateUniqueIdByName(String objFullName) {
-        return cache.generateUniqueIdByName(objFullName);
+    public long generateUniqueIdByName(String fullNameOrLegacyHash) {
+        return repo.generateUniqueIdByName(fullNameOrLegacyHash);
+    }
+
+    public List<Obj> findByApplicationId(String applicationId) {
+        return repo.findByApplicationId(applicationId);
+    }
+
+    public List<Obj> findAll() {
+        return repo.findAll();
     }
 }

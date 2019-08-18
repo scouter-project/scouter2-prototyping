@@ -20,6 +20,7 @@ package scouter2.collector.transport.scouter2;
 import com.google.protobuf.TextFormat;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.proto.CountingP;
 import scouter2.proto.XlogListP;
 import scouter2.proto.XlogP;
@@ -33,6 +34,9 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 @Slf4j
 public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
+
+    public static final ThrottleConfig S_0024 = ThrottleConfig.of("S0024");
+
     @Override
     public void getXlogByTxid(XlogSearchP request, StreamObserver<XlogP> responseObserver) {
         log.info("[getXlogByTxid] start, xlogSearch:" + TextFormat.shortDebugString(request));
@@ -59,7 +63,7 @@ public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
 
             @Override
             public void onError(Throwable t) {
-                log.error("Error on GrpcXlogCollector.onError()", t);
+                log.error("Error on GrpcXlogCollector.onError()", S_0024, t);
             }
 
             @Override

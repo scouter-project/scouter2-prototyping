@@ -18,6 +18,8 @@ package scouter2.collector.domain.obj;
 
 import scouter2.collector.domain.ScouterRepo;
 
+import java.util.List;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
@@ -33,7 +35,7 @@ public interface ObjRepo extends ScouterRepo {
      * @param objFullName
      * @return
      */
-    long findIdByName(String objFullName);
+    Long findIdByName(String objFullName);
 
     /**
      * generate (unique) object id of the object full name if not exists.
@@ -42,7 +44,7 @@ public interface ObjRepo extends ScouterRepo {
      * @param objFullName
      * @return
      */
-    long generateUniqueIdByName(String objFullName);
+    Long generateUniqueIdByName(String objFullName);
 
     /**
      * find object by id
@@ -50,4 +52,12 @@ public interface ObjRepo extends ScouterRepo {
      * @return
      */
     Obj findById(long objId);
+
+
+    void remove(long objId);
+
+    List<Obj> findByApplicationId(String applicationId);
+
+    List<Obj> findAll();
+
 }

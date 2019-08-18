@@ -19,8 +19,8 @@ package scouter2.collector.infrastructure.mapdb;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import scouter2.collector.config.ScouterConfigAdapter;
 import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
 import scouter2.common.helper.Props;
 
 import java.util.List;
@@ -31,14 +31,16 @@ import java.util.List;
 @Getter
 @Slf4j
 @Component
-public class ConfigMapDb implements ScouterConfigIF {
+public class ConfigMapDb extends ScouterConfigAdapter {
+    static ConfigMapDb initValuedConfig = new ConfigMapDb();
 
     @Override
     public List<ConfigItem> getAllConfigs() {
-        return null;
+        return super.getAllConfigs(initValuedConfig);
     }
 
     @Override
     public void refresh(Props props) {
+        super.refresh(initValuedConfig, props);
     }
 }

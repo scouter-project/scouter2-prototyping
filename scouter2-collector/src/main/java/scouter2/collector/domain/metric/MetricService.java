@@ -35,12 +35,7 @@ public class MetricService {
         this.cache = cache;
     }
 
-
     public long findMetricIdAbsentGen(String metricName) {
         return cache.findMetricIdAbsentGen(metricName);
-    }
-
-    public long findTagIdAbsentGen(String tagName) {
-        return cache.findTagIdAbsentGen(tagName);
     }
 }

@@ -18,8 +18,8 @@
 package scouter2.collector.transport.legacy;
 
 import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.xlog.XlogReceiveQueue;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.FileUtil;
 import scouter2.common.util.ThreadUtil;
@@ -34,12 +34,15 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class LegacyUdpTransport extends Thread {
+    private static final ThrottleConfig S_0026 = ThrottleConfig.of("S0026");
+    private static final ThrottleConfig S_0027 = ThrottleConfig.of("S0027");
+    private static final ThrottleConfig S_0028 = ThrottleConfig.of("S0028");
+
     private static AtomicInteger threadNo = new AtomicInteger();
     private static LegacyUdpTransport instance;
     DatagramSocket udpsocket;
 
     private ConfigLegacy conf;
-    private XlogReceiveQueue xlogReceiveQueue;
     private LegacyUdpDataProcessor processor;
 
     public synchronized static LegacyUdpTransport start(ConfigLegacy conf,
@@ -63,30 +66,30 @@ public class LegacyUdpTransport extends Thread {
     public void run() {
         try {
             while (CoreRun.isRunning()) {
-                open(conf.getNetUdpListenIp(), conf.getNetUdpListenPort());
+                open(conf.getLegacyNetUdpListenIp(), conf.getLegacyNetUdpListenPort());
                 recv();
                 FileUtil.close(udpsocket);
             }
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error(e.getMessage(), S_0026, e);
         }
     }
 
     private void open(String host, Integer port) {
         log.info("legacy udp listen " + host + ":" + port);
-        log.info("legacy udp_buffer " + conf.getNetUdpPacketBufferSize());
-        log.info("legacy udp_so_rcvbuf " + conf.getNetUdpSoRcvbufSize());
+        log.info("legacy udp_buffer " + conf.getLegacyNetUdpPacketBufferSize());
+        log.info("legacy udp_so_rcvbuf " + conf.getLegacyNetUdpSoRcvbufSize());
 
         while (CoreRun.isRunning()) {
             try {
                 udpsocket = new DatagramSocket(port, InetAddress.getByName(host));
-                int buf = conf.getNetUdpSoRcvbufSize();
+                int buf = conf.getLegacyNetUdpSoRcvbufSize();
                 if (buf > 0) {
                     udpsocket.setReceiveBufferSize(buf);
                 }
                 return ;
             } catch (Exception e) {
-                log.info("S157", 1, "udp data server port=" + port, e);
+                log.error(e.getMessage(), S_0027, e);
             }
             ThreadUtil.sleep(3000);
         }
@@ -94,7 +97,7 @@ public class LegacyUdpTransport extends Thread {
 
     private void recv() {
         try {
-            int bufferSize = conf.getNetUdpPacketBufferSize();
+            int bufferSize = conf.getLegacyNetUdpPacketBufferSize();
             byte[] rbuf = new byte[bufferSize];
             DatagramPacket packet = new DatagramPacket(rbuf, bufferSize);
 
@@ -106,7 +109,7 @@ public class LegacyUdpTransport extends Thread {
                 processor.offer(data, packet.getAddress());
             }
         } catch(Throwable t) {
-            log.error("S151 {}", 10, t);
+            log.error(t.getMessage(), S_0028, t);
         }
     }
 }

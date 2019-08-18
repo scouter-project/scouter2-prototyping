@@ -14,7 +14,7 @@ service ObjServiceP {
 
 message ObjP {
   string applicationId = 1;
-  string objType = 2; //host, java, redis ... etc
+  string objFamily = 2; //host, java, redis ... etc
   string objLegacyType = 3; //for legacy support. scouter1's user defined objType
   string objFullName = 4;
   int32 legacyObjHash = 5;

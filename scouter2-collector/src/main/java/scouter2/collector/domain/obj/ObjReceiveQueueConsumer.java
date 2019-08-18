@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
 import scouter2.proto.ObjP;
@@ -31,6 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class ObjReceiveQueueConsumer extends Thread {
+    public static final ThrottleConfig S_0001 = ThrottleConfig.of("S0001");
     private static ImmutableList<ObjReceiveQueueConsumer> consumerThreads;
 
     private ObjReceiveQueue queue;
@@ -81,24 +83,23 @@ public class ObjReceiveQueueConsumer extends Thread {
         while (CoreRun.isRunning()) {
             try {
                 ObjP objP = queue.take();
-                long instanceId = objP.getLegacyObjHash() != 0 ?
-                        objP.getLegacyObjHash()
-                        : findInstanceId(objP.getObjFullName());
+                long objId = objP.getLegacyObjHash() != 0
+                        ? findObjId(String.valueOf(objP.getLegacyObjHash()))
+                        : findObjId(objP.getObjFullName());
 
-                Obj obj =  new Obj(instanceId, objP) ;
+                Obj obj =  new Obj(objId, objP) ;
                 adder.addObj(obj);
 
             } catch (Exception e) {
-                log.error(e.getMessage(), e);
-                e.printStackTrace();
+                log.error(e.getMessage(), S_0001, e);
             }
         }
     }
 
-    private long findInstanceId(String objFullName) {
-        long objId = service.findIdByName(objFullName);
-        if (objId == 0) {
-            objId = service.generateUniqueIdByName(objFullName);
+    private long findObjId(String objFullNameOrLegacyHash) {
+        Long objId = service.findIdByName(objFullNameOrLegacyHash);
+        if (objId == null) {
+            objId = service.generateUniqueIdByName(objFullNameOrLegacyHash);
         }
         return objId;
     }

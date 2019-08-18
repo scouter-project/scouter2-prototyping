@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigMetric;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.util.ThreadUtil;
@@ -32,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class MetricReceiveQueueConsumer extends Thread {
+    public static final ThrottleConfig S_0011 = ThrottleConfig.of("S0011");
     private static ImmutableList<MetricReceiveQueueConsumer> consumerThreads;
 
     private ConfigMetric conf;
@@ -76,8 +78,7 @@ public class MetricReceiveQueueConsumer extends Thread {
                 adder.addMetric(metric);
 
             } catch (InterruptedException e) {
-                log.error(e.getMessage(), e);
-                e.printStackTrace();
+                log.error(e.getMessage(), S_0011, e);
             }
         }
     }

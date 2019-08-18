@@ -24,9 +24,11 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.common.util.RafUtil;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigCommon;
+import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.FileUtil;
@@ -52,6 +54,7 @@ import java.util.function.Consumer;
 @Slf4j
 public class MetricFileDb {
     private static final long CLOSE_IDLE_MILLIS = 10000;
+    public static final ThrottleConfig S_0002 = ThrottleConfig.of("S0002");
 
     private final Map<String, Table> partitionTableMap = new HashMap<>();
 
@@ -82,6 +85,9 @@ public class MetricFileDb {
 
     private Table open(String pKey) throws FileNotFoundException {
         synchronized (partitionTableMap) {
+            if (!CoreRun.isRunning()) {
+                return new Table("temp");
+            }
             Table table = partitionTableMap.get(pKey);
             if (table == null) {
                 table = new Table(pKey);
@@ -140,9 +146,11 @@ public class MetricFileDb {
             String dbFileName = directory + DB_NAME;
             this.dataFile = new RandomAccessFile(dbFileName, "rw");
             this.lastAccess = U.now();
+            log.info("[MetricFileDb.Table:{}] open.", pKey);
         }
 
         private void close() {
+            log.info("[MetricFileDb.Table:{}] closing.", pKey);
             partitionTableMap.remove(pKey);
             FileUtil.close(dataFile);
         }
@@ -151,6 +159,8 @@ public class MetricFileDb {
             if (metric == null) {
                 return -1;
             }
+            this.lastAccess = U.now();
+
             synchronized (this) {
                 long offset = dataFile.length();
                 dataFile.seek(offset);
@@ -163,6 +173,8 @@ public class MetricFileDb {
 
         private void readPeriod(long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
                 throws IOException {
+
+            this.lastAccess = U.now();
 
             long offset = startOffset;
             long loop = 0;
@@ -178,7 +190,7 @@ public class MetricFileDb {
 
                 if (partSize <= 4) {
                     if (partSize > 0) {
-                        log.error("something wrong.(partSize is less than 4)");
+                        log.error("something wrong.(partSize is less than 4)", S_0002);
                     }
                     break;
                 }

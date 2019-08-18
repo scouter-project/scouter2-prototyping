@@ -16,15 +16,25 @@
  */
 package scouter2.collector.main;
 
+import com.hazelcast.config.AdvancedNetworkConfig;
+import com.hazelcast.config.Config;
+import com.hazelcast.config.JoinConfig;
+import com.hazelcast.config.ServerSocketEndpointConfig;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.domain.NonThreadSafeRepo;
+import scouter2.collector.domain.obj.ObjRepo;
+import scouter2.collector.springconfig.InitConfig;
 import scouter2.common.util.SysJMX;
 import scouter2.common.util.ThreadUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
@@ -33,22 +43,56 @@ import java.io.IOException;
 @Slf4j
 public class CollectorMain {
 
+    ObjRepo objRepo;
     ServerBeanInitializer serverBeanInitializer;
 
-    public CollectorMain(ServerBeanInitializer serverBeanInitializer) {
+    public CollectorMain(InitConfig.Initializer initializer,
+                         ServerBeanInitializer serverBeanInitializer,
+                         ObjRepo objRepo) {
+
+        initializer.init();
         this.serverBeanInitializer = serverBeanInitializer;
+        this.objRepo = objRepo;
     }
 
     public void start(String[] args) throws IOException {
         //TODO logo
         System.out.println("System JRE version : " + System.getProperty("java.version"));
+        testHazelcast();
         //serverBeanInitializer.init();
         startServer();
     }
 
-    private void startServer() throws IOException {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown()));
+    private void testHazelcast() {
+        if (!(objRepo instanceof NonThreadSafeRepo)) {
+            new Thread(() -> {
+                Config config = new Config();
+                JoinConfig joinConfig = new JoinConfig();
+                joinConfig.getMulticastConfig().setEnabled(false);
+                joinConfig.getTcpIpConfig().setEnabled(true);
+                //.addMember("127.0.0.1");
 
+                ServerSocketEndpointConfig endpointConfig = new ServerSocketEndpointConfig()
+                        .setPort(5701)
+                        .setPortAutoIncrement(false)
+                        .setReuseAddress(true)
+                        .setSocketTcpNoDelay(true);
+
+                AdvancedNetworkConfig advancedNetworkConfig = config.getAdvancedNetworkConfig();
+                advancedNetworkConfig.setEnabled(true);
+                advancedNetworkConfig.setJoin(joinConfig);
+                advancedNetworkConfig.setMemberEndpointConfig(endpointConfig);
+
+                HazelcastInstance hzInstance = Hazelcast.newHazelcastInstance();
+                Map<String, String> capitalcities = hzInstance.getMap( "capitals" );
+                capitalcities.put( "1", "Tokyo" );
+                System.out.println(capitalcities.get("1"));
+                System.out.println(hzInstance.getCluster().getLocalMember().getAddressMap());
+            }).run();
+        }
+    }
+
+    private void startServer() throws IOException {
         //TODO after file DB
 //        if(DBCtr.createLock()==false){
 //            return;

@@ -23,15 +23,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.domain.NonThreadSafeRepo;
+import scouter2.collector.domain.metric.MetricRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
-import scouter2.collector.domain.metric.MetricRepo;
 import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
 import scouter2.collector.infrastructure.filedb.MetricFileDb;
-import scouter2.collector.infrastructure.mapdb.CommonDb;
 import scouter2.collector.infrastructure.mapdb.MetricDb;
 import scouter2.collector.infrastructure.mapdb.MetricDbDaily;
+import scouter2.collector.infrastructure.mapdb.MetricDictDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.DateUtil;
@@ -53,16 +54,18 @@ import static scouter2.common.util.DateUtil.MILLIS_PER_HOUR;
 @RepoTypeMatch("local")
 public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, NonThreadSafeRepo {
 
+    public static final ThrottleConfig S_0004 = ThrottleConfig.of("S0004");
+    public static final ThrottleConfig S_0005 = ThrottleConfig.of("S0005");
     HourUnitWithMinutes currentHourBucket;
 
-    private CommonDb commonDb;
+    private MetricDictDb metricDictDb;
     private MetricFileDb metricFileDb;
     private MetricDb metricDb;
     private ObjService instanceService;
 
-    public LocalMetricRepo(CommonDb commonDb, MetricFileDb metricFileDb, MetricDb metricDb,
+    public LocalMetricRepo(MetricDictDb metricDictDb, MetricFileDb metricFileDb, MetricDb metricDb,
                            ObjService instanceService) {
-        this.commonDb = commonDb;
+        this.metricDictDb = metricDictDb;
         this.metricFileDb = metricFileDb;
         this.metricDb = metricDb;
         this.instanceService = instanceService;
@@ -83,7 +86,7 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
             }
 
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            log.error(e.getMessage(), S_0004, e);
         }
     }
 
@@ -114,35 +117,35 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
                 metric -> publishMatched(applicationId, from, to, stream, metric));
     }
 
-    public void streamListByPeriodAndInstances(String applicationId, LongSet instanceIds, long from, long to,
-                                               StreamObserver<Metric4RepoP> stream) {
+    public void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
+                                          StreamObserver<Metric4RepoP> stream) {
         streamListByPeriod0(applicationId, from, to, stream,
-                metric -> publishMatchedWithInstances(applicationId, instanceIds, from, to, stream, metric));
+                metric -> publishMatchedWithObjs(applicationId, instanceIds, from, to, stream, metric));
     }
 
     private void publishMatched(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream,
                                 Metric4RepoP metric) {
-        Obj instance = instanceService.findById(metric.getObjId());
-        if (instance == null) return;
+        Obj obj = instanceService.findById(metric.getObjId());
+        if (obj == null) return;
 
         if (metric.getTimestamp() >= from
                 && metric.getTimestamp() <= to
-                && applicationId.equals(instance.getProto().getApplicationId())) {
+                && applicationId.equals(obj.getApplicationId())) {
 
             stream.onNext(metric);
         }
     }
 
-    private void publishMatchedWithInstances(String applicationId, LongSet instanceIds,
-                                             long from, long to,
-                                             StreamObserver<Metric4RepoP> stream, Metric4RepoP metric) {
+    private void publishMatchedWithObjs(String applicationId, LongSet instanceIds,
+                                        long from, long to,
+                                        StreamObserver<Metric4RepoP> stream, Metric4RepoP metric) {
 
-        Obj instance = instanceService.findById(metric.getObjId());
-        if (instance == null) return;
+        Obj obj = instanceService.findById(metric.getObjId());
+        if (obj == null) return;
 
         if (metric.getTimestamp() >= from
                 && metric.getTimestamp() <= to
-                && applicationId.equals(instance.getProto().getApplicationId())
+                && applicationId.equals(obj.getApplicationId())
                 && instanceIds.contains(metric.getObjId())) {
 
             stream.onNext(metric);
@@ -184,7 +187,7 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
                     streamInDay(ymd, startOffset, to, metric4RepoPConsumer);
 
                 } catch (Exception e) {
-                    log.error("error on streamListByPeriod.", e);
+                    log.error("error on streamListByPeriod.", S_0005, e);
                     stream.onError(e);
                     break;
                 }
@@ -216,15 +219,8 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
 
     @Override
     public long findMetricIdAbsentGen(String metricName) {
-        return commonDb.getMetricReverseDict()
+        return metricDictDb.getMetricReverseDict()
                 .computeIfAbsent(metricName,
-                        k -> commonDb.getMetricKeyGenerator().incrementAndGet());
-    }
-
-    @Override
-    public long findTagIdAbsentGen(String tagName) {
-        return commonDb.getMetricTagReverseDict()
-                .computeIfAbsent(tagName,
-                        k -> commonDb.getMetricTagKeyGenerator().incrementAndGet());
+                        k -> metricDictDb.getMetricKeyGenerator().incrementAndGet());
     }
 }

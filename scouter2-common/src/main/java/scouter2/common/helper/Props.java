@@ -44,7 +44,12 @@ public class Props {
     }
 
     public String getString(String key, String def) {
-        return StringUtils.trim(properties.getProperty(key, def));
+        String value = getString(key);
+        if (value == null) {
+            return def;
+        } else {
+            return value;
+        }
     }
 
     public int getInt(String key, int def) {

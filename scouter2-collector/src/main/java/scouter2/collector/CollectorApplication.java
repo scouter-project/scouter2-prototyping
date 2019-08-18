@@ -17,12 +17,15 @@
 
 package scouter2.collector;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.context.annotation.ComponentScan;
+import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.main.CollectorMain;
+import scouter2.collector.main.CoreRun;
 import scouter2.common.helper.Props;
 import scouter2.common.util.ScouterConfigUtil;
 
@@ -39,6 +42,7 @@ import static scouter2.collector.main.CollectorConstants.DEFAULT_CONF_FILE;
  */
 @SpringBootConfiguration
 @ComponentScan
+@Slf4j
 public class CollectorApplication implements CommandLineRunner {
     private static Props loadProps = new Props(new Properties());
     private final CollectorMain collectorMain;
@@ -48,8 +52,19 @@ public class CollectorApplication implements CommandLineRunner {
     }
 
     public static void main(String[] args) throws IOException {
+        log.info("starting Scouter CollectorApplication...");
+
         preloadConfig();
+        preInit();
+
         SpringApplication.run(CollectorApplication.class, args);
+    }
+
+    private static void preInit() {
+        CoreRun.init();
+        ShutdownManager.getInstance().register(() -> CoreRun.getInstance().shutdown()); //for manual shutdown
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> CoreRun.getInstance().shutdown())); //for kill -3
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown())); //for kill -3
     }
 
     private static void preloadConfig() throws IOException {

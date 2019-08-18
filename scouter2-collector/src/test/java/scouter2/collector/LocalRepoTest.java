@@ -55,7 +55,7 @@ public abstract class LocalRepoTest {
         clearDb();
     }
 
-    private static void clearDb() {
+    public static void clearDb() {
         File file = new File(DB_DIR);
         try {
             FileUtils.deleteDirectory(file);

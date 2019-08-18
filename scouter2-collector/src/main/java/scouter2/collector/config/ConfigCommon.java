@@ -24,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.collector.main.CollectorConstants;
 import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
 import scouter2.common.helper.Props;
 
 import java.util.List;
@@ -38,22 +37,25 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConfigCommon implements ScouterConfigIF {
+public class ConfigCommon extends ScouterConfigAdapter {
 
-    int netTcpPort = 6200;
-    String repoType = "local";
+    static ConfigCommon initValuedConfig = new ConfigCommon();
 
-    String dbDir = CollectorConstants.DEFAULT_DB_DIR;
+    @Configurable int netTcpPort = 6200;
+    @Configurable String repoType = "local";
+
+    @Configurable String dbDir = CollectorConstants.DEFAULT_DB_DIR;
+
+    @Configurable String logRootLevel = "info";
+    @Configurable String logScouterLevel = "info";
 
     @Override
     public List<ConfigItem> getAllConfigs() {
-        return null;
+        return super.getAllConfigs(initValuedConfig);
     }
 
     @Override
     public void refresh(Props props) {
-        netTcpPort = props.getInt("netTcpPort", netTcpPort);
-        repoType = props.getString("repoType", repoType);
-        dbDir = props.getString("dbDir", dbDir);
+        super.refresh(initValuedConfig, props);
     }
 }

@@ -31,9 +31,10 @@ import scouter.lang.pack.PerfCounterPack;
 import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.obj.ObjReceiveQueue;
 import scouter2.collector.domain.metric.MetricReceiveQueue;
+import scouter2.collector.domain.obj.ObjReceiveQueue;
 import scouter2.collector.legacy.CounterManager;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.collection.PurgingQueue;
@@ -67,9 +68,9 @@ public class LegacyUdpDataProcessor {
         instance = new LegacyUdpDataProcessor(conf);
         UdpMultipacketProcessor udpMultipacketProcessor = new UdpMultipacketProcessor(conf);
 
-        for (int i = 0; i < conf.get_netUdpWorkerThreadCount(); i++) {
+        for (int i = 0; i < conf.get_legacyNetUdpWorkerThreadCount(); i++) {
             LegacyUdpDataProcessorThread processorThread =
-                    new LegacyUdpDataProcessorThread(instance.getQueue(), udpMultipacketProcessor);
+                    new LegacyUdpDataProcessorThread(instance.getQueue(), udpMultipacketProcessor, conf);
             processorThread.setDaemon(true);
             processorThread.setName(ThreadUtil.getName(processorThread.getClass(), threadNo.getAndIncrement()));
             processorThread.start();
@@ -93,17 +94,23 @@ public class LegacyUdpDataProcessor {
 
     @Slf4j
     static class LegacyUdpDataProcessorThread extends Thread {
+        public static final ThrottleConfig S_0020 = ThrottleConfig.of("S0020");
+        public static final ThrottleConfig S_0021 = ThrottleConfig.of("S0021");
+        public static final ThrottleConfig S_0022 = ThrottleConfig.of("S0022");
+        public static final ThrottleConfig S_0023 = ThrottleConfig.of("S0023");
+        ConfigLegacy conf;
         PurgingQueue<NetData> udpDataQueue;
         ObjReceiveQueue objReceiveQueue;
         MetricReceiveQueue metricReceiveQueue;
         UdpMultipacketProcessor udpMultipacketProcessor;
 
         public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue,
-                                            UdpMultipacketProcessor udpMultipacketProcessor) {
+                                            UdpMultipacketProcessor udpMultipacketProcessor, ConfigLegacy conf) {
             this.udpDataQueue = udpDataQueue;
-            objReceiveQueue = ObjReceiveQueue.getInstance();
-            metricReceiveQueue = MetricReceiveQueue.getInstance();
+            this.objReceiveQueue = ObjReceiveQueue.getInstance();
+            this.metricReceiveQueue = MetricReceiveQueue.getInstance();
             this.udpMultipacketProcessor = udpMultipacketProcessor;
+            this.conf = conf;
         }
 
         @Override
@@ -114,11 +121,11 @@ public class LegacyUdpDataProcessor {
                         NetData data = udpDataQueue.take();
                         process(data);
                     } catch(Throwable t) {
-                        log.error(t.getMessage(), t);
+                        log.error(t.getMessage(), S_0020, t);
                     }
                 }
             } catch (Exception e) {
-                log.error(e.getMessage(), e);
+                log.error(e.getMessage(), S_0021, e);
             }
         }
 
@@ -146,12 +153,12 @@ public class LegacyUdpDataProcessor {
                         processCafeMTU(in, netData.addr);
                         break;
                     default:
-                        log.error("Receive unknown data, length="
-                                + BytesUtil.getLength(netData.data) + " from " + netData.addr);
+                        log.error("Receive unknown data, length=" + BytesUtil.getLength(netData.data)
+                                + " from " + netData.addr, S_0022);
                 }
 
             } catch(Throwable t) {
-                log.error("S159", 10, "invalid data ", t);
+                log.error("invalid data", S_0023, t);
             }
         }
 
@@ -199,9 +206,9 @@ public class LegacyUdpDataProcessor {
                         counterPack.timetype = TimeTypeEnum.REALTIME;
                     }
                     metricReceiveQueue.offer(LegacyMapper.toMetric(counterPack));
-//                    if (conf.log_udp_counter) {
-//                        System.out.println("DEBUG UDP COUNTER: " + p)
-//                    }
+                    if (conf.isLegacyLogUdpCounter()) {
+                        log.debug("Legacy UDP counterPack received: {}", counterPack);
+                    }
                     break;
 
                 case PackEnum.PERF_INTERACTION_COUNTER:
@@ -255,6 +262,9 @@ public class LegacyUdpDataProcessor {
                     String family = counterManager.getCounterEngine().getFamilyNameFromObjType(objectPack.objType);
 
                     objReceiveQueue.offer(LegacyMapper.toObjP(objectPack, family));
+                    if (conf.isLegacyLogUdpObj()) {
+                        log.debug("Legacy UDP counterPack received: {}", objectPack);
+                    }
                     break;
                 case PackEnum.PERF_STATUS:
                     //TODO

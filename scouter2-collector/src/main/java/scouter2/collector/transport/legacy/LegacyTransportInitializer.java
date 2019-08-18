@@ -31,6 +31,7 @@ public class LegacyTransportInitializer implements TransportInitializer {
         ConfigLegacy config = ConfigManager.getConfig(ConfigLegacy.class);
         LegacyUdpDataProcessor legacyUdpDataProcessor = LegacyUdpDataProcessor.start(config);
         LegacyUdpTransport.start(config, legacyUdpDataProcessor);
+        LegacyTcpTransport.start(config, legacyUdpDataProcessor);
     }
 
     @Override

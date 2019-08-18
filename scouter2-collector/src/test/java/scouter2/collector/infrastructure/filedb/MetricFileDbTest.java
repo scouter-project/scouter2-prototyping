@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static scouter2.proto.Metric4RepoPFixture.getMetric4RepoP;
+import static scouter2.fixture.Metric4RepoPFixture.getMetric4RepoP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-06

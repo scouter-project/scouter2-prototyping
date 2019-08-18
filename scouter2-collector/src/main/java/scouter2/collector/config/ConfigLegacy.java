@@ -23,7 +23,6 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import scouter2.common.config.ConfigItem;
-import scouter2.common.config.ScouterConfigIF;
 import scouter2.common.helper.Props;
 
 import java.util.List;
@@ -37,25 +36,40 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConfigLegacy implements ScouterConfigIF {
+public class ConfigLegacy extends ScouterConfigAdapter {
+    static ConfigLegacy initValuedConfig = new ConfigLegacy();
 
-    String netUdpListenIp = "0.0.0.0";
-    int netUdpListenPort = 6200;
-    int netUdpPacketBufferSize = 65535;
-    int netUdpSoRcvbufSize = 1024 * 1024 * 4;
-    int _netUdpWorkerThreadCount = 3;
+    //UDP
+    @Configurable String legacyNetUdpListenIp = "0.0.0.0";
+    @Configurable int legacyNetUdpListenPort = 6100;
+    @Configurable int legacyNetUdpPacketBufferSize = 65535;
+    @Configurable int legacyNetUdpSoRcvbufSize = 1024 * 1024 * 4;
+    @Configurable int _legacyNetUdpWorkerThreadCount = 3;
 
-    boolean logExpiredMultipacket = false;
+    //TCP
+    @Configurable private String legacyNetTcpListenIp = "0.0.0.0";
+    @Configurable private int legacyNetTcpListenPort = 6100;
+    @Configurable private int legacyNetTcpClientSoTimeoutMs = 60000;
+    @Configurable private int legacyNetTcpAgentSoTimeoutMs = 60000;
+    @Configurable private int legacyNetTcpAgentKeepaliveIntervalMs = 5000;
+    @Configurable private int legacyNetTcpGetAgentConnectionWaitMs = 1000;
+    @Configurable private int legacyNetTcpServicePoolSize = 100;
+    
+    //LOG
+    @Configurable boolean legacyLogExpiredMultipacket = false;
+
+    @Configurable boolean legacyLogUdpObj;
+    @Configurable boolean legacyLogUdpCounter;
+    @Configurable boolean legacyLogUdpXlog;
+
 
     @Override
     public List<ConfigItem> getAllConfigs() {
-        return null;
+        return super.getAllConfigs(initValuedConfig);
     }
 
     @Override
     public void refresh(Props props) {
-
+        super.refresh(initValuedConfig, props);
     }
-
-
 }

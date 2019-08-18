@@ -40,9 +40,20 @@ public class ShutdownManager {
     }
 
     public synchronized void shutdown() {
-        if (shutdownHooks.size() == 0) return;
         log.info("Collector on shutdown.");
-        shutdownHooks.forEach(ShutdownHook::shutdown);
+        try {
+            //waiting processing
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        for (ShutdownHook hook : shutdownHooks) {
+            try {
+                hook.shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         shutdownHooks.clear();
     }
 }

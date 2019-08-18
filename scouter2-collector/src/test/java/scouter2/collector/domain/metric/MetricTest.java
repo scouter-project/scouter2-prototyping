@@ -23,7 +23,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.MetricP;
-import scouter2.proto.MetricPFixture;
+import scouter2.fixture.MetricPFixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;

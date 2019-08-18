@@ -17,70 +17,89 @@
 
 package scouter2.collector.transport.legacy;
 
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
+import lombok.extern.slf4j.Slf4j;
+import scouter2.collector.common.log.ThrottleConfig;
+import scouter2.collector.config.ConfigLegacy;
+import scouter2.collector.main.CoreRun;
+import scouter2.collector.transport.legacy.service.LegacyServiceHandlingProxy;
+import scouter2.common.util.FileUtil;
+import scouter2.common.util.ThreadUtil;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-24
  */
-public class LegacyTcpTransport {
-    // 서버 소켓 포트 번호를 지정합니다.
-    private static final int PORT = 8080;
+@Slf4j
+public class LegacyTcpTransport extends Thread {
+    public static final ThrottleConfig S_0030 = ThrottleConfig.of("S0030");
+    public static final ThrottleConfig S_0031 = ThrottleConfig.of("S0031");
+    private static ExecutorService es;
+    private static AtomicInteger threadNo = new AtomicInteger();
+    private static LegacyTcpTransport instance;
 
-    public static void main(String[] args) {
-	/*
-		NioEventLoop는 I/O 동작을 다루는 멀티스레드 이벤트 루프입니다.
-		네티는 다양한 이벤트 루프를 제공합니다.
-		이 예제에서는 두개의 Nio 이벤트 루프를 사용합니다.
-		첫번째 'parent' 그룹은 인커밍 커넥션(incomming connection)을 액세스합니다.
-		두번째 'child' 그룹은 액세스한 커넥션의 트래픽을 처리합니다.
-		만들어진 채널에 매핑하고 스레드를 얼마나 사용할지는 EventLoopGroup 구현에 의존합니다.
-		그리고 생성자를 통해서도 구성할 수 있습니다.
-	*/
-        EventLoopGroup parentGroup = new NioEventLoopGroup(1);
-        EventLoopGroup childGroup = new NioEventLoopGroup();
+    private ServerSocket serverSocket;
+
+    private ConfigLegacy conf;
+    private LegacyUdpDataProcessor processor;
+
+    public synchronized static LegacyTcpTransport start(ConfigLegacy conf,
+                                                        LegacyUdpDataProcessor processor) {
+        if (instance != null) {
+            throw new RuntimeException("Already working legacy udp receiver exists.");
+        }
+
+        //init
+        LegacyServiceHandlingProxy.load();
+
+        es = ThreadUtil.createExecutor("LegacyTcpWorker", 2, conf.getLegacyNetTcpServicePoolSize(),
+                20000, true);
+
+        instance = new LegacyTcpTransport(conf, processor);
+        instance.setDaemon(true);
+        instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
+        instance.start();
+        return instance;
+
+    }
+
+    private LegacyTcpTransport(ConfigLegacy conf, LegacyUdpDataProcessor processor) {
+        this.conf = conf;
+        this.processor = processor;
+    }
+
+    @Override
+    public void run() {
+        log.info("\ttcp_port=" + conf.getLegacyNetTcpListenPort());
+        log.info("\tcp_agent_so_timeout=" + conf.getLegacyNetTcpAgentSoTimeoutMs());
+        log.info("\tcp_client_so_timeout=" + conf.getLegacyNetTcpClientSoTimeoutMs());
+
         try {
-            // 서버 부트스트랩을 만듭니다. 이 클래스는 일종의 헬퍼 클래스입니다.
-            // 이 클래스를 사용하면 서버에서 Channel을 직접 세팅 할 수 있습니다.
-            ServerBootstrap sb = new ServerBootstrap();
-            sb.group(parentGroup, childGroup)
-                    // 인커밍 커넥션을 액세스하기 위해 새로운 채널을 객체화 하는 클래스 지정합니다.
-                    .channel(NioServerSocketChannel.class)
-                    // 상세한 Channel 구현을 위해 옵션을 지정할 수 있습니다.
-                    .option(ChannelOption.SO_BACKLOG, 100)
-                    .handler(new LoggingHandler(LogLevel.INFO))
-                    // 새롭게 액세스된 Channel을 처리합니다.
-                    // ChannelInitializer는 특별한 핸들러로 새로운 Channel의
-                    // 환경 구성을 도와 주는 것이 목적입니다.
-                    .childHandler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel sc) throws Exception {
-                            ChannelPipeline cp = sc.pipeline();
-                            //cp.addLast(new EhcoServerHandler());
-                        }
-                    });
-
-            // 인커밍 커넥션을 액세스하기 위해 바인드하고 시작합니다.
-            ChannelFuture cf = sb.bind(PORT).sync();
-
-            // 서버 소켓이 닫힐때까지 대기합니다.
-            cf.channel().closeFuture().sync();
-
+            serverSocket = new ServerSocket(conf.getLegacyNetTcpListenPort(), 50,
+                    InetAddress.getByName(conf.getLegacyNetTcpListenIp()));
+            open();
         } catch (Exception e) {
-            e.printStackTrace();
-
+            log.error(e.getMessage(), S_0030, e);
         } finally {
-            parentGroup.shutdownGracefully();
-            childGroup.shutdownGracefully();
+            FileUtil.close(serverSocket);
+        }
+    }
+
+    private void open() throws IOException {
+        while (CoreRun.isRunning()) {
+            Socket socket = serverSocket.accept();
+            socket.setSoTimeout(conf.getLegacyNetTcpClientSoTimeoutMs());
+            socket.setReuseAddress(true);
+            try {
+                es.execute(new LegacyTcpWorker(socket, conf));
+            } catch (Exception e) {
+                log.error(e.getMessage(), S_0031, e);
+            }
         }
     }
 }

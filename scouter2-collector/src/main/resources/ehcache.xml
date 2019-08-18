@@ -34,15 +34,21 @@
     </defaultCache>
 
     <cache
-            name="objName"
+            name="objId"
             maxElementsInMemory="10000"
             timeToLiveSeconds="300"
     />
 
     <cache
             name="obj"
-            maxElementsInMemory="10000"
-            timeToLiveSeconds="300"
+            maxElementsInMemory="3000"
+            timeToLiveSeconds="5"
+    />
+
+    <cache
+            name="objList"
+            maxElementsInMemory="300"
+            timeToLiveSeconds="5"
     />
 
     <cache

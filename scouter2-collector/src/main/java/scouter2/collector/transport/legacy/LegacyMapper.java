@@ -19,7 +19,11 @@ package scouter2.collector.transport.legacy;
 
 import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.PerfCounterPack;
+import scouter.lang.value.ListValue;
 import scouter.lang.value.Value;
+import scouter.util.HashUtil;
+import scouter2.collector.legacy.LegacySupport;
+import scouter2.common.legacy.counters.CounterConstants;
 import scouter2.proto.MetricP;
 import scouter2.proto.ObjP;
 import scouter2.proto.TimeTypeP;
@@ -39,8 +43,8 @@ public class LegacyMapper {
         }
 
         return ObjP.newBuilder()
-                .setApplicationId(objectPack.objType)
-                .setObjType(legacyFamily)
+                .setApplicationId(LegacySupport.APPLICATION_ID_FALLBACK_FOR_SCOUTER1_AGENT)
+                .setObjFamily(legacyFamily)
                 .setObjLegacyType(objectPack.objType)
                 .setObjFullName(objectPack.objName)
                 .setLegacyObjHash(objectPack.objHash)
@@ -53,10 +57,23 @@ public class LegacyMapper {
     public static MetricP toMetric(PerfCounterPack counterPack) {
         MetricP.Builder builder = MetricP.newBuilder()
                 .setTimestamp(counterPack.time)
-                .setObjFullName(counterPack.objName)
+                .setObjFullName(String.valueOf(HashUtil.hash(counterPack.objName)))
+                .setLegacyObjHash(HashUtil.hash(counterPack.objName))
                 .setTimeType(toTimeTypeP(counterPack.timetype));
 
         counterPack.data.toMap().forEach((key, value) -> builder.putMetrics(key, doubleValueOf(value)));
+
+        ListValue heapTotUsage = counterPack.data.getList(CounterConstants.JAVA_HEAP_TOT_USAGE);
+        ListValue activeSpeed = counterPack.data.getList(CounterConstants.WAS_ACTIVE_SPEED);
+        if (heapTotUsage != null) {
+            builder.putMetrics(CounterConstants.JAVA_HEAP_TOT_USAGE_TOT, heapTotUsage.getFloat(0));
+            builder.putMetrics(CounterConstants.JAVA_HEAP_TOT_USAGE_USAGE, heapTotUsage.getFloat(1));
+        }
+        if (activeSpeed != null) {
+            builder.putMetrics(CounterConstants.WAS_ACTIVE_SPEED_STEP_LOW, activeSpeed.getInt(0));
+            builder.putMetrics(CounterConstants.WAS_ACTIVE_SPEED_STEP_MID, activeSpeed.getInt(1));
+            builder.putMetrics(CounterConstants.WAS_ACTIVE_SPEED_STEP_HIGH, activeSpeed.getInt(2));
+        }
 
         return builder.build();
     }

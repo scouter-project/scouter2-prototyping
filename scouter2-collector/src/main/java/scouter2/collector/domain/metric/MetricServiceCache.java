@@ -38,10 +38,4 @@ public class MetricServiceCache {
     public long findMetricIdAbsentGen(String metricName) {
         return repo.findMetricIdAbsentGen(metricName);
     }
-
-    @Cacheable(cacheNames = "tagName")
-    public long findTagIdAbsentGen(String tagName) {
-        return repo.findTagIdAbsentGen(tagName);
-    }
-
 }

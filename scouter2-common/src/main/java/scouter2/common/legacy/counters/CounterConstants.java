@@ -60,6 +60,9 @@ public class CounterConstants {
 
 	public final static String WAS_TPS = "TPS";
 	public final static String WAS_ACTIVE_SPEED = "ActiveSpeed";
+	public final static String WAS_ACTIVE_SPEED_STEP_LOW = "ActiveSpeedStepLow";
+	public final static String WAS_ACTIVE_SPEED_STEP_MID = "ActiveSpeedStepMid";
+	public final static String WAS_ACTIVE_SPEED_STEP_HIGH = "ActiveSpeedStepHigh";
 	public final static String WAS_ELAPSED_TIME = "ElapsedTime";
 	public final static String WAS_ELAPSED_90PCT = "Elapsed90%";
 	public final static String WAS_SERVICE_COUNT = "ServiceCount";
@@ -73,6 +76,8 @@ public class CounterConstants {
 	public final static String JAVA_GC_COUNT = "GcCount";
 	public final static String JAVA_GC_TIME = "GcTime";
 	public final static String JAVA_HEAP_TOT_USAGE = "HeapTotUsage";
+	public final static String JAVA_HEAP_TOT_USAGE_TOT = "HeapTotUsageTot";
+	public final static String JAVA_HEAP_TOT_USAGE_USAGE = "HeapTotUsageUsage";
 	public final static String JAVA_HEAP_USED = "HeapUsed";
 	public final static String JAVA_HEAP_TOTAL = "HeapTotal";
 	public final static String JAVA_CPU_TIME = "CpuTime";

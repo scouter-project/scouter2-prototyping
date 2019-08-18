@@ -16,15 +16,31 @@
   -->
 
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="STDOUT" class="scouter2.collector.common.log.ThrottlingConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36},[%X{omit}]: %msg%n</pattern>
         </encoder>
     </appender>
 
-    <logger name="com.parfait.study.simplelogging.service.SomeService" level="INFO"/>
+    <appender name="SCOUTER_DEFAULT" class="scouter2.collector.common.log.ThrottlingRollingFileAppender">
+        <file>scouter.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>scouter.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36},[%X{omit}]: %msg%n</pattern>
+        </encoder>
+    </appender>
 
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="STDOUT"/>
     </root>
+
+    <logger name="scouter2" level="debug" additivity="false">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="SCOUTER_DEFAULT"/>
+    </logger>
+
 </configuration>
