@@ -24,12 +24,22 @@ import java.util.Map;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-15
  */
 public class LruMap {
+    private static long lastLogging = 0;
 
     public static <K, V> Map<K, V> newOfMax(final int maxEntries) {
         return new LinkedHashMap<K, V>(maxEntries*10/7, 0.7f, true) {
+
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-                return size() > maxEntries;
+                boolean remove = size() > maxEntries;
+                if (remove) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastLogging > 1000) { //logging every 1000ms
+                        lastLogging = now;
+                        new Exception("[SCOUTER] LruMap Full. removing eldest.").printStackTrace();
+                    }
+                }
+                return remove;
             }
         };
     }

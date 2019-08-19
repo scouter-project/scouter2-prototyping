@@ -22,6 +22,7 @@ import scouter.lang.pack.PerfCounterPack;
 import scouter.lang.value.ListValue;
 import scouter.lang.value.Value;
 import scouter.util.HashUtil;
+import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.common.legacy.counters.CounterConstants;
 import scouter2.proto.MetricP;
@@ -52,6 +53,17 @@ public class LegacyMapper {
                 .setVersion(objectPack.version)
                 .putAllTags(tagMap)
                 .build();
+    }
+
+    public static ObjectPack toObjectPack(Obj obj) {
+        ObjectPack pack = new ObjectPack();
+        pack.objType = obj.getObjLegacyType();
+        pack.objName = obj.getObjFullName();
+        pack.objHash = (int) obj.getObjId();
+        pack.address = obj.getAddress();
+        pack.version = obj.getVersion();
+
+        return pack;
     }
 
     public static MetricP toMetric(PerfCounterPack counterPack) {

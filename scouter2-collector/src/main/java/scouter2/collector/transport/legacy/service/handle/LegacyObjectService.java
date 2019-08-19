@@ -17,10 +17,28 @@
 
 package scouter2.collector.transport.legacy.service.handle;
 
+import scouter.io.DataInputX;
+import scouter.io.DataOutputX;
+import scouter.lang.pack.ObjectPack;
+import scouter.net.RequestCmd;
+import scouter.net.TcpFlag;
+import scouter2.collector.domain.metric.MetricService;
+import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.legacy.LegacySupport;
+import scouter2.collector.transport.legacy.LegacyMapper;
+import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
+
+import java.io.IOException;
+import java.util.List;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-13
  */
 public class LegacyObjectService {
+
+    private ObjService objService = ObjService.getInstance();
+    private MetricService metricService = MetricService.getInstance();
 
     /**
      * OBJECT_LIST_REAL_TIME
@@ -28,9 +46,22 @@ public class LegacyObjectService {
      * @param dout ObjectPack[]
      * @param login
      */
-//    @LegacyServiceHandler(RequestCmd.OBJECT_LIST_REAL_TIME)
-//    public void agentList(DataInputX din, DataOutputX dout, boolean login) {
-//
+    @LegacyServiceHandler(RequestCmd.OBJECT_LIST_REAL_TIME)
+    public void findObjList(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+
+        List<Obj> objs = objService.findByApplicationId(LegacySupport.APPLICATION_ID_FALLBACK_FOR_SCOUTER1_AGENT);
+        for (Obj obj : objs) {
+            if (!objService.isDeadObject(obj)) {
+//                metricService.
+            }
+
+            ObjectPack pack = LegacyMapper.toObjectPack(obj);
+            dout.writeByte(TcpFlag.HasNEXT);
+            dout.writePack(pack);
+
+            //if obj alive get master metric
+
+        }
 //        val engine = CounterManager.getInstance().getCounterEngine();
 //        val en: java.util.Enumeration[ObjectPack] = AgentManager.getObjPacks();
 //        while (en.hasMoreElements()) {
@@ -49,8 +80,8 @@ public class LegacyObjectService {
 //            dout.writeByte(TcpFlag.HasNEXT);
 //            dout.writePack(p);
 //        }
-//    }
-//
+    }
+
 //    @LegacyServiceHandler("OBJECT_LIST_LOAD_DATE")
 //    public void getAgentOldList(DataInputX din, DataOutputX dout, boolean login)
 //    {

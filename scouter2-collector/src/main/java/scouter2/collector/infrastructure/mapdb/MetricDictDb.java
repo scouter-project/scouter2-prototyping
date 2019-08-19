@@ -25,9 +25,11 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.config.ConfigCommon;
+import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.FileUtil;
@@ -71,12 +73,25 @@ public class MetricDictDb implements Closeable {
         ShutdownManager.getInstance().register(this::close);
     }
 
+    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+    public void schedule4CloseIdles() {
+        if (CoreRun.isRunning() && !db.isClosed()) {
+            db.commit();
+        }
+    }
+
     @Override
     public synchronized void close() {
         if (!db.isClosed()) {
             log.info("[MetricDictDb] closing.");
             db.commit();
             db.close();
+        }
+    }
+
+    public void commit() {
+        if (CoreRun.isRunning() && !db.isClosed()) {
+            db.commit();
         }
     }
 

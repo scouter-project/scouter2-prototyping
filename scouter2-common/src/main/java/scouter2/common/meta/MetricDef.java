@@ -26,6 +26,7 @@ public class MetricDef {
     private MetricType metricType;
     private Unit unit;
     private String icon4Legacy;
+    private boolean displayTotal;
 
     public String getId() {
         return id;
@@ -67,14 +68,23 @@ public class MetricDef {
         this.icon4Legacy = icon4Legacy;
     }
 
+    public boolean isDisplayTotal() {
+        return displayTotal;
+    }
+
+    public void setDisplayTotal(boolean displayTotal) {
+        this.displayTotal = displayTotal;
+    }
+
     @Override
     public String toString() {
-        return "Metric{" +
+        return "MetricDef{" +
                 "id='" + id + '\'' +
                 ", displayName='" + displayName + '\'' +
                 ", metricType=" + metricType +
                 ", unit=" + unit +
                 ", icon4Legacy='" + icon4Legacy + '\'' +
+                ", displayTotal=" + displayTotal +
                 '}';
     }
 

@@ -18,12 +18,9 @@
 package scouter2.common.meta;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-18
  */
-public enum MetricType {
-    MEASURE,
-    COUNTER,
-    SUMMARY,
-    HISTOGRAM,
-    ;
+public class MetricConstant {
+    public static final String OBJ_FAMILIES_FILE_NAME = "/objFamilies.json";
+    public static final String OBJ_FAMILY_LEGACY_MAPPING_FILE_NAME = "/objFamiliesLegacyMapping.json";
 }

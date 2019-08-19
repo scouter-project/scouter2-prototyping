@@ -38,7 +38,7 @@ public class SchedulerConfig implements SchedulingConfigurer {
 
     public Executor schedulerExecutor() {
         ThreadPoolTaskScheduler t = new ThreadPoolTaskScheduler();
-        t.setPoolSize(10);
+        t.setPoolSize(20);
         t.setThreadNamePrefix("ScouterSpringSchedulerThread-");
         t.setDaemon(true);
         t.initialize();

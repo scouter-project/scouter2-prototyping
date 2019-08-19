@@ -37,6 +37,8 @@ import scouter2.common.meta.ObjFamily;
 import javax.annotation.PostConstruct;
 import java.io.InputStream;
 
+import static scouter2.common.meta.MetricConstant.OBJ_FAMILIES_FILE_NAME;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
  */
@@ -44,11 +46,25 @@ import java.io.InputStream;
 @Slf4j
 public class ObjFamilyManager {
 
-    public static final String OBJ_FAMILIES_FILE_NAME = "/objFamilies.json";
     public static final ThrottleConfig S_0012 = ThrottleConfig.of("S0012");
+
+    private static ObjFamilyManager instance;
 
     private ImmutableList<ObjFamily> objFamilyList = Lists.immutable.empty();
     private ImmutableMap<String, ObjFamily> objFamilyMap = Maps.immutable.empty();
+
+    public ObjFamilyManager() {
+        synchronized (ObjFamilyManager.class) {
+            if (instance != null) {
+                throw new IllegalStateException();
+            }
+            instance = this;
+        }
+    }
+
+    public static ObjFamilyManager getInstance() {
+        return instance;
+    }
 
     @PostConstruct
     public void init() {
@@ -84,12 +100,16 @@ public class ObjFamilyManager {
         }
     }
 
-    public ObjFamily getObjFamily(String objTypeId) {
-        return objFamilyMap.get(objTypeId);
+    public ObjFamily getObjFamily(String familyId) {
+        return objFamilyMap.get(familyId);
     }
 
-    public ImmutableList<MetricDef> getMetricDefsByObjFamily(String objFamilyId) {
-        ObjFamily objFamily = objFamilyMap.get(objFamilyId);
+    public ImmutableList<ObjFamily> getAll() {
+        return objFamilyList;
+    }
+
+    public ImmutableList<MetricDef> getMetricDefsByObjFamily(String familyId) {
+        ObjFamily objFamily = objFamilyMap.get(familyId);
         if (objFamily == null) {
             return Lists.immutable.empty();
         }

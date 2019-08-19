@@ -69,11 +69,19 @@ public class Obj implements Serializable {
         this.tags = new HashMap<>(proto.getTagsMap());
     }
 
+    public void setLastActive(long lastActive) {
+        this.lastActive = lastActive;
+    }
+
     public String getFullNameOrLegacyHash() {
         if (objLegacyHash != 0) {
             return String.valueOf(objLegacyHash);
         }
         return objFullName;
+    }
+
+    public boolean isDead(long deadIntervalMillis, long now) {
+        return now - lastActive > deadIntervalMillis;
     }
 
     @Override

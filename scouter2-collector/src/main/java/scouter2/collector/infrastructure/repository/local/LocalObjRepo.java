@@ -83,12 +83,15 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
         boolean renew = true;
         Obj cached = objCache.get(obj.getObjId());
         if (cached != null) {
+            cached.setLastActive(System.currentTimeMillis());
             renew = !cached.equals(obj);
         }
 
         if (renew) {
+            obj.setLastActive(System.currentTimeMillis());
             objMap.put(obj.getObjId(), obj);
             objNameIdMap.put(obj.getFullNameOrLegacyHash(), obj.getObjId());
+            db.commit();
 
             objCache.put(obj.getObjId(), obj);
             objNameIdCache.put(obj.getFullNameOrLegacyHash(), obj.getObjId());
@@ -118,12 +121,14 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
         Long id = objNameIdMap.get(fullNameOrLegacyHash);
         if (id == null) {
             long newId = objIdGenerator.incrementAndGet();
+            db.commit();
             //There can exist something of legacy objHash.
             if (objMap.containsKey(newId)) {
                 return generateUniqueIdByName(fullNameOrLegacyHash);
             }
             objNameIdMap.put(fullNameOrLegacyHash, newId);
             objNameIdCache.put(fullNameOrLegacyHash, newId);
+            db.commit();
             return newId;
 
         } else {

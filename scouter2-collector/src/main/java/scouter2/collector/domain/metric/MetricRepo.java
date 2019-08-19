@@ -16,6 +16,8 @@
  */
 package scouter2.collector.domain.metric;
 
+import io.grpc.stub.StreamObserver;
+import org.eclipse.collections.api.set.primitive.LongSet;
 import scouter2.collector.domain.ScouterRepo;
 import scouter2.proto.Metric4RepoP;
 
@@ -25,6 +27,11 @@ import scouter2.proto.Metric4RepoP;
 public interface MetricRepo extends ScouterRepo {
     void add(String applicationId, Metric4RepoP metric);
 
+    void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream);
+
+    void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
+                                   StreamObserver<Metric4RepoP> stream);
+
     /**
      * get unique metric name's id, if absent generate it.
      *  - less value is better for serialization.
@@ -32,4 +39,5 @@ public interface MetricRepo extends ScouterRepo {
      */
     long findMetricIdAbsentGen(String metricName);
 
+    String findMetricNameById(long metricId);
 }

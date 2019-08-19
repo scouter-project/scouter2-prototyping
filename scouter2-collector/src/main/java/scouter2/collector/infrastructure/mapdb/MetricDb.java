@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import scouter2.collector.config.ConfigCommon;
+import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.DateUtil;
@@ -67,6 +68,16 @@ public class MetricDb {
         }
         for (MetricDbDaily idle : idles) {
             idle.close();
+        }
+    }
+
+    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+    public void schedule4Commit() {
+        for (WithTouch<MetricDbDaily> value : dbMap.values()) {
+            MetricDbDaily inner = value.inner;
+            if (CoreRun.isRunning() && !inner.getDb().isClosed()) {
+                inner.getDb().commit();
+            }
         }
     }
 

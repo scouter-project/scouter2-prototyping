@@ -23,9 +23,9 @@
     </appender>
 
     <appender name="SCOUTER_DEFAULT" class="scouter2.collector.common.log.ThrottlingRollingFileAppender">
-        <file>scouter.log</file>
+        <file>./logs/scouter.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>scouter.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>./logs/scouter.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>10</maxHistory>
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>

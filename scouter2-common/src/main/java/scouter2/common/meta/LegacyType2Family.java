@@ -17,54 +17,54 @@
 
 package scouter2.common.meta;
 
-import java.util.List;
-
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-18
  */
-public class ObjFamily {
-    private String id;
-    private String masterMetricName;
-    private List<MetricDef> metricDefs;
-
-    public static ObjFamily empty() {
-        return new ObjFamily();
-    }
+public class LegacyType2Family {
+    String id;
+    String objFamily;
+    String displayName;
+    boolean subObject;
 
     public String getId() {
         return id;
-    }
-
-    public boolean isEmpty() {
-        return id == null;
     }
 
     public void setId(String id) {
         this.id = id;
     }
 
-    public String getMasterMetricName() {
-        return masterMetricName;
+    public String getObjFamily() {
+        return objFamily;
     }
 
-    public void setMasterMetricName(String masterMetricName) {
-        this.masterMetricName = masterMetricName;
+    public void setObjFamily(String objFamily) {
+        this.objFamily = objFamily;
     }
 
-    public List<MetricDef> getMetricDefs() {
-        return metricDefs;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public void setMetricDefs(List<MetricDef> metricDefs) {
-        this.metricDefs = metricDefs;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public boolean isSubObject() {
+        return subObject;
+    }
+
+    public void setSubObject(boolean subObject) {
+        this.subObject = subObject;
     }
 
     @Override
     public String toString() {
-        return "ObjFamily{" +
+        return "LegacyType2Family{" +
                 "id='" + id + '\'' +
-                ", masterMetricName='" + masterMetricName + '\'' +
-                ", metricDefs=" + metricDefs +
+                ", objFamily='" + objFamily + '\'' +
+                ", displayName='" + displayName + '\'' +
+                ", subObject=" + subObject +
                 '}';
     }
 }

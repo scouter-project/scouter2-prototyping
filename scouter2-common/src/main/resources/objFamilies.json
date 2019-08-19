@@ -2,7 +2,7 @@
   {
     "id": "host",
     "masterMetricName": "Cpu",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "Cpu",
         "displayName": "CPU",
@@ -252,7 +252,7 @@
   {
     "id": "javaee",
     "masterMetricName": "ActiveService",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "RecentUser",
         "displayName": "Recent User",
@@ -463,7 +463,7 @@
   {
     "id": "datasource",
     "masterMetricName": "ConnActive",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "ConnIdle",
         "displayName": "Conn Idle",
@@ -499,7 +499,7 @@
   {
     "id": "reqproc",
     "masterMetricName": "BytesSent",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "ErrorCount",
         "displayName": "Error Count",
@@ -555,7 +555,7 @@
   {
     "id": "batch",
     "masterMetricName": "RunCount",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "BatchService",
         "displayName": "Batch Service",
@@ -601,7 +601,7 @@
   {
     "id": "aws",
     "masterMetricName": "Cpu",
-    "metricsDefs": [
+    "metricDefs": [
       {
         "id": "Cpu",
         "displayName": "CPU",

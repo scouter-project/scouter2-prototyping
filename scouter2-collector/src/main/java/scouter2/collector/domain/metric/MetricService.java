@@ -26,13 +26,24 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MetricService {
+    private static MetricService instance;
 
     private MetricRepo repo;
     private MetricServiceCache cache;
 
     public MetricService(MetricRepo repo, MetricServiceCache cache) {
-        this.repo = repo;
-        this.cache = cache;
+        synchronized (MetricService.class) {
+            if (instance != null) {
+                throw new IllegalStateException();
+            }
+            this.repo = repo;
+            this.cache = cache;
+            instance = this;
+        }
+    }
+
+    public static MetricService getInstance() {
+        return instance;
     }
 
     public long findMetricIdAbsentGen(String metricName) {

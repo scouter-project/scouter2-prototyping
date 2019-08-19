@@ -20,12 +20,18 @@ package scouter2.collector.infrastructure.repository.local;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.primitive.LongSet;
+import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.log.ThrottleConfig;
+import scouter2.collector.common.util.U;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.metric.MetricRepo;
+import scouter2.collector.domain.metric.MetricRepoAdapter;
+import scouter2.collector.domain.metric.Metrics;
+import scouter2.collector.domain.metric.SingleMetric;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
@@ -39,6 +45,7 @@ import scouter2.common.util.DateUtil;
 import scouter2.proto.Metric4RepoP;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.NavigableSet;
 import java.util.function.Consumer;
 
@@ -52,23 +59,39 @@ import static scouter2.common.util.DateUtil.MILLIS_PER_HOUR;
 @Component
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
-public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, NonThreadSafeRepo {
+public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, NonThreadSafeRepo {
 
     public static final ThrottleConfig S_0004 = ThrottleConfig.of("S0004");
     public static final ThrottleConfig S_0005 = ThrottleConfig.of("S0005");
-    HourUnitWithMinutes currentHourBucket;
+
+    private HourUnitWithMinutes currentHourBucket;
 
     private MetricDictDb metricDictDb;
     private MetricFileDb metricFileDb;
     private MetricDb metricDb;
     private ObjService instanceService;
+    LocalMetricRepoCache cache;
 
     public LocalMetricRepo(MetricDictDb metricDictDb, MetricFileDb metricFileDb, MetricDb metricDb,
-                           ObjService instanceService) {
+                           ObjService instanceService, LocalMetricRepoCache cache) {
         this.metricDictDb = metricDictDb;
         this.metricFileDb = metricFileDb;
         this.metricDb = metricDb;
         this.instanceService = instanceService;
+        this.cache = cache;
+    }
+
+    @Override
+    public String getRepoType() {
+        return LocalRepoConstant.TYPE_NAME;
+    }
+
+    @Override
+    public void init() {
+    }
+
+    @Override
+    public void destroy() {
     }
 
     @Override
@@ -85,9 +108,40 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
                 indexing(metric, dayDb, offset);
             }
 
+            for (Map.Entry<Long, Double> e : metric.getMetricsMap().entrySet()) {
+                cache.addCurrentMetric(applicationId, metric.getObjId(), e.getKey(), e.getValue(),
+                        metric.getTimestamp(), Metrics.getAliveMillisOfType(metric.getTimeType()));
+            }
+
+            findCurrentMetrics(applicationId,
+                    LongSets.mutable.with(metric.getObjId()), LongSets.mutable.with(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+            );
+
         } catch (Exception e) {
             log.error(e.getMessage(), S_0004, e);
         }
+    }
+
+    public MutableList<SingleMetric> findCurrentMetrics(String applicationId, LongSet objIds, LongSet metricIds) {
+        return cache.findCurrentMetrics(applicationId, objIds, metricIds, U.now());
+    }
+
+    @Override
+    public void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream) {
+        streamListByPeriod0(applicationId, from, to, stream,
+                metric -> publishMatched(applicationId, from, to, stream, metric));
+    }
+
+    @Override
+    public void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
+                                          StreamObserver<Metric4RepoP> stream) {
+        streamListByPeriod0(applicationId, from, to, stream,
+                metric -> publishMatchedWithObjs(applicationId, instanceIds, from, to, stream, metric));
+    }
+
+    public void findCurrentByName(String applicationId, LongSet instanceIds, long now) {
+//        String ymd = DateUtil.yyyymmdd(now);
+//        currentMetricCache.values()
     }
 
     private void indexing(Metric4RepoP metric, MetricDbDaily dayDb, long offset) {
@@ -110,17 +164,6 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
     private void resetCurrentMinutesListModel(MetricDbDaily dayDb, long hour) {
         this.currentHourBucket = dayDb.getHourUnitMap()
                 .computeIfAbsent(hour, k -> new HourUnitWithMinutes(hour));
-    }
-
-    public void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(applicationId, from, to, stream,
-                metric -> publishMatched(applicationId, from, to, stream, metric));
-    }
-
-    public void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
-                                          StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(applicationId, from, to, stream,
-                metric -> publishMatchedWithObjs(applicationId, instanceIds, from, to, stream, metric));
     }
 
     private void publishMatched(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream,
@@ -219,8 +262,18 @@ public class LocalMetricRepo extends LocalRepoAdapter implements MetricRepo, Non
 
     @Override
     public long findMetricIdAbsentGen(String metricName) {
-        return metricDictDb.getMetricReverseDict()
-                .computeIfAbsent(metricName,
-                        k -> metricDictDb.getMetricKeyGenerator().incrementAndGet());
+        Long metricId = metricDictDb.getMetricReverseDict().get(metricName);
+        if (metricId == null) {
+            metricId = metricDictDb.getMetricKeyGenerator().incrementAndGet();
+            metricDictDb.getMetricReverseDict().put(metricName, metricId);
+            metricDictDb.getMetricDict().put(metricId, metricName);
+            metricDictDb.commit();
+        }
+        return metricId;
+    }
+
+    @Override
+    public String findMetricNameById(long metricId) {
+        return metricDictDb.getMetricDict().get(metricId);
     }
 }

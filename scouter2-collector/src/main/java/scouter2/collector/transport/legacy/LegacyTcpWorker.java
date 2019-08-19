@@ -140,7 +140,9 @@ public class LegacyTcpWorker implements Runnable {
 //                    }
                 }
 //                RequestLogger.getInstance().add(cmd, session);
-                log.info("LegacyCmd: {}", cmd);
+                if (conf.isLegacyLogClientCallCmd()) {
+                    log.debug("LegacyCmd Call: {}", cmd);
+                }
                 LegacyServiceHandlingProxy.process(cmd, in, out, sessionOk);
 
                 out.writeByte(TcpFlag.NoNEXT);

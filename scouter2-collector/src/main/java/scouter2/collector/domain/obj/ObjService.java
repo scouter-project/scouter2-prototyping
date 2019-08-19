@@ -18,6 +18,8 @@
 package scouter2.collector.domain.obj;
 
 import org.springframework.stereotype.Service;
+import scouter2.collector.common.util.U;
+import scouter2.collector.config.ConfigObj;
 
 import java.util.List;
 
@@ -26,12 +28,27 @@ import java.util.List;
  */
 @Service
 public class ObjService {
+    private static ObjService instance;
+
     ObjRepo repo;
     ObjServiceCache cache;
+    ConfigObj configObj;
 
-    public ObjService(ObjRepo repo, ObjServiceCache cache) {
-        this.repo = repo;
-        this.cache = cache;
+    public ObjService(ObjRepo repo, ObjServiceCache cache, ConfigObj configObj) {
+        synchronized (ObjService.class) {
+            if (instance != null) {
+                throw new IllegalStateException();
+            }
+            this.repo = repo;
+            this.cache = cache;
+            this.configObj = configObj;
+            instance = this;
+        }
+    }
+
+    //for 3rd party transport
+    public static ObjService getInstance() {
+        return instance;
     }
 
     public Long findIdByName(String objFullName) {
@@ -52,5 +69,9 @@ public class ObjService {
 
     public List<Obj> findAll() {
         return repo.findAll();
+    }
+
+    public boolean isDeadObject(Obj obj) {
+        return obj.isDead(configObj.getObjDeadTime(), U.now());
     }
 }
