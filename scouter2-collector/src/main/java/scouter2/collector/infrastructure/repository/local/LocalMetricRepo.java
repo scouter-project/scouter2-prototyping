@@ -21,8 +21,9 @@ import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.api.set.primitive.LongSet;
-import org.eclipse.collections.impl.factory.primitive.LongSets;
+import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.log.ThrottleConfig;
@@ -31,18 +32,19 @@ import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.metric.MetricRepo;
 import scouter2.collector.domain.metric.MetricRepoAdapter;
 import scouter2.collector.domain.metric.Metrics;
-import scouter2.collector.domain.metric.SingleMetric;
+import scouter2.collector.domain.metric.SingleMetricDatum;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
-import scouter2.collector.infrastructure.filedb.HourUnitWithMinutes;
-import scouter2.collector.infrastructure.filedb.MetricFileDb;
-import scouter2.collector.infrastructure.mapdb.MetricDb;
-import scouter2.collector.infrastructure.mapdb.MetricDbDaily;
-import scouter2.collector.infrastructure.mapdb.MetricDictDb;
+import scouter2.collector.infrastructure.db.filedb.HourUnitWithMinutes;
+import scouter2.collector.infrastructure.db.filedb.MetricFileDb;
+import scouter2.collector.infrastructure.db.mapdb.DailyMinuteIndex;
+import scouter2.collector.infrastructure.db.mapdb.MetricDb;
+import scouter2.collector.infrastructure.db.mapdb.MetricDictDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.util.DateUtil;
 import scouter2.proto.Metric4RepoP;
+import scouter2.proto.TimeTypeP;
 
 import java.io.IOException;
 import java.util.Map;
@@ -50,7 +52,6 @@ import java.util.NavigableSet;
 import java.util.function.Consumer;
 
 import static scouter2.common.util.DateUtil.MILLIS_PER_DAY;
-import static scouter2.common.util.DateUtil.MILLIS_PER_HOUR;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-17
@@ -64,7 +65,7 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
     public static final ThrottleConfig S_0004 = ThrottleConfig.of("S0004");
     public static final ThrottleConfig S_0005 = ThrottleConfig.of("S0005");
 
-    private HourUnitWithMinutes currentHourBucket;
+    private MutableIntObjectMap<HourUnitWithMinutes> currentHourBucketMap = IntObjectMaps.mutable.empty();
 
     private MetricDictDb metricDictDb;
     private MetricFileDb metricFileDb;
@@ -92,6 +93,8 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
 
     @Override
     public void destroy() {
+        metricDb.closeAll();
+        metricDictDb.getDb().close();
     }
 
     @Override
@@ -101,69 +104,67 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
                 return;
             }
             String ymd = DateUtil.yyyymmdd(metric.getTimestamp());
-            MetricDbDaily dayDb = metricDb.getDailyDb(ymd);
+            DailyMinuteIndex dayIndex = metricDb.getDailyIndex(ymd, metric.getTimeType());
 
             long offset = metricFileDb.add(ymd, metric);
             if (offset >= 0) {
-                indexing(metric, dayDb, offset);
+                indexing(metric, dayIndex, offset);
             }
 
-            for (Map.Entry<Long, Double> e : metric.getMetricsMap().entrySet()) {
-                cache.addCurrentMetric(applicationId, metric.getObjId(), e.getKey(), e.getValue(),
-                        metric.getTimestamp(), Metrics.getAliveMillisOfType(metric.getTimeType()));
+            if (metric.getTimeType() == TimeTypeP.REALTIME) {
+                for (Map.Entry<Long, Double> e : metric.getMetricsMap().entrySet()) {
+                    cache.addCurrentMetric(applicationId, metric.getObjId(), e.getKey(), e.getValue(),
+                            metric.getTimestamp(), Metrics.getAliveMillisOfType(metric.getTimeType()));
+                }
             }
-
-            findCurrentMetrics(applicationId,
-                    LongSets.mutable.with(metric.getObjId()), LongSets.mutable.with(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
-            );
 
         } catch (Exception e) {
             log.error(e.getMessage(), S_0004, e);
         }
     }
 
-    public MutableList<SingleMetric> findCurrentMetrics(String applicationId, LongSet objIds, LongSet metricIds) {
+    @Override
+    public MutableList<SingleMetricDatum> findCurrentMetrics(String applicationId, LongSet objIds, LongSet metricIds) {
         return cache.findCurrentMetrics(applicationId, objIds, metricIds, U.now());
     }
 
-    @Override
-    public void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(applicationId, from, to, stream,
-                metric -> publishMatched(applicationId, from, to, stream, metric));
-    }
-
-    @Override
-    public void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
-                                          StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(applicationId, from, to, stream,
-                metric -> publishMatchedWithObjs(applicationId, instanceIds, from, to, stream, metric));
-    }
-
-    public void findCurrentByName(String applicationId, LongSet instanceIds, long now) {
-//        String ymd = DateUtil.yyyymmdd(now);
-//        currentMetricCache.values()
-    }
-
-    private void indexing(Metric4RepoP metric, MetricDbDaily dayDb, long offset) {
+    private void indexing(Metric4RepoP metric, DailyMinuteIndex dayIndex, long offset) {
         long hourUnit = DateUtil.getHourUnit(metric.getTimestamp());
+        HourUnitWithMinutes currentHourBucket = currentHourBucketMap.get(metric.getTimeTypeValue());
         if (currentHourBucket == null) {
-            resetCurrentMinutesListModel(dayDb, hourUnit);
+            currentHourBucket = resetCurrentMinutesListModel(dayIndex, hourUnit);
+            currentHourBucketMap.put(metric.getTimeTypeValue(), currentHourBucket);
         }
         if (currentHourBucket.getHourUnit() != hourUnit) {
-            resetCurrentMinutesListModel(dayDb, hourUnit);
+            currentHourBucket = resetCurrentMinutesListModel(dayIndex, hourUnit);
+            currentHourBucketMap.put(metric.getTimeTypeValue(), currentHourBucket);
         }
 
         long minuteUnit = DateUtil.getMinuteUnit(metric.getTimestamp());
         if (!currentHourBucket.getMinuteUnits().contains(minuteUnit)) {
             currentHourBucket.getMinuteUnits().add(minuteUnit);
-            dayDb.getHourUnitMap().put(hourUnit, currentHourBucket);
-            dayDb.getMinuteIndex().put(minuteUnit, offset);
+            dayIndex.getHourUnitMap().put(hourUnit, currentHourBucket);
+            dayIndex.getMinuteIndex().put(minuteUnit, offset);
         }
     }
 
-    private void resetCurrentMinutesListModel(MetricDbDaily dayDb, long hour) {
-        this.currentHourBucket = dayDb.getHourUnitMap()
+    private HourUnitWithMinutes resetCurrentMinutesListModel(DailyMinuteIndex dayIndex, long hour) {
+        return dayIndex.getHourUnitMap()
                 .computeIfAbsent(hour, k -> new HourUnitWithMinutes(hour));
+    }
+
+    @Override
+    public void stream(String applicationId, TimeTypeP timeTypeP, long from, long to,
+                       StreamObserver<Metric4RepoP> stream) {
+        streamListByPeriod0(timeTypeP, from, to, stream,
+                metric -> publishMatched(applicationId, from, to, stream, metric));
+    }
+
+    @Override
+    public void streamByObjs(String applicationId, LongSet objIds, TimeTypeP timeTypeP, long from, long to,
+                             StreamObserver<Metric4RepoP> stream) {
+        streamListByPeriod0(timeTypeP, from, to, stream,
+                metric -> publishMatchedWithObjs(applicationId, objIds, from, to, stream, metric));
     }
 
     private void publishMatched(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream,
@@ -179,7 +180,7 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
         }
     }
 
-    private void publishMatchedWithObjs(String applicationId, LongSet instanceIds,
+    private void publishMatchedWithObjs(String applicationId, LongSet objIds,
                                         long from, long to,
                                         StreamObserver<Metric4RepoP> stream, Metric4RepoP metric) {
 
@@ -189,13 +190,13 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
         if (metric.getTimestamp() >= from
                 && metric.getTimestamp() <= to
                 && applicationId.equals(obj.getApplicationId())
-                && instanceIds.contains(metric.getObjId())) {
+                && (objIds.isEmpty() || objIds.contains(metric.getObjId()))) {
 
             stream.onNext(metric);
         }
     }
 
-    private void streamListByPeriod0(String applicationId, long from, long to,
+    private void streamListByPeriod0(TimeTypeP timeTypeP, long from, long to,
                                      StreamObserver<Metric4RepoP> stream,
                                      Consumer<Metric4RepoP> metric4RepoPConsumer) {
 
@@ -208,16 +209,16 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
         for (long day = fromDayUnit; day <= toDayUnit; day++) {
             long dayTimestamp = DateUtil.reverseDayUnit(day);
             String ymd = DateUtil.yyyymmdd(dayTimestamp);
-            MetricDbDaily dayDb = metricDb.getDailyDb(ymd);
+            DailyMinuteIndex dayIndex = metricDb.getDailyIndex(ymd, timeTypeP);
 
             long dayMaxHourUnit = DateUtil.getHourUnit(dayTimestamp + MILLIS_PER_DAY - 1000);
             dayMaxHourUnit = Math.min(dayMaxHourUnit, toHourUnit);
 
             long startOffset = -1;
             for (long hour = fromHourUnit; hour <= dayMaxHourUnit; hour++) {
-                HourUnitWithMinutes hourUnitWithMinutes = dayDb.getHourUnitMap().get(hour);
+                HourUnitWithMinutes hourUnitWithMinutes = dayIndex.getHourUnitMap().get(hour);
                 if (hourUnitWithMinutes != null) {
-                    long offset = findStartOffset(ymd, hourUnitWithMinutes, fromMinUnit);
+                    long offset = findStartOffset(ymd, timeTypeP, hourUnitWithMinutes, fromMinUnit);
                     if (offset != -1) {
                         startOffset = offset;
                         break;
@@ -227,7 +228,7 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
 
             if (startOffset >= 0) {
                 try {
-                    streamInDay(ymd, startOffset, to, metric4RepoPConsumer);
+                    streamInDay(timeTypeP, ymd, startOffset, to, metric4RepoPConsumer);
 
                 } catch (Exception e) {
                     log.error("error on streamListByPeriod.", S_0005, e);
@@ -240,24 +241,23 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
     }
 
 
-    private void streamInDay(String ymd, long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
+    private void streamInDay(TimeTypeP timeTypeP, String ymd, long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
             throws IOException {
 
-        metricFileDb.readPeriod(ymd, startOffset, toMillis, metric4RepoPConsumer);
+        metricFileDb.readPeriod(ymd, timeTypeP, startOffset, toMillis, metric4RepoPConsumer);
     }
 
-    private long findStartOffset(String ymd, HourUnitWithMinutes hourUnitWithMinutes, long fromMinUnit) {
-        long timestamp = DateUtil.reverseMinuteUnit(fromMinUnit);
-        long hourLastMinUnit = DateUtil.getMinuteUnit(DateUtil.truncHour(timestamp) + MILLIS_PER_HOUR - 1000);
+    private long findStartOffset(String ymd, TimeTypeP timeTypeP,
+                                 HourUnitWithMinutes hourUnitWithMinutes, long fromMinUnit) {
         NavigableSet<Long> withInRange = hourUnitWithMinutes.getMinuteUnits()
-                .subSet(fromMinUnit, true, hourLastMinUnit, true);
+                .subSet(fromMinUnit, true, fromMinUnit + 60, true);
 
         Long minUnit = withInRange.pollFirst();
         if (minUnit == null) {
             return -1;
         }
-        Long offset = metricDb.getDailyDb(ymd).getMinuteIndex().get(minUnit);
-        return offset == null ? 0 : offset;
+        Long offset = metricDb.getDailyIndex(ymd, timeTypeP).getMinuteIndex().get(minUnit);
+        return offset == null ? -1 : offset;
     }
 
     @Override

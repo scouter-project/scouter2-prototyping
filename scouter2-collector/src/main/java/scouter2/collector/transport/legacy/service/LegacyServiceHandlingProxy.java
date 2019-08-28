@@ -100,7 +100,7 @@ public class LegacyServiceHandlingProxy {
 		if (handler != null) {
 			handler.exec(in, out, login);
 		} else {
-			throw new RuntimeException("no handler  cmd=" + cmd);
+			throw new RuntimeException("Non implemented Legacy CMD: " + cmd);
 		}
 	}
 }

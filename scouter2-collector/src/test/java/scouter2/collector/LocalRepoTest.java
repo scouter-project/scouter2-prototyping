@@ -18,6 +18,7 @@
 package scouter2.collector;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
@@ -30,6 +31,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigCommon;
 import scouter2.common.helper.Props;
+import scouter2.common.util.ThreadUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,20 +44,26 @@ import java.util.Properties;
 @Import(LocalRepoTest.LocalRepoTestConfig.class)
 public abstract class LocalRepoTest {
 
-    public static final String DB_DIR = U.systemTmpDir() + "scouter2/database";
+    public static final String DB_DIR = U.systemTmpDir() + RandomUtils.nextLong() + "/scouter2/database";
 
     @BeforeClass
     public static void beforeClass() {
         System.setProperty("repoType", "local");
-        clearDb();
+        Runtime.getRuntime().addShutdownHook(new Thread(LocalRepoTest::clearDb));
     }
 
     @AfterClass
     public static void afterClass() {
-        clearDb();
     }
 
-    public static void clearDb() {
+    private static boolean clearCalled = false;
+    public synchronized static void clearDb() {
+        if (clearCalled) {
+            return;
+        }
+        ThreadUtil.sleep(200);
+        clearCalled = true;
+
         File file = new File(DB_DIR);
         try {
             FileUtils.deleteDirectory(file);
@@ -69,8 +77,8 @@ public abstract class LocalRepoTest {
 
     @TestConfiguration
     @ComponentScan(basePackages = {
-            "scouter2.collector.infrastructure.filedb",
-            "scouter2.collector.infrastructure.mapdb",
+            "scouter2.collector.infrastructure.db.filedb",
+            "scouter2.collector.infrastructure.db.mapdb",
             "scouter2.collector.infrastructure.repository.local",
             "scouter2.collector.config",
             "scouter2.collector.domain.obj"

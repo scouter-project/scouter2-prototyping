@@ -28,7 +28,7 @@ public interface ObjRepo extends ScouterRepo {
      * persist obj
      * @param obj
      */
-    void add(Obj obj);
+    void addOrModify(Obj obj);
 
     /**
      * find object id by object full name
@@ -57,6 +57,8 @@ public interface ObjRepo extends ScouterRepo {
     void remove(long objId);
 
     List<Obj> findByApplicationId(String applicationId);
+
+    List<Obj> findByLegacyObjType(String legacyObjType);
 
     List<Obj> findAll();
 

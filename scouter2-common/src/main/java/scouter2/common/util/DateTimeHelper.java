@@ -308,6 +308,10 @@ public class DateTimeHelper {
 		return (time - BASE_TIME) / MILLIS_PER_HOUR;
 	}
 
+	public int getSecUnit(long time) {
+		return (int) ((time - BASE_TIME) / MILLIS_PER_SECOND);
+	}
+
 	public long reverseDayUnit(long dayUnit) {
 		return dayUnit * MILLIS_PER_DAY + BASE_TIME;
 	}
@@ -318,6 +322,10 @@ public class DateTimeHelper {
 
 	public long reverseMinuteUnit(long unit) {
 		return (unit * MILLIS_PER_MINUTE) + BASE_TIME;
+	}
+
+	public long reverseSecUnit(long unit) {
+		return (unit * MILLIS_PER_SECOND) + BASE_TIME;
 	}
 
 	public long getDateUnit() {

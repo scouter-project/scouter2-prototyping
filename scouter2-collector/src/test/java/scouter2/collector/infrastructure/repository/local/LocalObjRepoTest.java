@@ -50,7 +50,7 @@ public class LocalObjRepoTest extends LocalRepoTest {
         long objId = sut.generateUniqueIdByName("obj1");
         Obj fixture = ObjFixture.getOne(objId);
 
-        sut.add(fixture);
+        sut.addOrModify(fixture);
         Obj actual = sut.findById(fixture.getObjId());
 
         sut.findById(fixture.getObjId());
@@ -66,9 +66,9 @@ public class LocalObjRepoTest extends LocalRepoTest {
         Obj fixture2 = ObjFixture.getOne(sut.generateUniqueIdByName("obj2"));
         Obj fixture3 = ObjFixture.getOne(sut.generateUniqueIdByName("obj3"));
 
-        sut.add(fixture1);
-        sut.add(fixture2);
-        sut.add(fixture3);
+        sut.addOrModify(fixture1);
+        sut.addOrModify(fixture2);
+        sut.addOrModify(fixture3);
 
         MutableList<Obj> actuals = Lists.adapt(sut.findAll());
 

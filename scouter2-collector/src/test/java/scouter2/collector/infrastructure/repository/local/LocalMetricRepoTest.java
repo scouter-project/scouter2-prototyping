@@ -30,11 +30,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import scouter2.collector.LocalRepoTest;
 import scouter2.collector.common.util.U;
-import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjService;
 import scouter2.common.util.DateUtil;
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.ObjP;
+import scouter2.proto.TimeTypeP;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,7 +84,25 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         List<Metric4RepoP> metrics = Lists.mutable.empty();
         AtomicInteger onCompletedCount = new AtomicInteger();
 
-        repo.streamListByPeriod(applicationId, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+
+        assertThat(onCompletedCount.get()).isEqualTo(1);
+        assertThat(metrics.size()).isEqualTo(2);
+    }
+
+    @Test
+    public void add_and_stream_of_5min_type_data() {
+        long testTime = U.now() - dayFlag.incrementAndGet() * DateUtil.MILLIS_PER_DAY;
+        Metric4RepoP metric1 = getAny(objId, testTime - 2000, TimeTypeP.FIVE_MIN);
+        Metric4RepoP metric2 = getAny(objId, testTime, TimeTypeP.FIVE_MIN);
+
+        repo.add(applicationId, metric1);
+        repo.add(applicationId, metric2);
+
+        List<Metric4RepoP> metrics = Lists.mutable.empty();
+        AtomicInteger onCompletedCount = new AtomicInteger();
+
+        repo.stream(applicationId, TimeTypeP.FIVE_MIN, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
 
         assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);
@@ -106,13 +125,13 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         AtomicInteger onCompletedCount = new AtomicInteger();
 
         //1st case
-        repo.streamListByPeriod(applicationId, testTime - 10000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 10000, testTime, streamObserver(metrics, onCompletedCount));
         assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(4);
 
         //2nd case
         metrics = Lists.mutable.empty();
-        repo.streamListByPeriod(applicationId, testTime - 8000, testTime - 6000, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 8000, testTime - 6000, streamObserver(metrics, onCompletedCount));
         assertThat(metrics.size()).isEqualTo(2);
     }
 
@@ -133,7 +152,7 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         AtomicInteger onCompletedCount = new AtomicInteger();
 
         LongSet instanceIds = LongSets.mutable.with(objId);
-        repo.streamListByPeriodAndObjs(applicationId, instanceIds,testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.streamByObjs(applicationId, instanceIds, TimeTypeP.REALTIME, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
 
         assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);

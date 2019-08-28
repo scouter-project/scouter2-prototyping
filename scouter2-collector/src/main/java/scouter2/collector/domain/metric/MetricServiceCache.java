@@ -34,8 +34,13 @@ public class MetricServiceCache {
         this.repo = repo;
     }
 
-    @Cacheable(cacheNames = "metricName")
+    @Cacheable(cacheNames = "metricDict", key="#metricName", unless="#result == null")
     public long findMetricIdAbsentGen(String metricName) {
         return repo.findMetricIdAbsentGen(metricName);
+    }
+
+    @Cacheable(cacheNames = "metricDict", key="#metricId", unless="#result == null")
+    public String findMetricNameById(long metricId) {
+        return repo.findMetricNameById(metricId);
     }
 }

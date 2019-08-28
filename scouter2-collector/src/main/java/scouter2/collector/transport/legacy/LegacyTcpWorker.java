@@ -27,6 +27,7 @@ import scouter.net.TcpFlag;
 import scouter.util.FileUtil;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
+import scouter2.collector.main.CoreRun;
 import scouter2.collector.transport.legacy.service.LegacyServiceHandlingProxy;
 
 import java.io.BufferedInputStream;
@@ -43,6 +44,7 @@ import static scouter2.collector.transport.legacy.LegacyTcpWorker.WorkerContaine
 public class LegacyTcpWorker implements Runnable {
 
     public static final ThrottleConfig S_0029 = ThrottleConfig.of("S0029");
+    public static final ThrottleConfig S_0035 = ThrottleConfig.of("S0035");
 
     static class WorkerContainer {
         static WorkerContainer container = new WorkerContainer();
@@ -98,6 +100,10 @@ public class LegacyTcpWorker implements Runnable {
                     return;
 
                 case NetCafe.TCP_CLIENT:
+                    if (conf.isLegacyLogTcpActionEnabled()) {
+                        container.inc();
+                        log.info("Legacy client : {} open, count:{}", remoteAddr, (container.getActiveCount()));
+                    }
 //                    if (conf.log_tcp_action_enabled) {
 //                        Logger.println("Client : " + remoteAddr + " open #" + (ServiceWorker.getActiveCount() + 1));
 //                    }
@@ -114,6 +120,10 @@ public class LegacyTcpWorker implements Runnable {
 
         } catch (Throwable t) {
             log.error(t.getMessage(), S_0029, t);
+            container.dec();
+            if (conf.isLegacyLogTcpActionEnabled()) {
+                log.info("Legacy client : closed by open error, count:{}", (container.getActiveCount() + 1));
+            }
 
             FileUtil.close(in);
             FileUtil.close(out);
@@ -122,11 +132,11 @@ public class LegacyTcpWorker implements Runnable {
         }
 
         try {
-            container.inc();
             boolean sessionOk = false;
-            while (true) {
+            while (CoreRun.isRunning()) {
                 String cmd = in.readText();
                 if (RequestCmd.CLOSE.equals(cmd)) {
+                    log.info("Legacy client sent CLOSE sign : {}", remoteAddr);
                     return;
                 }
                 long session = in.readLong();
@@ -149,10 +159,10 @@ public class LegacyTcpWorker implements Runnable {
                 out.flush();
             }
         } catch (Throwable t) {
-//            if (conf.log_tcp_action_enabled) {
-//                Logger.println("Client : " + remoteAddr + " closed");
-//                se.printStackTrace();
-//            }
+            log.error(t.getMessage(), S_0035, t);
+            if (conf.isLegacyLogTcpActionEnabled()) {
+                log.info("Legacy client : {} closed, count:{}", remoteAddr, container.getActiveCount(), t);
+            }
 
         } finally {
             FileUtil.close(in);

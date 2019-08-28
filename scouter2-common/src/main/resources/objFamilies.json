@@ -283,7 +283,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "gc.png"
+        "icon4Legacy": "gc.png",
+        "displayTotal": "true"
       },
       {
         "id": "ServiceCount",
@@ -293,7 +294,8 @@
           "display": "cnt/min",
           "format": "REAL"
         },
-        "icon4Legacy": "service_count.png"
+        "icon4Legacy": "service_count.png",
+        "displayTotal": "true"
       },
       {
         "id": "ErrorRate",
@@ -411,7 +413,8 @@
           "display": "tps",
           "format": "REAL"
         },
-        "icon4Legacy": "transaction.png"
+        "icon4Legacy": "transaction.png",
+        "displayTotal": "true"
       },
       {
         "id": "ProcCpu",
@@ -472,7 +475,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "conn_idle.png"
+        "icon4Legacy": "conn_idle.png",
+        "displayTotal": "true"
       },
       {
         "id": "ConnActive",
@@ -482,7 +486,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "conn_act.png"
+        "icon4Legacy": "conn_act.png",
+        "displayTotal": "true"
       },
       {
         "id": "ConnMax",
@@ -492,7 +497,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "database_go.png"
+        "icon4Legacy": "database_go.png",
+        "displayTotal": "true"
       }
     ]
   },
@@ -508,7 +514,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "error_count.png"
+        "icon4Legacy": "error_count.png",
+        "displayTotal": "true"
       },
       {
         "id": "BytesSent",
@@ -518,7 +525,8 @@
           "display": "bytes",
           "format": "REAL"
         },
-        "icon4Legacy": "bytes_sent.png"
+        "icon4Legacy": "bytes_sent.png",
+        "displayTotal": "true"
       },
       {
         "id": "RequestCount",
@@ -528,7 +536,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "req_count.gif"
+        "icon4Legacy": "req_count.gif",
+        "displayTotal": "true"
       },
       {
         "id": "ProcessingTime",
@@ -538,7 +547,8 @@
           "display": "sec",
           "format": "REAL"
         },
-        "icon4Legacy": "proc_time.png"
+        "icon4Legacy": "proc_time.png",
+        "displayTotal": "true"
       },
       {
         "id": "BytesReceived",
@@ -548,7 +558,8 @@
           "display": "bytes",
           "format": "INTEGER"
         },
-        "icon4Legacy": "bytes_recv.png"
+        "icon4Legacy": "bytes_recv.png",
+        "displayTotal": "true"
       }
     ]
   },
@@ -574,7 +585,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "service_count.png"
+        "icon4Legacy": "service_count.png",
+        "displayTotal": "true"
       },
       {
         "id": "BatchEnd",
@@ -584,7 +596,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "service_count.png"
+        "icon4Legacy": "service_count.png",
+        "displayTotal": "true"
       },
       {
         "id": "BatchEndNoSignal",
@@ -594,7 +607,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "service_count.png"
+        "icon4Legacy": "service_count.png",
+        "displayTotal": "true"
       }
     ]
   },
@@ -632,7 +646,8 @@
           "display": "cnt",
           "format": "INTEGER"
         },
-        "icon4Legacy": "req_count.gif"
+        "icon4Legacy": "req_count.gif",
+        "displayTotal": "true"
       }
     ]
   },

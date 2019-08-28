@@ -104,7 +104,14 @@ public class CollectorMain {
 
         while (true) {
             if (!exit.exists()) {
-                ShutdownManager.getInstance().shutdown();
+                try {
+                    CoreRun.getInstance().shutdown();
+                    Thread.sleep(500);
+                    ShutdownManager.getInstance().shutdown();
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
                 System.exit(0);
             }
             //TODO after file DB

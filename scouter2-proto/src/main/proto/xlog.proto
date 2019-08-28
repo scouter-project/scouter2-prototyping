@@ -20,7 +20,40 @@ message XlogP {
   int64 gxid = 1;
   int64 txid = 2;
   int64 ptxid = 3;
-  string partitionKey = 4;
+  int64 objId = 5;
+  int32 legacyObjHash = 6;
+  XlogTypeP xlogType = 7;
+
+  int32 service = 8;
+  int64 endTime = 9;
+  int32 elapsed = 10;
+  int32 threadName = 11;
+  int32 error = 12;
+  int32 cpuTime = 13;
+  int32 sqlCount = 14;
+  int32 sqlTime = 15;
+  bytes ipaddr = 16;
+  int32 memoryKb = 17;
+  int64 userId = 18;
+  int32 userAgent = 19;
+  int32 referrer = 20;
+  int32 apiCallCount = 21;
+  int32 apiCallTime = 22;
+  int32 group = 23;
+  string countryCode = 24;
+  int32 city = 25;
+
+  int32 queuingHostHash = 26;
+  int32 queuingTime = 27;
+  int32 queuing2ndHostHash = 28;
+  int32 queuing2ndTime = 29;
+
+  bool hasDump = 30;
+  bool b3Mode = 31;
+  int32 profileCount = 32;
+
+  map<string, int32> dictTags = 51;
+  map<string, string> stringTags = 52;
 }
 
 message IDWithTimeoutRequestP {

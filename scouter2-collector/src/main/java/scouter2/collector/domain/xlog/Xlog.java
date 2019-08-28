@@ -28,13 +28,16 @@ import scouter2.proto.XlogP;
 public class Xlog {
     XlogP proto;
     long timestamp;
+    String applicationId;
 
-    public Xlog(XlogP proto) {
-        this(proto, System.currentTimeMillis());
+    public Xlog(XlogP proto, String applicationId) {
+        this(proto, System.currentTimeMillis(), applicationId);
     }
 
-    public Xlog(XlogP proto, long timestamp) {
+    public Xlog(XlogP proto, long timestamp, String applicationId) {
         this.proto = proto;
+        this.timestamp = timestamp;
+        this.applicationId = applicationId;
     }
 
     @Override

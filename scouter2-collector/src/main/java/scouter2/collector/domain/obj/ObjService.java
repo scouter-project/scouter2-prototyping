@@ -17,11 +17,13 @@
 
 package scouter2.collector.domain.obj;
 
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.factory.Lists;
 import org.springframework.stereotype.Service;
+import scouter.util.HashUtil;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigObj;
-
-import java.util.List;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
@@ -52,6 +54,19 @@ public class ObjService {
     }
 
     public Long findIdByName(String objFullName) {
+        Long objID = findIdByName0(objFullName);
+        if (objID == null) {
+            //For scouter agent1 -> agent2 upgrade
+            objID = findIdByName0(String.valueOf(HashUtil.hash(objFullName)));
+        }
+        return objID;
+    }
+
+    private static boolean isScouterLegacyObjHash(String objFullName) {
+        return StringUtils.isNumeric(StringUtils.remove(objFullName, '-'));
+    }
+
+    private Long findIdByName0(String objFullName) {
         return cache.findIdByName(objFullName);
     }
 
@@ -63,12 +78,16 @@ public class ObjService {
         return repo.generateUniqueIdByName(fullNameOrLegacyHash);
     }
 
-    public List<Obj> findByApplicationId(String applicationId) {
-        return repo.findByApplicationId(applicationId);
+    public MutableList<Obj> findByApplicationId(String applicationId) {
+        return cache.findByApplicationId(applicationId);
     }
 
-    public List<Obj> findAll() {
-        return repo.findAll();
+    public MutableList<Obj> findByLegacyObjType(String legacyObjType) {
+        return cache.findByLegacyObjType(legacyObjType);
+    }
+
+    public MutableList<Obj> findAll() {
+        return Lists.adapt(repo.findAll());
     }
 
     public boolean isDeadObject(Obj obj) {

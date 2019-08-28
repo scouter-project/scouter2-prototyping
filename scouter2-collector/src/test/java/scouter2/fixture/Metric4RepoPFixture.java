@@ -19,6 +19,7 @@ package scouter2.fixture;
 
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.MetricTypeP;
+import scouter2.proto.TimeTypeP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-07
@@ -30,6 +31,7 @@ public class Metric4RepoPFixture {
         return Metric4RepoP.newBuilder()
                 .setObjId(objId)
                 .setMetricType(MetricTypeP.MEASURE)
+                .setTimeType(TimeTypeP.REALTIME)
                 .setTimestamp(timestamp)
                 .putMetrics(1L, counterValue1)
                 .putMetrics(2L, counterValue2)
@@ -40,6 +42,7 @@ public class Metric4RepoPFixture {
         return Metric4RepoP.newBuilder()
                 .setObjId(1)
                 .setMetricType(MetricTypeP.MEASURE)
+                .setTimeType(TimeTypeP.REALTIME)
                 .setTimestamp(System.currentTimeMillis())
                 .putMetrics(1L, 100)
                 .putMetrics(2L, 200)
@@ -50,6 +53,18 @@ public class Metric4RepoPFixture {
         return Metric4RepoP.newBuilder()
                 .setObjId(objId)
                 .setMetricType(MetricTypeP.MEASURE)
+                .setTimeType(TimeTypeP.REALTIME)
+                .setTimestamp(timestamp)
+                .putMetrics(1L, 100)
+                .putMetrics(2L, 200)
+                .build();
+    }
+
+    public static Metric4RepoP getAny(long objId, long timestamp, TimeTypeP timeTypeP) {
+        return Metric4RepoP.newBuilder()
+                .setObjId(objId)
+                .setMetricType(MetricTypeP.MEASURE)
+                .setTimeType(timeTypeP)
                 .setTimestamp(timestamp)
                 .putMetrics(1L, 100)
                 .putMetrics(2L, 200)

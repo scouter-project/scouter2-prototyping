@@ -36,31 +36,49 @@
     <cache
             name="objId"
             maxElementsInMemory="10000"
-            timeToLiveSeconds="300"
+            timeToLiveSeconds="10"
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU"
     />
 
     <cache
             name="obj"
             maxElementsInMemory="3000"
             timeToLiveSeconds="5"
-    />
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU">
+    </cache>
 
     <cache
             name="objList"
             maxElementsInMemory="300"
             timeToLiveSeconds="5"
-    />
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU">
+<!--            copyOnRead="true"-->
+<!--            copyOnWrite="true">-->
+<!--        <copyStrategy class="scouter2.collector.springconfig.ScouterCacheReadWriteSerializationCopyStrategy"/>-->
+    </cache>
 
     <cache
-            name="metricName"
+            name="metricDict"
             maxElementsInMemory="10000"
             timeToLiveSeconds="3600"
-    />
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU">
+    </cache>
 
     <cache
             name="tagName"
             maxElementsInMemory="10000"
             timeToLiveSeconds="3600"
-    />
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU">
+    </cache>
 
 </ehcache>

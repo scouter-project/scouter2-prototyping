@@ -17,7 +17,9 @@
 
 package scouter2.common.meta;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-03
@@ -26,6 +28,7 @@ public class ObjFamily {
     private String id;
     private String masterMetricName;
     private List<MetricDef> metricDefs;
+    private Map<String, MetricDef> metricDefMap;
 
     public static ObjFamily empty() {
         return new ObjFamily();
@@ -55,8 +58,17 @@ public class ObjFamily {
         return metricDefs;
     }
 
+    public MetricDef getMasterMetricDefs() {
+        return metricDefMap.get(getMasterMetricName());
+    }
+
     public void setMetricDefs(List<MetricDef> metricDefs) {
         this.metricDefs = metricDefs;
+        Map<String, MetricDef> metricDefMap = new HashMap<String, MetricDef>();
+        for (MetricDef def : metricDefs) {
+            metricDefMap.put(def.getId(), def);
+        }
+        this.metricDefMap = metricDefMap;
     }
 
     @Override

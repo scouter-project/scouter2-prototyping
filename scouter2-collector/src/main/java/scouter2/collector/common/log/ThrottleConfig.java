@@ -28,8 +28,8 @@ public class ThrottleConfig {
 
     protected String name = "default";
     protected int thresholdCount = 10;
-    protected long intervalMillis = 3000;
-    protected long timeToIdleMillis = 60000;
+    protected long intervalMillis = 5000;
+    protected long timeToIdleMillis = 10000;
 
     private ThrottleConfig() {}
 
@@ -63,7 +63,7 @@ public class ThrottleConfig {
     }
 
     public boolean idlePassed(long timeGapMillis) {
-        return timeGapMillis >timeToIdleMillis;
+        return timeGapMillis > timeToIdleMillis;
     }
 
     public boolean intervalNotPassed(long timeGapMillis) {

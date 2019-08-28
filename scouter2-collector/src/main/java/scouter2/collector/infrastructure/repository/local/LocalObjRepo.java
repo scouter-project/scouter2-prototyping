@@ -26,7 +26,7 @@ import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjRepo;
 import scouter2.collector.domain.obj.ObjRepoAdapter;
-import scouter2.collector.infrastructure.mapdb.ObjDb;
+import scouter2.collector.infrastructure.db.mapdb.ObjDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.collection.LruMap;
@@ -75,20 +75,20 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
 
     @Override
     public void destroy() {
+        db.close();
     }
 
 
     @Override
-    public void add(Obj obj) {
+    public void addOrModify(Obj obj) {
         boolean renew = true;
         Obj cached = objCache.get(obj.getObjId());
         if (cached != null) {
-            cached.setLastActive(System.currentTimeMillis());
+            cached.setLastActive(obj.getLastActive());
             renew = !cached.equals(obj);
         }
 
         if (renew) {
-            obj.setLastActive(System.currentTimeMillis());
             objMap.put(obj.getObjId(), obj);
             objNameIdMap.put(obj.getFullNameOrLegacyHash(), obj.getObjId());
             db.commit();
@@ -156,6 +156,13 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<Obj> findByLegacyObjType(String legacyObjType) {
+        return objCache.values().stream()
+                .filter(obj -> !obj.isDeleted())
+                .filter(obj -> legacyObjType.equals(obj.getObjLegacyType()))
+                .collect(Collectors.toList());
+    }
 
     @Override
     public List<Obj> findAll() {

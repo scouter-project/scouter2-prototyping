@@ -25,7 +25,7 @@ import java.util.List;
 public abstract class ObjRepoAdapter implements ObjRepo {
 
     @Override
-    public void add(Obj obj) {
+    public void addOrModify(Obj obj) {
         throw new UnsupportedOperationException();
     }
 
@@ -51,6 +51,11 @@ public abstract class ObjRepoAdapter implements ObjRepo {
 
     @Override
     public List<Obj> findByApplicationId(String applicationId) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<Obj> findByLegacyObjType(String legacyObjType) {
         throw new UnsupportedOperationException();
     }
 

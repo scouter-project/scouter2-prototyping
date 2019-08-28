@@ -67,6 +67,7 @@ public class Obj implements Serializable {
         this.address = proto.getAddress();
         this.version = proto.getVersion();
         this.tags = new HashMap<>(proto.getTagsMap());
+        this.lastActive = System.currentTimeMillis();
     }
 
     public void setLastActive(long lastActive) {

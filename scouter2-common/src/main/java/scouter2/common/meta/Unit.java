@@ -37,6 +37,10 @@ public class Unit {
         return format;
     }
 
+    public boolean isInteger() {
+        return format == UnitFormat.INTEGER;
+    }
+
     public void setFormat(UnitFormat format) {
         this.format = format;
     }

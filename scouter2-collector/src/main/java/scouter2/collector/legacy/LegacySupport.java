@@ -17,12 +17,22 @@
 
 package scouter2.collector.legacy;
 
+import org.eclipse.collections.api.list.primitive.MutableLongList;
+import org.eclipse.collections.impl.factory.primitive.LongLists;
+import scouter.lang.value.ListValue;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-15
  */
 public class LegacySupport {
 
-    public static final String APPLICATION_ID_FALLBACK_FOR_SCOUTER1_AGENT = "SCOUTER1-DEFAULT";
+    public static final String APPLICATION_ID_FOR_SCOUTER1_AGENT = "SCOUTER1-DEFAULT";
 
-
+    public static MutableLongList listValue2LongList(ListValue objHashParamLv) {
+        MutableLongList objIds = LongLists.mutable.empty();
+        for (int i = 0; i < objHashParamLv.size(); i++) {
+            objIds.add(objHashParamLv.getInt(i));
+        }
+        return objIds;
+    }
 }

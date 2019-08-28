@@ -22,7 +22,7 @@ import org.eclipse.collections.api.set.primitive.MutableLongSet;
 import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.junit.Test;
 import scouter2.collector.common.util.U;
-import scouter2.collector.domain.metric.SingleMetric;
+import scouter2.collector.domain.metric.SingleMetricDatum;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,7 +46,7 @@ public class LocalMetricRepoCacheTest {
 
         MutableLongSet objIds = LongSets.mutable.of(1);
         MutableLongSet metricIds = LongSets.mutable.of(1);
-        MutableList<SingleMetric> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
+        MutableList<SingleMetricDatum> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
 
         assertThat(currentMetrics.size()).isEqualTo(1);
         assertThat(currentMetrics.get(0).getObjId()).isEqualTo(1);
@@ -70,10 +70,10 @@ public class LocalMetricRepoCacheTest {
 
         MutableLongSet objIds = LongSets.mutable.of(1, 2);
         MutableLongSet metricIds = LongSets.mutable.of(100);
-        MutableList<SingleMetric> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
+        MutableList<SingleMetricDatum> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
 
-        SingleMetric metric1 = currentMetrics.select(m -> m.getObjId() == 1).getFirst();
-        SingleMetric metric2 = currentMetrics.select(m -> m.getObjId() == 2).getFirst();
+        SingleMetricDatum metric1 = currentMetrics.select(m -> m.getObjId() == 1).getFirst();
+        SingleMetricDatum metric2 = currentMetrics.select(m -> m.getObjId() == 2).getFirst();
 
         assertThat(currentMetrics.size()).isEqualTo(2);
 
@@ -99,10 +99,10 @@ public class LocalMetricRepoCacheTest {
 
         MutableLongSet objIds = LongSets.mutable.of(1);
         MutableLongSet metricIds = LongSets.mutable.of(100, 200);
-        MutableList<SingleMetric> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
+        MutableList<SingleMetricDatum> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
 
-        SingleMetric metric1 = currentMetrics.select(m -> m.getMetricId() == 100).getFirst();
-        SingleMetric metric2 = currentMetrics.select(m -> m.getMetricId() == 200).getFirst();
+        SingleMetricDatum metric1 = currentMetrics.select(m -> m.getMetricId() == 100).getFirst();
+        SingleMetricDatum metric2 = currentMetrics.select(m -> m.getMetricId() == 200).getFirst();
 
         assertThat(currentMetrics.size()).isEqualTo(2);
 
@@ -136,15 +136,15 @@ public class LocalMetricRepoCacheTest {
 
         MutableLongSet objIds = LongSets.mutable.of(1, 2);
         MutableLongSet metricIds = LongSets.mutable.of(100, 200);
-        MutableList<SingleMetric> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
+        MutableList<SingleMetricDatum> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 3000);
 
-        SingleMetric metric100_obj1 = currentMetrics
+        SingleMetricDatum metric100_obj1 = currentMetrics
                 .select(m -> m.getMetricId() == 100 && m.getObjId() == 1).getFirst();
-        SingleMetric metric200_obj1 = currentMetrics
+        SingleMetricDatum metric200_obj1 = currentMetrics
                 .select(m -> m.getMetricId() == 200 && m.getObjId() == 1).getFirst();
-        SingleMetric metric100_obj2 = currentMetrics
+        SingleMetricDatum metric100_obj2 = currentMetrics
                 .select(m -> m.getMetricId() == 100 && m.getObjId() == 2).getFirst();
-        SingleMetric metric200_obj2 = currentMetrics
+        SingleMetricDatum metric200_obj2 = currentMetrics
                 .select(m -> m.getMetricId() == 200 && m.getObjId() == 2).getFirst();
 
         assertThat(currentMetrics.size()).isEqualTo(4);
@@ -166,7 +166,7 @@ public class LocalMetricRepoCacheTest {
 
         MutableLongSet objIds = LongSets.mutable.of(1, 2);
         MutableLongSet metricIds = LongSets.mutable.of(1);
-        MutableList<SingleMetric> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 11000);
+        MutableList<SingleMetricDatum> currentMetrics = cache.findCurrentMetrics(APP_ID, objIds, metricIds, now + 11000);
 
         assertThat(currentMetrics.size()).isEqualTo(1);
         assertThat(currentMetrics.get(0).getObjId()).isEqualTo(1);

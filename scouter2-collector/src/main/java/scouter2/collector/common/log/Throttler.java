@@ -33,7 +33,6 @@ class Throttler<E> {
     MutableMap<String, LongBox> countMap = Maps.mutable.empty();
 
     boolean throttle(E eventObject) {
-
         if (eventObject instanceof LoggingEvent) {
             LoggingEvent e = (LoggingEvent) eventObject;
             Object[] args = e.getArgumentArray();
@@ -49,7 +48,6 @@ class Throttler<E> {
                     long logTs = e.getTimeStamp();
                     LongBox lastAccess = lastAccessMap.computeIfAbsent(config.name, k -> new LongBox(e.getTimeStamp()));
                     long lastAccessTs = lastAccess.value;
-                    lastAccess.value = logTs;
                     long gapMillis = logTs - lastAccessTs;
 
                     if (config.intervalNotPassed(gapMillis)) {
@@ -58,14 +56,21 @@ class Throttler<E> {
                         }
 
                     } else {
-                        if (config.idlePassed(gapMillis)) {
+                        if (count.value <= config.thresholdCount) {
+                            lastAccess.value = logTs;
                             count.value = 0;
-
-                        } else if (count.value > config.thresholdCount + 1) {
-                            String omitMessage = config.name
-                                    + ":log-omitted(" +  (count.value - config.thresholdCount - 1) + ")";
-                            MDC.put(OMIT_MDC_KEY, omitMessage);
-                            count.value = config.thresholdCount;
+                        } else {
+                            if (config.idlePassed(gapMillis)) {
+                                lastAccess.value = logTs;
+                                if (count.value > config.thresholdCount + 1) {
+                                    String omitMessage = config.name
+                                            + ":log-omitted(" +  (count.value - config.thresholdCount - 1) + ")";
+                                    MDC.put(OMIT_MDC_KEY, omitMessage);
+                                }
+                                count.value = 1;
+                            } else {
+                                return true;
+                            }
                         }
                     }
 

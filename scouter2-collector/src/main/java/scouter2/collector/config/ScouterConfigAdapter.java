@@ -36,6 +36,9 @@ import java.util.List;
 @Slf4j
 public abstract class ScouterConfigAdapter implements ScouterConfigIF {
 
+    public static final ThrottleConfig S_0034 = ThrottleConfig.of("S0034");
+    public static final ThrottleConfig S_0033 = ThrottleConfig.of("S0033");
+    public static final ThrottleConfig S_0032 = ThrottleConfig.of("S0032");
     List<ConfigFieldInfo> fieldInfoList = new ArrayList<>();
 
     @Data
@@ -60,7 +63,7 @@ public abstract class ScouterConfigAdapter implements ScouterConfigIF {
                 }
             }
         } catch (Exception e) {
-            log.error("{}, {}", this.getClass().getName(), e.getMessage(), ThrottleConfig.of("S0034"), e);
+            log.error("{}, {}", this.getClass().getName(), e.getMessage(), S_0034, e);
         }
     }
 
@@ -86,7 +89,7 @@ public abstract class ScouterConfigAdapter implements ScouterConfigIF {
                 }
             }
         } catch (Exception e) {
-            log.error("{}, {}", this.getClass().getName(), e.getMessage(), ThrottleConfig.of("S0032"), e);
+            log.error("{}, {}", this.getClass().getName(), e.getMessage(), S_0032, e);
         }
     }
 
@@ -105,7 +108,7 @@ public abstract class ScouterConfigAdapter implements ScouterConfigIF {
                 items.add(configItem);
             }
         } catch (Exception e) {
-            log.error("{}, {}", this.getClass().getName(), e.getMessage(), ThrottleConfig.of("S0033"), e);
+            log.error("{}, {}", this.getClass().getName(), e.getMessage(), S_0033, e);
         }
 
         return items;

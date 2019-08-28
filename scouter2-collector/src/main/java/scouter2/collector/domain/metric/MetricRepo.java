@@ -17,9 +17,11 @@
 package scouter2.collector.domain.metric;
 
 import io.grpc.stub.StreamObserver;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import scouter2.collector.domain.ScouterRepo;
 import scouter2.proto.Metric4RepoP;
+import scouter2.proto.TimeTypeP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
@@ -27,10 +29,12 @@ import scouter2.proto.Metric4RepoP;
 public interface MetricRepo extends ScouterRepo {
     void add(String applicationId, Metric4RepoP metric);
 
-    void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream);
+    MutableList<SingleMetricDatum> findCurrentMetrics(String applicationId, LongSet objIds, LongSet metricIds);
 
-    void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to,
-                                   StreamObserver<Metric4RepoP> stream);
+    void stream(String applicationId, TimeTypeP timeType, long from, long to, StreamObserver<Metric4RepoP> stream);
+
+    void streamByObjs(String applicationId, LongSet objIds, TimeTypeP timeType, long from, long to,
+                      StreamObserver<Metric4RepoP> stream);
 
     /**
      * get unique metric name's id, if absent generate it.

@@ -88,7 +88,7 @@ public class ObjReceiveQueueConsumer extends Thread {
                         : findObjId(objP.getObjFullName());
 
                 Obj obj =  new Obj(objId, objP) ;
-                adder.addObj(obj);
+                adder.addOrModifyObj(obj);
 
             } catch (Exception e) {
                 log.error(e.getMessage(), S_0001, e);

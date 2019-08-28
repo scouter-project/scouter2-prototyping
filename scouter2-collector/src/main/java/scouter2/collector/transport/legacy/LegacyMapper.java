@@ -17,8 +17,10 @@
 
 package scouter2.collector.transport.legacy;
 
+import com.google.protobuf.ByteString;
 import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.PerfCounterPack;
+import scouter.lang.pack.XLogPack;
 import scouter.lang.value.ListValue;
 import scouter.lang.value.Value;
 import scouter.util.HashUtil;
@@ -28,6 +30,7 @@ import scouter2.common.legacy.counters.CounterConstants;
 import scouter2.proto.MetricP;
 import scouter2.proto.ObjP;
 import scouter2.proto.TimeTypeP;
+import scouter2.proto.XlogP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +47,7 @@ public class LegacyMapper {
         }
 
         return ObjP.newBuilder()
-                .setApplicationId(LegacySupport.APPLICATION_ID_FALLBACK_FOR_SCOUTER1_AGENT)
+                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
                 .setObjFamily(legacyFamily)
                 .setObjLegacyType(objectPack.objType)
                 .setObjFullName(objectPack.objName)
@@ -88,6 +91,70 @@ public class LegacyMapper {
         }
 
         return builder.build();
+    }
+
+    public static XlogP toXlog(XLogPack p, Long objId) {
+
+        XlogP.Builder builder = XlogP.newBuilder()
+                .setGxid(p.gxid)
+                .setTxid(p.txid)
+                .setPtxid(p.caller)
+                .setObjId(objId)
+                .setLegacyObjHash(p.objHash)
+                .setXlogTypeValue(p.xType)
+                .setService(p.service)
+                .setEndTime(p.endTime)
+                .setThreadName(p.threadNameHash)
+                .setError(p.error)
+                .setCpuTime(p.cpu)
+                .setSqlCount(p.sqlCount)
+                .setIpaddr(ByteString.copyFrom(p.ipaddr))
+                .setMemoryKb(p.kbytes)
+                .setUserId(p.userid)
+                .setUserAgent(p.userAgent)
+                .setReferrer(p.referer)
+                .setApiCallCount(p.apicallCount)
+                .setApiCallTime(p.apicallTime)
+                .setGroup(p.group)
+                .setCountryCode(p.countryCode)
+                .setCity(p.city)
+                .setQueuingHostHash(p.queuingHostHash)
+                .setQueuingTime(p.queuingTime)
+                .setQueuing2NdHostHash(p.queuing2ndHostHash)
+                .setQueuing2NdTime(p.queuing2ndTime)
+                .setHasDump(p.hasDump != 0)
+                .setB3Mode(p.b3Mode)
+                .setProfileCount(p.profileCount);
+
+        if (p.login != 0) {
+            builder.putDictTags("login", p.login);
+        }
+        if (p.desc != 0) {
+            builder.putDictTags("desc", p.desc);
+        }
+        if (p.text1 != null && p.text1.length() > 0) {
+            builder.putStringTags("text1", p.text1);
+        }
+        if (p.text2 != null && p.text2.length() > 1) {
+            builder.putStringTags("text2", p.text2);
+        }
+        if (p.text3 != null && p.text3.length() > 2) {
+            builder.putStringTags("text3", p.text3);
+        }
+        if (p.text4 != null && p.text4.length() > 3) {
+            builder.putStringTags("text4", p.text4);
+        }
+        if (p.text5 != null && p.text5.length() > 4) {
+            builder.putStringTags("text5", p.text5);
+        }
+
+        return builder.build();
+    }
+
+    public static void main(String[] args) {
+//        byte x = 0;
+//        boolean b = (boolean) x;
+//        System.out.println(b);
     }
 
     private static double doubleValueOf(Value value) {

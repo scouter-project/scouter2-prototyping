@@ -28,17 +28,23 @@ import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.Pack;
 import scouter.lang.pack.PackEnum;
 import scouter.lang.pack.PerfCounterPack;
+import scouter.lang.pack.XLogPack;
 import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
 import scouter2.collector.common.log.ThrottleConfig;
+import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.domain.metric.MetricReceiveQueue;
+import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjReceiveQueue;
+import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.domain.xlog.XlogReceiveQueue;
 import scouter2.collector.legacy.CounterManager;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.common.util.ThreadUtil;
+import scouter2.proto.XlogP;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -99,18 +105,27 @@ public class LegacyUdpDataProcessor {
         public static final ThrottleConfig S_0022 = ThrottleConfig.of("S0022");
         public static final ThrottleConfig S_0023 = ThrottleConfig.of("S0023");
         ConfigLegacy conf;
+        UdpMultipacketProcessor udpMultipacketProcessor;
+
         PurgingQueue<NetData> udpDataQueue;
         ObjReceiveQueue objReceiveQueue;
         MetricReceiveQueue metricReceiveQueue;
-        UdpMultipacketProcessor udpMultipacketProcessor;
+        XlogReceiveQueue xlogReceiveQueue;
+
+        ObjService objService;
 
         public LegacyUdpDataProcessorThread(PurgingQueue<NetData> udpDataQueue,
-                                            UdpMultipacketProcessor udpMultipacketProcessor, ConfigLegacy conf) {
+                                            UdpMultipacketProcessor udpMultipacketProcessor,
+                                            ConfigLegacy conf) {
+            this.conf = conf;
             this.udpDataQueue = udpDataQueue;
+            this.udpMultipacketProcessor = udpMultipacketProcessor;
+
             this.objReceiveQueue = ObjReceiveQueue.getInstance();
             this.metricReceiveQueue = MetricReceiveQueue.getInstance();
-            this.udpMultipacketProcessor = udpMultipacketProcessor;
-            this.conf = conf;
+            this.xlogReceiveQueue = XlogReceiveQueue.getInstance();
+
+            this.objService = ObjService.getInstance();
         }
 
         @Override
@@ -200,7 +215,7 @@ public class LegacyUdpDataProcessor {
                 case PackEnum.PERF_COUNTER:
                     PerfCounterPack counterPack = (PerfCounterPack) p;
                     if (counterPack.time == 0) {
-                        counterPack.time = System.currentTimeMillis();
+                        counterPack.time = U.now();
                     }
                     if (counterPack.timetype == 0) {
                         counterPack.timetype = TimeTypeEnum.REALTIME;
@@ -220,10 +235,19 @@ public class LegacyUdpDataProcessor {
                     break;
 
                 case PackEnum.XLOG:
-                    //TODO XLogCore.add(p.asInstanceOf[XLogPack])
-//                    if (conf.log_udp_xlog) {
-//                        System.out.println("DEBUG UDP XLOG: " + p)
-//                    }
+                    XLogPack xlogPack = (XLogPack) p;
+                    Long objId = objService.findIdByName(String.valueOf(xlogPack.objHash));
+                    if (objId == null) {
+                        break;
+                    }
+                    if (xlogPack.endTime == 0) {
+                        xlogPack.endTime = U.now();
+                    }
+                    XlogP xlogP = LegacyMapper.toXlog(xlogPack, objId);
+                    xlogReceiveQueue.offer(xlogP);
+                    if (conf.isLegacyLogUdpXlog()) {
+                        log.debug("Legacy UDP xlogPack received: {}", xlogPack);
+                    }
                     break;
 
                 case PackEnum.XLOG_PROFILE:
@@ -256,7 +280,6 @@ public class LegacyUdpDataProcessor {
                     if (objectPack.objHash == 0) {
                         objectPack.objHash = HashUtil.hash(objectPack.objName);
                     }
-                    //TODO 옮기자. 메인으로
                     CounterManager counterManager = CounterManager.getInstance();
                     counterManager.addObjectTypeIfNotExist(objectPack);
                     String family = counterManager.getCounterEngine().getFamilyNameFromObjType(objectPack.objType);

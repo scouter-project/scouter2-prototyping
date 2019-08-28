@@ -57,6 +57,7 @@ public class ConfigLegacy extends ScouterConfigAdapter {
     
     //LOG
     @Configurable boolean legacyLogExpiredMultipacket = false;
+    @Configurable boolean legacyLogTcpActionEnabled = false;
 
     @Configurable boolean legacyLogClientCallCmd = false;
 

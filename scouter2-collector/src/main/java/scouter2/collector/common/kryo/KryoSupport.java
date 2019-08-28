@@ -23,16 +23,16 @@ import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.pool.KryoFactory;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.serializers.EnumNameSerializer;
-import com.esotericsoftware.kryo.serializers.TaggedFieldSerializer;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.tuple.Pair;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -45,10 +45,10 @@ public class KryoSupport {
 		KryoFactory factory = () -> {
 			Kryo kryo = new Kryo();
 			kryo.setInstantiatorStrategy(new Kryo.DefaultInstantiatorStrategy(new StdInstantiatorStrategy()));
-			kryo.setDefaultSerializer(TaggedFieldSerializer.class);
-			kryo.getTaggedFieldSerializerConfig().setSkipUnknownTags(true);
+			kryo.setDefaultSerializer(FieldSerializer.class);
 			kryo.addDefaultSerializer(Enum.class, EnumNameSerializer.class);
 			kryo.addDefaultSerializer(ImmutableList.class, ImmutableListSerializer.class);
+			kryo.addDefaultSerializer(MutableList.class, MutableListSerializer.class);
 			for (Pair<Class<?>, Integer> classAndId : classAndIdList) {
 				kryo.register(classAndId.getOne(), classAndId.getTwo());
 			}

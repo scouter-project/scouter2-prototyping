@@ -17,6 +17,8 @@
 
 package scouter2.collector.domain.obj;
 
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.factory.Lists;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +33,7 @@ public class ObjServiceCache {
         this.repo = repo;
     }
 
-    @Cacheable(cacheNames = "objId", unless="#result == null")
+    @Cacheable(cacheNames = "objId", sync = true)
     public Long findIdByName(String objFullName) {
         return repo.findIdByName(objFullName);
     }
@@ -41,4 +43,13 @@ public class ObjServiceCache {
         return repo.findById(objId);
     }
 
+    @Cacheable(cacheNames = "objList")
+    public MutableList<Obj> findByApplicationId(String applicationId) {
+        return Lists.mutable.withAll(repo.findByApplicationId(applicationId));
+    }
+
+    @Cacheable(cacheNames = "objList")
+    public MutableList<Obj> findByLegacyObjType(String legacyObjType) {
+        return Lists.mutable.withAll(repo.findByLegacyObjType(legacyObjType));
+    }
 }

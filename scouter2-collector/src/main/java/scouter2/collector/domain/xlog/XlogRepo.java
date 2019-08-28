@@ -16,11 +16,18 @@
  */
 package scouter2.collector.domain.xlog;
 
+import io.grpc.stub.StreamObserver;
+import org.eclipse.collections.api.set.primitive.LongSet;
 import scouter2.collector.domain.ScouterRepo;
+import scouter2.proto.XlogP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
 public interface XlogRepo extends ScouterRepo {
-    void add(Xlog xlog);
+    void add(String applicationId, Xlog xlog);
+
+    void stream(String applicationId, long from, long to, StreamObserver<XlogP> stream);
+
+    void streamByObjs(String applicationId, LongSet objIds, long from, long to, StreamObserver<XlogP> stream);
 }

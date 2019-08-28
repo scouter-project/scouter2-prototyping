@@ -183,6 +183,10 @@ public class DateUtil {
 		return helper.getHourUnit(time);
 	}
 
+	public static int getSecUnit(long time) {
+		return helper.getSecUnit(time);
+	}
+
 	public static long reverseHourUnit(long unit) {
 		return helper.reverseHourUnit(unit);
 	}
@@ -195,8 +199,15 @@ public class DateUtil {
 		return helper.reverseMinuteUnit(unit);
 	}
 
+	public static long reverseSecUnit(long unit) {
+		return helper.reverseSecUnit(unit);
+	}
+
 	public static long now() {
 		return System.currentTimeMillis();
 	}
 
+	public static void main(String[] args) {
+		System.out.println(getSecUnit(System.currentTimeMillis()));
+	}
 }

@@ -33,14 +33,14 @@ public class ObjAdder {
 
     }
 
-    public void addObj(Obj obj) {
+    public void addOrModifyObj(Obj obj) {
         addInstanceTypeIfNotExist(obj);
 
-        Obj byId = service.findById(obj.getObjId());
-        repo.add(obj);
+        //TODO cache? Obj byId = service.findById(obj.getObjId());
+        repo.addOrModify(obj);
     }
 
     private void addInstanceTypeIfNotExist(Obj obj) {
-
+        //TODO
     }
 }

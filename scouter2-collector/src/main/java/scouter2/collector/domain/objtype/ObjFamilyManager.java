@@ -108,12 +108,20 @@ public class ObjFamilyManager {
         return objFamilyList;
     }
 
-    public ImmutableList<MetricDef> getMetricDefsByObjFamily(String familyId) {
+    public ImmutableList<MetricDef> getMetricDefs(String familyId) {
         ObjFamily objFamily = objFamilyMap.get(familyId);
         if (objFamily == null) {
             return Lists.immutable.empty();
         }
 
         return Lists.immutable.ofAll(objFamily.getMetricDefs());
+    }
+
+    public String getMasterMetricName(String familyId) {
+        ObjFamily objFamily = objFamilyMap.get(familyId);
+        if (objFamily == null) {
+            return null;
+        }
+        return objFamily.getMasterMetricName();
     }
 }

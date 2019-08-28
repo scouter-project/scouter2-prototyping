@@ -18,8 +18,10 @@
 package scouter2.collector.domain.metric;
 
 import io.grpc.stub.StreamObserver;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import scouter2.proto.Metric4RepoP;
+import scouter2.proto.TimeTypeP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-18
@@ -31,12 +33,12 @@ public abstract class MetricRepoAdapter implements MetricRepo {
     }
 
     @Override
-    public void streamListByPeriod(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream) {
+    public void stream(String applicationId, TimeTypeP timeType, long from, long to, StreamObserver<Metric4RepoP> stream) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void streamListByPeriodAndObjs(String applicationId, LongSet instanceIds, long from, long to, StreamObserver<Metric4RepoP> stream) {
+    public void streamByObjs(String applicationId, LongSet objIds, TimeTypeP timeType, long from, long to, StreamObserver<Metric4RepoP> stream) {
         throw new UnsupportedOperationException();
     }
 
@@ -48,5 +50,10 @@ public abstract class MetricRepoAdapter implements MetricRepo {
     @Override
     public String findMetricNameById(long metricId) {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MutableList<SingleMetricDatum> findCurrentMetrics(String applicationId, LongSet objIds, LongSet metricIds) {
+        return null;
     }
 }

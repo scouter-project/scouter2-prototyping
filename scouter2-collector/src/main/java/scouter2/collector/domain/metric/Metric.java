@@ -22,6 +22,7 @@ import lombok.Getter;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.MetricP;
+import scouter2.proto.TimeTypeP;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.Map;
 public class Metric {
     MetricP proto;
     long timestamp;
+    TimeTypeP timeTypeAdvised;
 
     public Metric(MetricP proto, long timestamp) {
         this.proto = proto;
@@ -42,7 +44,9 @@ public class Metric {
     public Metric4RepoP toRepoType(long objId, MetricService metricService, boolean nonThreadSafeRepo) {
         Metric4RepoP.Builder builder = Metric4RepoP.newBuilder()
                 .setObjId(objId)
-                .setMetricType(this.getProto().getMetricType());
+                .setMetricType(this.getProto().getMetricType())
+                .setTimeType(this.getTimeTypeAdvised() == null
+                        ? this.getProto().getTimeType() : this.getTimeTypeAdvised());
 
         if (!nonThreadSafeRepo) {
             builder.setTimestamp(this.getProto().getTimestamp());
@@ -66,6 +70,11 @@ public class Metric {
             newMap.put(metricService.findMetricIdAbsentGen(e.getKey()), e.getValue());
         }
         return newMap;
+    }
+
+    public Metric withTimeTypeAdvised(TimeTypeP timeTypeP) {
+        this.timeTypeAdvised = timeTypeP;
+        return this;
     }
 
     @Override
