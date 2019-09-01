@@ -74,6 +74,14 @@ public class ThreadUtil {
 		return "SCOUTER-" + name.substring(name.lastIndexOf('.') + 1) + "-" + no;
 	}
 
+	public static String getName(Class clazz, String additional, int no) {
+		String name = clazz.getName();
+		if (!name.startsWith("scouter2")) {
+			return name + "-" + additional + "-" + no;
+		}
+		return "SCOUTER-" + name.substring(name.lastIndexOf('.') + 1) + "-" + additional + "-" + no;
+	}
+
 	public static String getThreadStack(long id) {
 		ThreadMXBean tmb = ManagementFactory.getThreadMXBean();
 		ThreadInfo f = tmb.getThreadInfo(id, 500);

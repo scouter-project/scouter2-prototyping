@@ -62,6 +62,14 @@ public class ObjService {
         return objID;
     }
 
+    public Obj findByName(String objFullName) {
+        Long objID = findIdByName0(objFullName);
+        if (objID == null) {
+            return null;
+        }
+        return findById(objID);
+    }
+
     private static boolean isScouterLegacyObjHash(String objFullName) {
         return StringUtils.isNumeric(StringUtils.remove(objFullName, '-'));
     }

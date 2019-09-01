@@ -17,19 +17,23 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.eclipse.collections.api.set.primitive.MutableLongSet;
 import org.springframework.context.annotation.Conditional;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.log.ThrottleConfig;
+import scouter2.collector.common.util.U;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.xlog.Xlog;
+import scouter2.collector.domain.xlog.XlogOffset;
 import scouter2.collector.domain.xlog.XlogRepo;
 import scouter2.collector.domain.xlog.XlogRepoAdapter;
+import scouter2.collector.domain.xlog.XlogStreamObserver;
 import scouter2.collector.infrastructure.db.filedb.MinuteUnitWithSeconds;
 import scouter2.collector.infrastructure.db.filedb.XlogFileDb;
 import scouter2.collector.infrastructure.db.mapdb.DailySecondIndex;
@@ -53,6 +57,10 @@ import static scouter2.common.util.DateUtil.MILLIS_PER_DAY;
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
 public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThreadSafeRepo {
+
+    public static final ThrottleConfig S_0049 = ThrottleConfig.of("S0049");
+    public static final ThrottleConfig S_0050 = ThrottleConfig.of("S0050");
+
     @Override
     public String getRepoType() {
         return LocalRepoConstant.TYPE_NAME;
@@ -98,6 +106,37 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         }
     }
 
+    @Override
+    public void stream(String applicationId, long from, long to, Consumer<XlogP> consumer) {
+        MutableLongSet objIds = instanceService.findByApplicationId(applicationId)
+                .collectLong(Obj::getObjId).toSet();
+        streamListByPeriod0(objIds, from, to, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
+    }
+
+    @Override
+    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> consumer) {
+        streamListByPeriod0(objIds, from, to, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
+    }
+
+    @Override
+    public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount,
+                             XlogStreamObserver stream) {
+        try {
+            String yyyymmdd = DateUtil.yyyymmdd(U.now());
+            long offset = lastOffset == null ? -1 : ((LocalXlogOffset) lastOffset).getOffsetValue();
+            long fileOffset = xlogFileDb.findLatestOffset(yyyymmdd);
+            if (offset == -1 || offset > fileOffset) {
+                offset = fileOffset;
+            }
+            long nextOffset = xlogFileDb.readToLatest(yyyymmdd, offset, maxCount, stream::onNext);
+            stream.onComplete(new LocalXlogOffset(nextOffset));
+
+        } catch (IOException e) {
+            log.error(e.getMessage(), S_0050, e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+    }
+
     private void addToDb(Xlog xlog) throws IOException {
         String ymd = DateUtil.yyyymmdd(xlog.getTimestamp());
         DailySecondIndex dayIndex = xlogDb.getDailyPeriodicIndex(ymd);
@@ -137,19 +176,7 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
                 .computeIfAbsent(minute, k -> new MinuteUnitWithSeconds(minute));
     }
 
-    @Override
-    public void stream(String applicationId, long from, long to, StreamObserver<XlogP> stream) {
-        MutableLongSet objIds = instanceService.findByApplicationId(applicationId)
-                .collectLong(Obj::getObjId).toSet();
-        streamListByPeriod0(objIds, from, to, stream, xlog -> publishMatched(applicationId, from, to, stream, xlog));
-    }
-
-    @Override
-    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, StreamObserver<XlogP> stream) {
-        streamListByPeriod0(objIds, from, to, stream, xlog -> publishMatched(applicationId, from, to, stream, xlog));
-    }
-
-    private void publishMatched(String applicationId, long from, long to, StreamObserver<XlogP> stream, XlogP xlog) {
+    private void publishMatched(String applicationId, long from, long to, Consumer<XlogP> consumer, XlogP xlog) {
         Obj obj = instanceService.findById(xlog.getObjId());
         if (obj == null) return;
 
@@ -157,13 +184,12 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
                 && xlog.getEndTime() <= to
                 && applicationId.equals(obj.getApplicationId())) {
 
-            stream.onNext(xlog);
+            consumer.accept(xlog);
         }
     }
 
     private void streamListByPeriod0(LongSet objIds, long from, long to,
-                                     StreamObserver<XlogP> stream,
-                                     Consumer<XlogP> xlogPConsumer) {
+                                     Consumer<XlogP> wrapperConsumer) {
 
         long fromDayUnit = DateUtil.getDayUnit(from);
         long fromMinuteUnit = DateUtil.getMinuteUnit(from);
@@ -192,18 +218,9 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
             }
 
             if (startOffset >= 0) {
-                try {
-                    streamInDay(ymd, objIds, startOffset, to, xlogPConsumer);
-
-                } catch (Exception e) {
-                    //TODO error code
-                    log.error("error on streamListByPeriod.", "", e);
-                    stream.onError(e);
-                    break;
-                }
+                streamInDay(ymd, objIds, startOffset, to, wrapperConsumer);
             }
         }
-        stream.onCompleted();
     }
 
     private long findStartOffset(String ymd, MinuteUnitWithSeconds minuteUnitWithSeconds, long fromSecUnit) {
@@ -218,9 +235,13 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         return offset == null ? -1 : offset;
     }
 
-    private void streamInDay(String ymd, LongSet objIds, long startOffset, long toMillis, Consumer<XlogP> xlogPConsumer)
-            throws IOException {
-
-        xlogFileDb.readPeriod(ymd, startOffset, toMillis, objIds, xlogPConsumer);
+    private void streamInDay(String ymd, LongSet objIds, long startOffset, long toMillis,
+                             Consumer<XlogP> consumer) {
+        try {
+            xlogFileDb.readPeriod(ymd, startOffset, toMillis, objIds, consumer);
+        } catch (IOException e) {
+            log.error(e.getMessage(), S_0049, e);
+            throw new RuntimeException(e);
+        }
     }
 }

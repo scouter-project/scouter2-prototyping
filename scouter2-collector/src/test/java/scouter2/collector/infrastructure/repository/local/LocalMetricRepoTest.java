@@ -17,7 +17,6 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
-import io.grpc.stub.StreamObserver;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.LongSets;
@@ -39,9 +38,9 @@ import scouter2.proto.TimeTypeP;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static scouter2.fixture.Metric4RepoPFixture.getAny;
@@ -82,11 +81,9 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         repo.add(applicationId, metric2);
 
         List<Metric4RepoP> metrics = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
-        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 2000, testTime, consumer(metrics));
 
-        assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);
     }
 
@@ -100,11 +97,9 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         repo.add(applicationId, metric2);
 
         List<Metric4RepoP> metrics = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
-        repo.stream(applicationId, TimeTypeP.FIVE_MIN, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.FIVE_MIN, testTime - 2000, testTime, consumer(metrics));
 
-        assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);
     }
 
@@ -122,16 +117,14 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         repo.add(applicationId, metric4);
 
         List<Metric4RepoP> metrics = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
         //1st case
-        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 10000, testTime, streamObserver(metrics, onCompletedCount));
-        assertThat(onCompletedCount.get()).isEqualTo(1);
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 10000, testTime, consumer(metrics));
         assertThat(metrics.size()).isEqualTo(4);
 
         //2nd case
         metrics = Lists.mutable.empty();
-        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 8000, testTime - 6000, streamObserver(metrics, onCompletedCount));
+        repo.stream(applicationId, TimeTypeP.REALTIME, testTime - 8000, testTime - 6000, consumer(metrics));
         assertThat(metrics.size()).isEqualTo(2);
     }
 
@@ -149,33 +142,15 @@ public class LocalMetricRepoTest extends LocalRepoTest {
         repo.add(applicationId, metric4);
 
         List<Metric4RepoP> metrics = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
         LongSet instanceIds = LongSets.mutable.with(objId);
-        repo.streamByObjs(applicationId, instanceIds, TimeTypeP.REALTIME, testTime - 2000, testTime, streamObserver(metrics, onCompletedCount));
+        repo.streamByObjs(applicationId, instanceIds, TimeTypeP.REALTIME, testTime - 2000, testTime, consumer(metrics));
 
-        assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(metrics.size()).isEqualTo(2);
     }
 
     @NotNull
-    private StreamObserver<Metric4RepoP> streamObserver(List<Metric4RepoP> metrics, AtomicInteger onCompletedCount) {
-        return new StreamObserver<Metric4RepoP>() {
-            @Override
-            public void onNext(Metric4RepoP value) {
-                metrics.add(value);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                t.printStackTrace();
-                fail();
-            }
-
-            @Override
-            public void onCompleted() {
-                onCompletedCount.incrementAndGet();
-            }
-        };
+    private Consumer<Metric4RepoP> consumer(List<Metric4RepoP> metrics) {
+        return value -> metrics.add(value);
     }
 }

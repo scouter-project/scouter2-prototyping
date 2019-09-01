@@ -17,7 +17,6 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
-import io.grpc.stub.StreamObserver;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +31,8 @@ import scouter2.collector.common.util.U;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.xlog.Xlog;
+import scouter2.collector.domain.xlog.XlogOffset;
+import scouter2.collector.domain.xlog.XlogStreamObserver;
 import scouter2.common.util.DateUtil;
 import scouter2.fixture.XlogFixture;
 import scouter2.proto.ObjP;
@@ -39,9 +40,9 @@ import scouter2.proto.XlogP;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
@@ -80,13 +81,10 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         repo.add(applicationId, xlog1);
         repo.add(applicationId, xlog2);
 
-        System.out.println("test");
         List<XlogP> xlogs = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 2000, testTime, streamObserver(xlogs, onCompletedCount));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 2000, testTime, consumer(xlogs));
 
-        assertThat(onCompletedCount.get()).isEqualTo(1);
         assertThat(xlogs.size()).isEqualTo(2);
     }
 
@@ -103,40 +101,95 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         repo.add(applicationId, xlog3);
         repo.add(applicationId, xlog4);
 
-        System.out.println("test");
         List<XlogP> xlogs = Lists.mutable.empty();
-        AtomicInteger onCompletedCount = new AtomicInteger();
 
         //1st case
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime - 7000,
-                streamObserver(xlogs, onCompletedCount));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime - 7000, consumer(xlogs));
         assertThat(xlogs.size()).isEqualTo(2);
 
         //2nd case
         xlogs = Lists.mutable.empty();
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime,
-                streamObserver(xlogs, onCompletedCount));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime, consumer(xlogs));
         assertThat(xlogs.size()).isEqualTo(3);
     }
 
+    @Test
+    public void add_and_stream_to_latest() {
+        long testTime = U.now();
+        Xlog xlog1 = XlogFixture.getOne(testTime - 10000, applicationId, objId);
+        Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
+        Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
+        Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+
+        repo.add(applicationId, xlog1);
+        repo.add(applicationId, xlog2);
+        repo.add(applicationId, xlog3);
+        repo.add(applicationId, xlog4);
+
+        List<XlogP> xlogs = Lists.mutable.empty();
+        List<LocalXlogOffset> offsets = Lists.mutable.empty();
+
+        repo.streamLatest(applicationId, new LocalXlogOffset(0), Integer.MAX_VALUE, stream(xlogs, offsets));
+
+        assertThat(xlogs.size()).isEqualTo(4);
+        assertThat(offsets.get(0).getOffsetValue()).isGreaterThan(0);
+    }
+
+    @Test
+    public void add_and_stream_to_latest_with_offset_parameter() {
+        long testTime = U.now();
+        Xlog xlog1 = XlogFixture.getOne(testTime - 10000, applicationId, objId);
+        Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
+        Xlog xlog3 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+        Xlog xlogAfter_1 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+        Xlog xlogAfter_2 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+
+        repo.add(applicationId, xlog1);
+        repo.add(applicationId, xlog2);
+        repo.add(applicationId, xlog3);
+        repo.add(applicationId, xlogAfter_1);
+        repo.add(applicationId, xlogAfter_2);
+
+        List<XlogP> xlogs = Lists.mutable.empty();
+        List<LocalXlogOffset> offsets = Lists.mutable.empty();
+
+        repo.streamLatest(applicationId, new LocalXlogOffset(0), 3, stream(xlogs, offsets));
+        LocalXlogOffset lastOffset = offsets.get(0);
+
+        //first try
+        assertThat(xlogs.size()).isEqualTo(3);
+        assertThat(lastOffset.getOffsetValue()).isGreaterThan(0);
+        assertThat(xlogs.get(0).getTxid()).isEqualTo(xlog1.getProto().getTxid());
+        assertThat(xlogs.get(2).getTxid()).isEqualTo(xlog3.getProto().getTxid());
+
+        //stream with next offset
+        xlogs.clear();
+        offsets.clear();
+        repo.streamLatest(applicationId, lastOffset, Integer.MAX_VALUE, stream(xlogs, offsets));
+
+        assertThat(xlogs.size()).isEqualTo(2);
+        assertThat(xlogs.get(0).getTxid()).isEqualTo(xlogAfter_1.getProto().getTxid());
+        assertThat(xlogs.get(1).getTxid()).isEqualTo(xlogAfter_2.getProto().getTxid());
+
+    }
+
     @NotNull
-    private StreamObserver<XlogP> streamObserver(List<XlogP> xlogs, AtomicInteger onCompletedCount) {
-        return new StreamObserver<XlogP>() {
+    private XlogStreamObserver stream(List<XlogP> xlogs, List<LocalXlogOffset> offsets) {
+        return new XlogStreamObserver() {
             @Override
-            public void onNext(XlogP value) {
-                xlogs.add(value);
+            public void onNext(XlogP xlogP) {
+                xlogs.add(xlogP);
             }
 
             @Override
-            public void onError(Throwable t) {
-                t.printStackTrace();
-                fail();
-            }
-
-            @Override
-            public void onCompleted() {
-                onCompletedCount.incrementAndGet();
+            public void onComplete(XlogOffset offset) {
+                offsets.add((LocalXlogOffset) offset);
             }
         };
+    }
+
+    @NotNull
+    private Consumer<XlogP> consumer(List<XlogP> xlogs) {
+        return value -> xlogs.add(value);
     }
 }

@@ -17,9 +17,11 @@
 
 package scouter2.collector.domain.xlog;
 
-import io.grpc.stub.StreamObserver;
 import org.eclipse.collections.api.set.primitive.LongSet;
+import org.springframework.lang.Nullable;
 import scouter2.proto.XlogP;
+
+import java.util.function.Consumer;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 28/08/2019
@@ -31,12 +33,18 @@ public abstract class XlogRepoAdapter implements XlogRepo {
     }
 
     @Override
-    public void stream(String applicationId, long from, long to, StreamObserver<XlogP> stream) {
+    public void stream(String applicationId, long from, long to, Consumer<XlogP> stream) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, StreamObserver<XlogP> stream) {
+    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> stream) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount,
+                             XlogStreamObserver stream) {
         throw new UnsupportedOperationException();
     }
 }

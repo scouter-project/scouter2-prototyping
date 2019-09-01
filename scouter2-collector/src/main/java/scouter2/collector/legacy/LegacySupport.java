@@ -20,6 +20,7 @@ package scouter2.collector.legacy;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.impl.factory.primitive.LongLists;
 import scouter.lang.value.ListValue;
+import scouter2.proto.ObjP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-15
@@ -27,6 +28,24 @@ import scouter.lang.value.ListValue;
 public class LegacySupport {
 
     public static final String APPLICATION_ID_FOR_SCOUTER1_AGENT = "SCOUTER1-DEFAULT";
+    public static final String DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT = "dummyObjForScouter1";
+
+    /**
+     * Some legacy transport protocol doesn't have obj information,
+     * but scouter2 must have obj info on all transport protocol.
+     * (actually the applicationId is mandatory for persistence layer for partitioning)
+     * In these case, dummy obj is treated as default value.
+     */
+    public static ObjP getDummyObjP() {
+        return ObjP.newBuilder()
+                .setObjFullName(DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT)
+                .setObjLegacyType("javaee")
+                .setObjFamily("javaee")
+                .setVersion("0.0.0")
+                .setAddress("127.0.0.1")
+                .setApplicationId(APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .build();
+    }
 
     public static MutableLongList listValue2LongList(ListValue objHashParamLv) {
         MutableLongList objIds = LongLists.mutable.empty();

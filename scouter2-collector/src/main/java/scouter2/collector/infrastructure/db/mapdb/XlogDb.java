@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class XlogDb {
 
     private static final long AUTO_CLOSE_MILLIS = 60 * 1000;
-    public static final String INDEX_NAME = "metric";
+    public static final String INDEX_NAME = "xlog";
 
     public static final ThrottleConfig S_0038 = ThrottleConfig.of("S0038");
 

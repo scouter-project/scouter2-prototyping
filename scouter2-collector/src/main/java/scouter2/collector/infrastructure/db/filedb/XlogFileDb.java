@@ -71,6 +71,11 @@ public class XlogFileDb {
         ShutdownManager.getInstance().register(this::closeAll);
     }
 
+    @Scheduled(fixedDelay = 15000, initialDelay = 15000)
+    public void schedule4CloseIdles() {
+        closeIdles();
+    }
+
     public long add(String pKey, Xlog xlog) throws IOException {
         Table table = partitionTableMap.get(pKey);
         if (table == null) {
@@ -86,7 +91,25 @@ public class XlogFileDb {
         if (table == null) {
             table = open(pKey);
         }
-        table.readPeriod(startOffset, toMillis, objIds, xlogPConsumer);
+        table.readPeriod(startOffset, toMillis, objIds, Long.MAX_VALUE, xlogPConsumer);
+    }
+
+    public long readToLatest(String pKey, long startOffset, long maxReadCount, Consumer<XlogP> xlogPConsumer)
+            throws IOException {
+
+        Table table = partitionTableMap.get(pKey);
+        if (table == null) {
+            table = open(pKey);
+        }
+        return table.readPeriod(startOffset, Long.MAX_VALUE, null, maxReadCount, xlogPConsumer);
+    }
+
+    public long findLatestOffset(String pKey) throws IOException {
+        Table table = partitionTableMap.get(pKey);
+        if (table == null) {
+            table = open(pKey);
+        }
+        return table.getOffset();
     }
 
     private Table open(String pKey) throws FileNotFoundException {
@@ -101,11 +124,6 @@ public class XlogFileDb {
             }
             return table;
         }
-    }
-
-    @Scheduled(fixedDelay = 15000, initialDelay = 15000)
-    public void schedule4CloseIdles() {
-        closeIdles();
     }
 
     private void closeIdles() {
@@ -144,6 +162,7 @@ public class XlogFileDb {
         String pKey;
         RandomAccessFile dataFile;
         RandomAccessFile dataFile4Read;
+        long offset;
         long lastAccess;
 
         Table(String pKey) throws FileNotFoundException {
@@ -163,6 +182,7 @@ public class XlogFileDb {
                 partitionTableMap.remove(pKey);
             }
             FileUtil.close(dataFile);
+            FileUtil.close(dataFile4Read);
             log.info("[XlogFileDb.Table:{}] closed.", pKey);
         }
 
@@ -182,22 +202,28 @@ public class XlogFileDb {
             out.write(bytes);
             dataFile.write(out.toByteArray());
 
+            this.offset = offset;
             return offset;
         }
 
-        private void readPeriod(long startOffset, long toMillis, LongSet objIds, Consumer<XlogP> xlogPConsumer)
-                throws IOException {
+        private long readPeriod(long startOffset, long toMillis, LongSet objIds, long maxReadCount,
+                                Consumer<XlogP> xlogPConsumer) throws IOException {
 
             this.lastAccess = U.now();
 
             long offset = startOffset;
             long loop = 0;
+            long readCount = 0;
             while (true) {
                 loop++;
                 if (loop > 1000000) {
                     log.error("too many loops on xlog readPeriod()", S_0040);
                     break;
                 }
+                if (readCount >= maxReadCount) {
+                    break;
+                }
+
                 byte[] part = readOfSize(offset, 32 * 1024);
                 long partSize = part.length;
                 long partOffset = 0;
@@ -211,6 +237,9 @@ public class XlogFileDb {
 
                 DataInputX dix = new DataInputX(new DataInputStream(new ByteArrayInputStream(part)));
                 while (true) {
+                    if (readCount >= maxReadCount) {
+                        break;
+                    }
                     if (partOffset + 5 + 8 + 8 >= partSize) {
                         break;
                     }
@@ -225,7 +254,7 @@ public class XlogFileDb {
                     }
 
                     partOffset += (dix.getOffset() + size - startDixOffset);
-                    if (!objIds.contains(objId)) {
+                    if (objIds != null && objIds.notEmpty() && !objIds.contains(objId)) {
                         continue;
                     }
                     if (endTime > toMillis) {
@@ -234,17 +263,19 @@ public class XlogFileDb {
                     }
 
                     byte[] buffer = dix.read(size);
+                    readCount++;
                     XlogP xlog = XlogP.parseFrom(buffer);
                     xlogPConsumer.accept(xlog);
                 }
 
                 offset += partOffset;
             }
+            return offset;
         }
 
         private byte[] readOfSize(long startOffset, int size) throws IOException {
             synchronized (this) {
-                return RafUtil.readOfSize(dataFile, startOffset, size);
+                return RafUtil.readOfSize(dataFile4Read, startOffset, size);
             }
         }
     }

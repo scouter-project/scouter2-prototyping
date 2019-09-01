@@ -38,7 +38,6 @@ public class ObjReceiveQueueConsumer extends Thread {
     private ObjReceiveQueue queue;
     private ObjAdder adder;
     private ObjService service;
-    private ObjRepo repo;
 
     @Component
     public static class Runner {
@@ -47,19 +46,17 @@ public class ObjReceiveQueueConsumer extends Thread {
 
         public Runner(ObjReceiveQueue receiveQueue,
                       ObjAdder adder,
-                      ObjService service,
-                      ObjRepo repo) {
+                      ObjService service) {
             consumerThreads = IntInterval.zeroTo(instanceReceiveQueueConsumerThreadCount - 1)
-                    .collect(n -> createConsumer(receiveQueue, adder, service, repo))
+                    .collect(n -> createConsumer(receiveQueue, adder, service))
                     .toImmutable();
         }
 
         private ObjReceiveQueueConsumer createConsumer(ObjReceiveQueue receiveQueue,
                                                        ObjAdder adder,
-                                                       ObjService service,
-                                                       ObjRepo repo) {
+                                                       ObjService service) {
 
-            ObjReceiveQueueConsumer consumer = new ObjReceiveQueueConsumer(receiveQueue, adder, service, repo);
+            ObjReceiveQueueConsumer consumer = new ObjReceiveQueueConsumer(receiveQueue, adder, service);
             consumer.setDaemon(true);
             consumer.setName(ThreadUtil.getName(consumer.getClass(), threadNo.getAndIncrement()));
             consumer.start();
@@ -70,12 +67,10 @@ public class ObjReceiveQueueConsumer extends Thread {
 
     private ObjReceiveQueueConsumer(ObjReceiveQueue queue,
                                     ObjAdder adder,
-                                    ObjService service,
-                                    ObjRepo repo) {
+                                    ObjService service) {
         this.queue = queue;
         this.adder = adder;
         this.service = service;
-        this.repo = repo;
     }
 
     @Override

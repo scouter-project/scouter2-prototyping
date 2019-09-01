@@ -1,5 +1,0 @@
-23:46:48.044 [main] INFO  s.c.i.db.filedb.XlogFileDb,[-]: [XlogFileDb.Table:20190101] open.
-23:47:14.441 [main] INFO  s.c.i.db.filedb.XlogFileDb,[-]: [XlogFileDb.Table:20190101] open.
-23:51:15.956 [main] INFO  s.c.i.db.filedb.XlogFileDb,[-]: [XlogFileDb.Table:20190101] open.
-23:52:57.649 [main] INFO  s.c.i.db.filedb.XlogFileDb,[-]: [XlogFileDb.Table:20190101] open.
-23:53:47.302 [main] INFO  s.c.i.db.filedb.XlogFileDb,[-]: [XlogFileDb.Table:20190101] open.

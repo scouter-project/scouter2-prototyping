@@ -17,7 +17,6 @@
 
 package scouter2.collector.domain.metric;
 
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
@@ -26,6 +25,8 @@ import org.eclipse.collections.api.set.primitive.MutableLongSet;
 import org.springframework.stereotype.Component;
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.TimeTypeP;
+
+import java.util.function.Consumer;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-05
@@ -80,7 +81,7 @@ public class MetricService {
     }
 
     public void streamListByObjs(String applicationId, LongSet objIds, long from, long to,
-                                 TimeTypeP timeType, StreamObserver<Metric4RepoP> stream) {
+                                 TimeTypeP timeType, Consumer<Metric4RepoP> stream) {
 
         repo.streamByObjs(applicationId, objIds, timeType, from, to, stream);
     }

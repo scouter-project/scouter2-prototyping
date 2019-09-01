@@ -14,49 +14,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.obj;
+package scouter2.collector.domain.dict;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import scouter2.collector.legacy.LegacySupport;
 import scouter2.common.collection.PurgingQueue;
-import scouter2.proto.ObjP;
+import scouter2.proto.DictP;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-07
  */
 @Slf4j
 @Component
-public class ObjReceiveQueue {
-    private static ObjReceiveQueue instance;
-    private PurgingQueue<ObjP> queue;
+public class DictReceiveQueue {
+    private static DictReceiveQueue instance;
+    private PurgingQueue<DictP> queue;
 
-    public ObjReceiveQueue() {
-        synchronized (ObjReceiveQueue.class) {
+    public DictReceiveQueue() {
+        synchronized (DictReceiveQueue.class) {
             if (instance != null) {
                 throw new IllegalStateException();
             }
-            this.queue = new PurgingQueue<>(100);
+            this.queue = new PurgingQueue<>(10000);
             instance = this;
-            queue.offerOverflowClear(LegacySupport.getDummyObjP());
         }
     }
 
     /**
      * for 3rd party receiver support
      */
-    public static ObjReceiveQueue getInstance() {
+    public static DictReceiveQueue getInstance() {
         return instance;
     }
 
-    public void offer(ObjP obj) {
-        boolean success = queue.offerOverflowClear(obj);
+    public void offer(DictP dict) {
+        boolean success = queue.offerOverflowClear(dict);
         if (!success) {
             //TODO logging
         }
     }
 
-    public ObjP take() throws InterruptedException {
+    public DictP take() throws InterruptedException {
         return queue.take();
     }
 }

@@ -20,13 +20,16 @@ package scouter2.collector.transport.legacy;
 import com.google.protobuf.ByteString;
 import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.PerfCounterPack;
+import scouter.lang.pack.TextPack;
 import scouter.lang.pack.XLogPack;
 import scouter.lang.value.ListValue;
 import scouter.lang.value.Value;
 import scouter.util.HashUtil;
+import scouter2.collector.domain.dict.DictCategory;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.common.legacy.counters.CounterConstants;
+import scouter2.proto.DictP;
 import scouter2.proto.MetricP;
 import scouter2.proto.ObjP;
 import scouter2.proto.TimeTypeP;
@@ -69,6 +72,15 @@ public class LegacyMapper {
         return pack;
     }
 
+    public static DictP toDict(TextPack p) {
+        return DictP.newBuilder()
+                .setObjFullName(LegacySupport.DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT)
+                .setCategory(DictCategory.ofLegacy(p.xtype).getCategory())
+                .setDictHash(p.hash)
+                .setText(p.text)
+                .build();
+    }
+
     public static MetricP toMetric(PerfCounterPack counterPack) {
         MetricP.Builder builder = MetricP.newBuilder()
                 .setTimestamp(counterPack.time)
@@ -104,6 +116,7 @@ public class LegacyMapper {
                 .setXlogTypeValue(p.xType)
                 .setService(p.service)
                 .setEndTime(p.endTime)
+                .setElapsed(p.elapsed)
                 .setThreadName(p.threadNameHash)
                 .setError(p.error)
                 .setCpuTime(p.cpu)
@@ -126,35 +139,51 @@ public class LegacyMapper {
                 .setB3Mode(p.b3Mode)
                 .setProfileCount(p.profileCount);
 
-        if (p.login != 0) {
-            builder.putDictTags("login", p.login);
-        }
-        if (p.desc != 0) {
-            builder.putDictTags("desc", p.desc);
-        }
-        if (p.text1 != null && p.text1.length() > 0) {
-            builder.putStringTags("text1", p.text1);
-        }
-        if (p.text2 != null && p.text2.length() > 1) {
-            builder.putStringTags("text2", p.text2);
-        }
-        if (p.text3 != null && p.text3.length() > 2) {
-            builder.putStringTags("text3", p.text3);
-        }
-        if (p.text4 != null && p.text4.length() > 3) {
-            builder.putStringTags("text4", p.text4);
-        }
-        if (p.text5 != null && p.text5.length() > 4) {
-            builder.putStringTags("text5", p.text5);
-        }
+        if (p.login != 0) builder.putDictTags("login", p.login);
+        if (p.desc != 0) builder.putDictTags("desc", p.desc);
+
+        if (p.text1 != null && p.text1.length() > 0) builder.putStringTags("text1", p.text1);
+        if (p.text2 != null && p.text2.length() > 1) builder.putStringTags("text2", p.text2);
+        if (p.text3 != null && p.text3.length() > 2) builder.putStringTags("text3", p.text3);
+        if (p.text4 != null && p.text4.length() > 3) builder.putStringTags("text4", p.text4);
+        if (p.text5 != null && p.text5.length() > 4) builder.putStringTags("text5", p.text5);
 
         return builder.build();
     }
 
-    public static void main(String[] args) {
-//        byte x = 0;
-//        boolean b = (boolean) x;
-//        System.out.println(b);
+    public static XLogPack toXlogPack(XlogP xlog) {
+        XLogPack p = new XLogPack();
+        p.gxid = xlog.getGxid();
+        p.txid = xlog.getTxid();
+        p.caller = xlog.getPtxid();
+        p.objHash = (int) xlog.getObjId();
+        p.xType = (byte) xlog.getXlogTypeValue();
+        p.service = xlog.getService();
+        p.endTime = xlog.getEndTime();
+        p.elapsed = xlog.getElapsed();
+        p.threadNameHash = xlog.getThreadName();
+        p.error = xlog.getError();
+        p.cpu = xlog.getCpuTime();
+        p.sqlCount = xlog.getSqlCount();
+        p.ipaddr = xlog.getIpaddr().toByteArray();
+        p.kbytes = xlog.getMemoryKb();
+        p.userid = xlog.getUserId();
+        p.userAgent = xlog.getUserAgent();
+        p.referer = xlog.getReferrer();
+        p.apicallCount = xlog.getApiCallCount();
+        p.apicallTime = xlog.getApiCallTime();
+        p.group = xlog.getGroup();
+        p.countryCode = xlog.getCountryCode();
+        p.city = xlog.getCity();
+        p.queuingHostHash = xlog.getQueuingHostHash();
+        p.queuingTime = xlog.getQueuingTime();
+        p.queuing2ndHostHash = xlog.getQueuing2NdHostHash();
+        p.queuing2ndTime = xlog.getQueuing2NdTime();
+        p.hasDump = !xlog.getHasDump() ? (byte) 0 : (byte) 1;
+        p.b3Mode = xlog.getB3Mode();
+        p.profileCount = xlog.getProfileCount();
+
+        return p;
     }
 
     private static double doubleValueOf(Value value) {

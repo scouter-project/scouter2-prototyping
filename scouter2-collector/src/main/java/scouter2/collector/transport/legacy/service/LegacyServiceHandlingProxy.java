@@ -87,10 +87,10 @@ public class LegacyServiceHandlingProxy {
 						handlers.put(key, news);
 					}
 				} catch (Exception x) {
-					x.printStackTrace();
+					log.error(x.getMessage(), x);
 				}
 			} catch (Exception e) {
-				e.printStackTrace();
+				log.error(e.getMessage(), e);
 			}
 		}
 	}

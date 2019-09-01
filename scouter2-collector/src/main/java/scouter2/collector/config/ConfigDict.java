@@ -36,36 +36,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ConfigLegacy extends ScouterConfigAdapter {
-    static ConfigLegacy initValuedConfig = new ConfigLegacy();
+public class ConfigDict extends ScouterConfigAdapter {
+    static ConfigDict initValuedConfig = new ConfigDict();
 
-    //UDP
-    @Configurable String legacyNetUdpListenIp = "0.0.0.0";
-    @Configurable int legacyNetUdpListenPort = 6100;
-    @Configurable int legacyNetUdpPacketBufferSize = 65535;
-    @Configurable int legacyNetUdpSoRcvbufSize = 1024 * 1024 * 4;
-    @Configurable int _legacyNetUdpWorkerThreadCount = 3;
-
-    //TCP
-    @Configurable private String legacyNetTcpListenIp = "0.0.0.0";
-    @Configurable private int legacyNetTcpListenPort = 6100;
-    @Configurable private int legacyNetTcpClientSoTimeoutMs = 60000;
-    @Configurable private int legacyNetTcpAgentSoTimeoutMs = 60000;
-    @Configurable private int legacyNetTcpAgentKeepaliveIntervalMs = 5000;
-    @Configurable private int legacyNetTcpGetAgentConnectionWaitMs = 1000;
-    @Configurable private int legacyNetTcpServicePoolSize = 100;
-    
-    //LOG
-    @Configurable boolean legacyLogExpiredMultipacket = false;
-    @Configurable boolean legacyLogTcpActionEnabled = false;
-
-    @Configurable boolean legacyLogClientCallCmd = false;
-
-    @Configurable boolean legacyLogUdpObj;
-    @Configurable boolean legacyLogUdpCounter;
-    @Configurable boolean legacyLogUdpXlog;
-    @Configurable boolean legacyLogUdpText;
-
+    @Configurable int dictCacheMultiplier = 1;
 
     @Override
     public List<ConfigItem> getAllConfigs() {

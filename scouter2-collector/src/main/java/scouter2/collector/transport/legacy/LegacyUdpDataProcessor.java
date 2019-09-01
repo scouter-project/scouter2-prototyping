@@ -28,6 +28,7 @@ import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.Pack;
 import scouter.lang.pack.PackEnum;
 import scouter.lang.pack.PerfCounterPack;
+import scouter.lang.pack.TextPack;
 import scouter.lang.pack.XLogPack;
 import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
@@ -35,8 +36,8 @@ import scouter.util.HashUtil;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigLegacy;
+import scouter2.collector.domain.dict.DictReceiveQueue;
 import scouter2.collector.domain.metric.MetricReceiveQueue;
-import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjReceiveQueue;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.xlog.XlogReceiveQueue;
@@ -111,6 +112,7 @@ public class LegacyUdpDataProcessor {
         ObjReceiveQueue objReceiveQueue;
         MetricReceiveQueue metricReceiveQueue;
         XlogReceiveQueue xlogReceiveQueue;
+        DictReceiveQueue dictReceiveQueue;
 
         ObjService objService;
 
@@ -124,6 +126,7 @@ public class LegacyUdpDataProcessor {
             this.objReceiveQueue = ObjReceiveQueue.getInstance();
             this.metricReceiveQueue = MetricReceiveQueue.getInstance();
             this.xlogReceiveQueue = XlogReceiveQueue.getInstance();
+            this.dictReceiveQueue = DictReceiveQueue.getInstance();
 
             this.objService = ObjService.getInstance();
         }
@@ -259,11 +262,11 @@ public class LegacyUdpDataProcessor {
                     break;
 
                 case PackEnum.TEXT:
-                    //TODO
-//                    TextCore.add(p.asInstanceOf[TextPack])
-//                    if (conf.log_udp_text) {
-//                        System.out.println("DEBUG UDP TEXT: " + p)
-//                    }
+                    TextPack textPack = (TextPack) p;
+                    dictReceiveQueue.offer(LegacyMapper.toDict(textPack));
+                    if (conf.isLegacyLogUdpText()) {
+                        log.debug("Legacy UDP xlogPack received: {}", textPack);
+                    }
                     break;
                 case PackEnum.ALERT:
                     //TODO

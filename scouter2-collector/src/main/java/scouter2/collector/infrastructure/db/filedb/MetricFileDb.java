@@ -78,14 +78,14 @@ public class MetricFileDb {
     }
 
     public void readPeriod(String pKey, TimeTypeP timeTypeP, long startOffset, long toMillis,
-                           Consumer<Metric4RepoP> metric4RepoPConsumer) throws IOException {
+                           Consumer<Metric4RepoP> consumer) throws IOException {
 
         PartitionKey tableKey = new PartitionKey(pKey, timeTypeP.getNumber());
         Table table = partitionTableMap.get(tableKey);
         if (table == null) {
             table = open(tableKey);
         }
-        table.readPeriod(startOffset, toMillis, metric4RepoPConsumer);
+        table.readPeriod(startOffset, toMillis, consumer);
     }
 
     private Table open(PartitionKey tableKey) throws FileNotFoundException {
@@ -179,7 +179,7 @@ public class MetricFileDb {
             return offset;
         }
 
-        private void readPeriod(long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
+        private void readPeriod(long startOffset, long toMillis, Consumer<Metric4RepoP> consumer)
                 throws IOException {
 
             this.lastAccess = U.now();
@@ -224,7 +224,7 @@ public class MetricFileDb {
                         partOffset = (Long.MAX_VALUE) / 2L;
                         break;
                     }
-                    metric4RepoPConsumer.accept(metric);
+                    consumer.accept(metric);
                 }
 
                 offset += partOffset;

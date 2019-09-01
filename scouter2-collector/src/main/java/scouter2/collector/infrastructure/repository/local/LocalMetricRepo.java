@@ -17,7 +17,6 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.list.MutableList;
@@ -155,19 +154,19 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
 
     @Override
     public void stream(String applicationId, TimeTypeP timeTypeP, long from, long to,
-                       StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(timeTypeP, from, to, stream,
-                metric -> publishMatched(applicationId, from, to, stream, metric));
+                       Consumer<Metric4RepoP> consumer) {
+        streamListByPeriod0(timeTypeP, from, to,
+                metric -> publishMatched(applicationId, from, to, consumer, metric));
     }
 
     @Override
     public void streamByObjs(String applicationId, LongSet objIds, TimeTypeP timeTypeP, long from, long to,
-                             StreamObserver<Metric4RepoP> stream) {
-        streamListByPeriod0(timeTypeP, from, to, stream,
-                metric -> publishMatchedWithObjs(applicationId, objIds, from, to, stream, metric));
+                             Consumer<Metric4RepoP> consumer) {
+        streamListByPeriod0(timeTypeP, from, to,
+                metric -> publishMatchedWithObjs(applicationId, objIds, from, to, consumer, metric));
     }
 
-    private void publishMatched(String applicationId, long from, long to, StreamObserver<Metric4RepoP> stream,
+    private void publishMatched(String applicationId, long from, long to, Consumer<Metric4RepoP> consumer,
                                 Metric4RepoP metric) {
         Obj obj = instanceService.findById(metric.getObjId());
         if (obj == null) return;
@@ -176,13 +175,12 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
                 && metric.getTimestamp() <= to
                 && applicationId.equals(obj.getApplicationId())) {
 
-            stream.onNext(metric);
+            consumer.accept(metric);
         }
     }
 
-    private void publishMatchedWithObjs(String applicationId, LongSet objIds,
-                                        long from, long to,
-                                        StreamObserver<Metric4RepoP> stream, Metric4RepoP metric) {
+    private void publishMatchedWithObjs(String applicationId, LongSet objIds, long from, long to,
+                                        Consumer<Metric4RepoP> consumer, Metric4RepoP metric) {
 
         Obj obj = instanceService.findById(metric.getObjId());
         if (obj == null) return;
@@ -192,13 +190,12 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
                 && applicationId.equals(obj.getApplicationId())
                 && (objIds.isEmpty() || objIds.contains(metric.getObjId()))) {
 
-            stream.onNext(metric);
+            consumer.accept(metric);
         }
     }
 
     private void streamListByPeriod0(TimeTypeP timeTypeP, long from, long to,
-                                     StreamObserver<Metric4RepoP> stream,
-                                     Consumer<Metric4RepoP> metric4RepoPConsumer) {
+                                     Consumer<Metric4RepoP> wrapperConsumer) {
 
         long fromDayUnit = DateUtil.getDayUnit(from);
         long fromHourUnit = DateUtil.getHourUnit(from);
@@ -227,24 +224,21 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
             }
 
             if (startOffset >= 0) {
-                try {
-                    streamInDay(timeTypeP, ymd, startOffset, to, metric4RepoPConsumer);
-
-                } catch (Exception e) {
-                    log.error("error on streamListByPeriod.", S_0005, e);
-                    stream.onError(e);
-                    break;
-                }
+                streamInDay(timeTypeP, ymd, startOffset, to, wrapperConsumer);
             }
         }
-        stream.onCompleted();
     }
 
 
-    private void streamInDay(TimeTypeP timeTypeP, String ymd, long startOffset, long toMillis, Consumer<Metric4RepoP> metric4RepoPConsumer)
-            throws IOException {
+    private void streamInDay(TimeTypeP timeTypeP, String ymd, long startOffset, long toMillis,
+                             Consumer<Metric4RepoP> consumer) {
 
-        metricFileDb.readPeriod(ymd, timeTypeP, startOffset, toMillis, metric4RepoPConsumer);
+        try {
+            metricFileDb.readPeriod(ymd, timeTypeP, startOffset, toMillis, consumer);
+        } catch (IOException e) {
+            log.error(e.getMessage(), S_0005, e);
+            throw new RuntimeException(e);
+        }
     }
 
     private long findStartOffset(String ymd, TimeTypeP timeTypeP,

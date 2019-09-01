@@ -15,22 +15,12 @@
  * limitations under the License.
  */
 
-package scouter2.common.collection;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+package scouter2.collector.domain.xlog;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-15
+ * @author Gun Lee (gunlee01@gmail.com) on 29/08/2019
  */
-public class LruMap {
-    public static <K, V> Map<K, V> newOfMax(final int maxEntries) {
-        return new LinkedHashMap<K, V>(maxEntries * 10/7, 0.7f, true) {
-
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-                return size() > maxEntries;
-            }
-        };
-    }
+public interface XlogOffset {
+    public String serialize();
+    public XlogOffset deserialize(String serialized);
 }

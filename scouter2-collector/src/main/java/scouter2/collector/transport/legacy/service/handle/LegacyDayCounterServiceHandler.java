@@ -17,7 +17,6 @@
 
 package scouter2.collector.transport.legacy.service.handle;
 
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.commons.lang3.StringUtils;
@@ -40,7 +39,6 @@ import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 import scouter2.common.util.DateUtil;
-import scouter2.proto.Metric4RepoP;
 import scouter2.proto.TimeTypeP;
 
 import java.io.IOException;
@@ -75,32 +73,16 @@ public class LegacyDayCounterServiceHandler {
                 stime,
                 etime,
                 timeType,
-                new StreamObserver<Metric4RepoP>() {
-                    @Override
-                    public void onNext(Metric4RepoP metric) {
-                        Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
-                        if (value != null) {
-                            timeLv.add(metric.getTimestamp());
-                            valueLv.add(value);
-                        }
+                metric -> {
+                    Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
+                    if (value != null) {
+                        timeLv.add(metric.getTimestamp());
+                        valueLv.add(value);
                     }
+                });
 
-                    @Override
-                    public void onError(Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        try {
-                            dout.writeByte(TcpFlag.HasNEXT);
-                            dout.writePack(mpack);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-        );
+        dout.writeByte(TcpFlag.HasNEXT);
+        dout.writePack(mpack);
     }
 
     @LegacyServiceHandler(RequestCmd.COUNTER_TODAY_ALL)
@@ -137,41 +119,25 @@ public class LegacyDayCounterServiceHandler {
                 stime,
                 etime,
                 timeType,
-                new StreamObserver<Metric4RepoP>() {
-                    @Override
-                    public void onNext(Metric4RepoP metric) {
-                        Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
-                        if (value != null) {
-                            MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
-                            if (mapPackOfObj != null) {
-                                mapPackOfObj.getList("time").add(metric.getTimestamp());
-                                mapPackOfObj.getList("value").add(value);
-                            }
+                metric -> {
+                    Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
+                    if (value != null) {
+                        MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
+                        if (mapPackOfObj != null) {
+                            mapPackOfObj.getList("time").add(metric.getTimestamp());
+                            mapPackOfObj.getList("value").add(value);
                         }
                     }
+                });
 
-                    @Override
-                    public void onError(Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        try {
-                            for (int i = 0; i < objIds.size(); i++) {
-                                MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
-                                dout.writeByte(TcpFlag.HasNEXT);
-                                if (mapPackOfObj != null) {
-                                    dout.writePack(mapPackOfObj);
-                                    dout.flush();
-                                }
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-        );
+        for (int i = 0; i < objIds.size(); i++) {
+            MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
+            dout.writeByte(TcpFlag.HasNEXT);
+            if (mapPackOfObj != null) {
+                dout.writePack(mapPackOfObj);
+                dout.flush();
+            }
+        }
     }
 
     //    @ServiceHandler(RequestCmd.COUNTER_TODAY_TOT)
@@ -331,7 +297,7 @@ public class LegacyDayCounterServiceHandler {
 
         if (StringUtils.isBlank(objType) && (objHashParamLv == null || objHashParamLv.size() == 0)) {
             log.warn("please check.. COUNTER_LOAD_TIME_ALL objType is null");
-            return ;
+            return;
         }
 
         MutableList<Obj> objs = objService.findByLegacyObjType(objType);
@@ -355,41 +321,25 @@ public class LegacyDayCounterServiceHandler {
                 stime,
                 etime,
                 timeType,
-                new StreamObserver<Metric4RepoP>() {
-                    @Override
-                    public void onNext(Metric4RepoP metric) {
-                        Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
-                        if (value != null) {
-                            MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
-                            if (mapPackOfObj != null) {
-                                mapPackOfObj.getList("time").add(metric.getTimestamp());
-                                mapPackOfObj.getList("value").add(value);
-                            }
+                metric -> {
+                    Double value = metric.getMetricsMap().get(metricService.findMetricIdAbsentGen(counter));
+                    if (value != null) {
+                        MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
+                        if (mapPackOfObj != null) {
+                            mapPackOfObj.getList("time").add(metric.getTimestamp());
+                            mapPackOfObj.getList("value").add(value);
                         }
                     }
+                });
 
-                    @Override
-                    public void onError(Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        try {
-                            for (int i = 0; i < objIds.size(); i++) {
-                                MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
-                                dout.writeByte(TcpFlag.HasNEXT);
-                                if (mapPackOfObj != null) {
-                                    dout.writePack(mapPackOfObj);
-                                    dout.flush();
-                                }
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-        );
+        for (int i = 0; i < objIds.size(); i++) {
+            MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
+            dout.writeByte(TcpFlag.HasNEXT);
+            if (mapPackOfObj != null) {
+                dout.writePack(mapPackOfObj);
+                dout.flush();
+            }
+        }
     }
 
 //    @ServiceHandler(RequestCmd.COUNTER_PAST_LONGDATE_TOT)

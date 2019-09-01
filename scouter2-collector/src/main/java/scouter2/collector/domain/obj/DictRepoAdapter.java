@@ -15,22 +15,20 @@
  * limitations under the License.
  */
 
-package scouter2.common.collection;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
+package scouter2.collector.domain.obj;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-15
  */
-public class LruMap {
-    public static <K, V> Map<K, V> newOfMax(final int maxEntries) {
-        return new LinkedHashMap<K, V>(maxEntries * 10/7, 0.7f, true) {
+public abstract class DictRepoAdapter implements DictRepo {
 
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-                return size() > maxEntries;
-            }
-        };
+    @Override
+    public void addOrModify(String applicationId, String category, int hash, String text) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String find(String applicationId, String category, int hash) {
+        throw new UnsupportedOperationException();
     }
 }

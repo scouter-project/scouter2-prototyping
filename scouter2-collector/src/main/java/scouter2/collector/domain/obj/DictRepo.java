@@ -14,24 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package scouter2.collector.domain.xlog;
+package scouter2.collector.domain.obj;
 
-import org.eclipse.collections.api.set.primitive.LongSet;
-import org.springframework.lang.Nullable;
 import scouter2.collector.domain.ScouterRepo;
-import scouter2.proto.XlogP;
-
-import java.util.function.Consumer;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
-public interface XlogRepo extends ScouterRepo {
-    void add(String applicationId, Xlog xlog);
+public interface DictRepo extends ScouterRepo {
 
-    void stream(String applicationId, long from, long to, Consumer<XlogP> stream);
+    void addOrModify(String applicationId, String category, int hash, String text);
+    String find(String applicationId, String category, int hash);
 
-    void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> stream);
-
-    void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount, XlogStreamObserver stream);
 }

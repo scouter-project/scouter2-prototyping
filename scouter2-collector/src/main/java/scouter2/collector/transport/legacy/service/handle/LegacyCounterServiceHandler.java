@@ -17,7 +17,6 @@
 
 package scouter2.collector.transport.legacy.service.handle;
 
-import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.list.MutableList;
@@ -41,7 +40,6 @@ import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
-import scouter2.proto.Metric4RepoP;
 import scouter2.proto.TimeTypeP;
 
 import java.io.IOException;
@@ -132,32 +130,16 @@ public class LegacyCounterServiceHandler {
                 stime,
                 etime,
                 TimeTypeP.REALTIME,
-                new StreamObserver<Metric4RepoP>() {
-                    @Override
-                    public void onNext(Metric4RepoP metric) {
+                metric -> {
                         Double value = metric.getMetricsMap().get(metricId);
                         if (value != null) {
                             timeLv.add(metric.getTimestamp());
                             valueLv.add(value);
                         }
-                    }
+                    });
 
-                    @Override
-                    public void onError(Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        try {
-                            dout.writeByte(TcpFlag.HasNEXT);
-                            dout.writePack(mpack);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-        );
+        dout.writeByte(TcpFlag.HasNEXT);
+        dout.writePack(mpack);
     }
 
     /**
@@ -200,41 +182,25 @@ public class LegacyCounterServiceHandler {
                 stime,
                 etime,
                 TimeTypeP.REALTIME,
-                new StreamObserver<Metric4RepoP>() {
-                    @Override
-                    public void onNext(Metric4RepoP metric) {
-                        Double value = metric.getMetricsMap().get(metricId);
-                        if (value != null) {
-                            MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
-                            if (mapPackOfObj != null) {
-                                mapPackOfObj.getList("time").add(metric.getTimestamp());
-                                mapPackOfObj.getList("value").add(value);
-                            }
+                metric -> {
+                    Double value = metric.getMetricsMap().get(metricId);
+                    if (value != null) {
+                        MapPack mapPackOfObj = mapPackMap.get(metric.getObjId());
+                        if (mapPackOfObj != null) {
+                            mapPackOfObj.getList("time").add(metric.getTimestamp());
+                            mapPackOfObj.getList("value").add(value);
                         }
                     }
+                });
 
-                    @Override
-                    public void onError(Throwable t) {
-                        throw new RuntimeException(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {
-                        try {
-                            for (int i = 0; i < objIds.size(); i++) {
-                                MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
-                                dout.writeByte(TcpFlag.HasNEXT);
-                                if (mapPackOfObj != null) {
-                                    dout.writePack(mapPackOfObj);
-                                    dout.flush();
-                                }
-                            }
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-        );
+        for (int i = 0; i < objIds.size(); i++) {
+            MapPack mapPackOfObj = mapPackMap.get(objIds.get(i));
+            dout.writeByte(TcpFlag.HasNEXT);
+            if (mapPackOfObj != null) {
+                dout.writePack(mapPackOfObj);
+                dout.flush();
+            }
+        }
     }
 
 //    @LegacyServiceHandler(RequestCmd.COUNTER_REAL_TIME_TOT)
