@@ -19,70 +19,69 @@ package scouter2.collector.infrastructure.db.mapdb;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.collections.api.list.MutableList;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
-import org.mapdb.serializer.SerializerCompressionWrapper;
 import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigCommon;
 import scouter2.common.util.FileUtil;
 
 import java.io.Closeable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-30
  */
 @Getter
 @Slf4j
-public class CategoryDictDb implements Closeable {
+public class XlogIdIndex implements Closeable {
 
-    public static final String DB_DIR = "/common/";
+    public static final String DB_DIR = "/%s/";
     public final String INDEX_FILE;
-    public static final ThrottleConfig S_0051 = ThrottleConfig.of("S0051");
-    public static final ThrottleConfig S_0052 = ThrottleConfig.of("S0052");
+    public static final ThrottleConfig S_0053 = ThrottleConfig.of("S0053");
+    public static final ThrottleConfig S_0054 = ThrottleConfig.of("S0054");
 
-    private String category;
-    private int expireDaysAfterLastTouch;
+    private String dayKey;
     private ConfigCommon configCommon;
     private ConfigMapDb configMapDb;
 
     private DB db;
 
-    private HTreeMap<Integer, String> dictMap;
+    private HTreeMap<byte[], Long> txidIndex;
+    private HTreeMap<byte[], MutableList<byte[]>> gxidIndex;
 
-    public CategoryDictDb(String category, int expireDaysAfterLastTouch, ConfigCommon configCommon, ConfigMapDb configMapDb) {
-        this.INDEX_FILE = category + ".dict.db";
-        this.category = category;
-        this.expireDaysAfterLastTouch = expireDaysAfterLastTouch;
+    public XlogIdIndex(String dayKey,
+                       ConfigCommon configCommon, ConfigMapDb configMapDb) {
+        this.INDEX_FILE = "xlog.id.idx";
+        this.dayKey = dayKey;
         this.configCommon = configCommon;
         this.configMapDb = configMapDb;
 
-        log.info("[CategoryDictDb][{}] trying open. ", category);
+        log.info("[XlogIdIndex] trying open. {}", dayKey);
 
         FileUtil.mkdirs(configCommon.getDbDir());
-        defineDb();
+        defineDayIndex();
 
-        log.info("[CategoryDictDb][{}] opened. ", category);
+        log.info("[XlogIdIndex] opened. {}", dayKey);
         ShutdownManager.getInstance().register(this::close);
     }
 
     @Override
     public synchronized void close() {
         if (!db.isClosed()) {
-            log.info("[CategoryDictDb][{}] closing. ", category);
+            log.info("[XlogIdIndex] closing. {}", dayKey);
             db.commit();
             db.close();
-            log.info("[CategoryDictDb][{}] closed. ", category);
+            log.info("[XlogIdIndex] closed. {}", dayKey);
         } else {
-            log.info("[CategoryDictDb][{}] already closed. ", category);
+            log.info("[XlogIdIndex] already closed. {}", dayKey);
         }
     }
 
-    private void defineDb() {
-        String path = configCommon.getDbDir() + DB_DIR;
+    private void defineDayIndex() {
+        String path = configCommon.getDbDir() + String.format(DB_DIR, dayKey);
         FileUtil.mkdirs(path);
         try {
             db = DBMaker.fileDB(path + INDEX_FILE)
@@ -91,27 +90,26 @@ public class CategoryDictDb implements Closeable {
                     .closeOnJvmShutdown()
                     .transactionEnable()
                     .checksumHeaderBypass()
-                    .allocateStartSize(3 * 1024 * 1024)
-                    .allocateIncrement(10 * 1024 * 1024)
+                    .allocateStartSize(1 * 1024 * 1024)
+                    .allocateIncrement(3 * 1024 * 1024)
                     .make();
 
-            DB.HashMapMaker<Integer, String> maker = db.hashMap("dictMap")
-                    .keySerializer(Serializer.INTEGER)
-                    .valueSerializer(new SerializerCompressionWrapper(Serializer.STRING));
+            txidIndex = db.hashMap("txidIndex")
+                    .keySerializer(Serializer.BYTE_ARRAY)
+                    .valueSerializer(Serializer.LONG)
+                    .createOrOpen();
 
-            //All is Integer.MAX_VALUE now
-            if (expireDaysAfterLastTouch != Integer.MAX_VALUE) {
-                maker.expireAfterCreate(expireDaysAfterLastTouch, TimeUnit.DAYS)
-                        .expireAfterGet(expireDaysAfterLastTouch, TimeUnit.DAYS);
-            }
-            this.dictMap = maker.createOrOpen();
+            gxidIndex = db.hashMap("gxidIndex")
+                    .keySerializer(Serializer.BYTE_ARRAY)
+                    .valueSerializer(new MapDbObjectSerializer())
+                    .createOrOpen();
 
         } catch (Exception e) {
-            log.error(e.getMessage(), S_0051, e);
+            log.error(e.getMessage(), S_0053, e);
             try {
                 db.close();
             } catch (Exception ex) {
-                log.error(e.getMessage(), S_0052, e);
+                log.error(e.getMessage(), S_0054, e);
             }
         }
     }

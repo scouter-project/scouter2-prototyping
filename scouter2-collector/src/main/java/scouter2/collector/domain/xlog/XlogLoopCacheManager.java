@@ -67,6 +67,10 @@ public class XlogLoopCacheManager extends Thread {
             return xlogLoopCache;
         }
         synchronized (this) {
+            xlogLoopCache = loopCacheMap.get(applicationId);
+            if (xlogLoopCache != null) {
+                return xlogLoopCache;
+            }
             xlogLoopCache = new XlogLoopCache(configXlog, applicationId);
             loopCacheMap.put(applicationId, xlogLoopCache);
 
@@ -96,7 +100,7 @@ public class XlogLoopCacheManager extends Thread {
         @Override
         public void run() {
             while (CoreRun.isRunning()) {
-                ThreadUtil.sleep(200);
+                ThreadUtil.sleep(100);
                 xlogRepo.streamLatest(applicationId, latestOffset, 10000, new XlogStreamObserver() {
                     @Override
                     public void onNext(XlogP xlogP) {

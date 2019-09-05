@@ -49,6 +49,7 @@ public class KryoSupport {
 			kryo.addDefaultSerializer(Enum.class, EnumNameSerializer.class);
 			kryo.addDefaultSerializer(ImmutableList.class, ImmutableListSerializer.class);
 			kryo.addDefaultSerializer(MutableList.class, MutableListSerializer.class);
+			kryo.addDefaultSerializer(MutableLongListSerializer.class, MutableLongListSerializer.class);
 			for (Pair<Class<?>, Integer> classAndId : classAndIdList) {
 				kryo.register(classAndId.getOne(), classAndId.getTwo());
 			}

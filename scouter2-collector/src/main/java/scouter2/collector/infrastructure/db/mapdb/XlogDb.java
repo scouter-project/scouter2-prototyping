@@ -17,8 +17,10 @@
 
 package scouter2.collector.infrastructure.db.mapdb;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -52,7 +54,7 @@ public class XlogDb {
     private ConfigCommon configCommon;
     private ConfigMapDb configMapDb;
 
-    private final ConcurrentHashMap<String, WithTouch<DailySecondIndex>> secondIndexMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, WithTouch<XlogIndexes>> indexMap = new ConcurrentHashMap<>();
 
     public XlogDb(ConfigCommon configCommon, ConfigMapDb configMapDb) {
         this.configCommon = configCommon;
@@ -63,25 +65,29 @@ public class XlogDb {
 
     @Scheduled(fixedDelay = 5000, initialDelay = 12000)
     public void schedule4CloseIdles() {
-        List<DailySecondIndex> candidates = new ArrayList<>();
-        synchronized (secondIndexMap) {
-            for (Map.Entry<String, WithTouch<DailySecondIndex>> e : secondIndexMap.entrySet()) {
-                if (e.getValue().isExpires() || e.getValue().getReal().getDb().isClosed()) {
+        List<XlogIndexes> candidates = new ArrayList<>();
+        synchronized (indexMap) {
+            for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
+                if (e.getValue().isExpires()
+                        || e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
+                        || e.getValue().getReal().getIdIndex().getDb().isClosed()
+                ) {
                     candidates.add(e.getValue().getReal());
                 }
             }
         }
-        for (DailySecondIndex candidate : candidates) {
+        for (XlogIndexes candidate : candidates) {
             try {
                 candidate.close();
             } catch (Exception e) {
                 log.error(e.getMessage(), S_0038, e);
             }
         }
-        synchronized (secondIndexMap) {
-            for (Map.Entry<String, WithTouch<DailySecondIndex>> e : secondIndexMap.entrySet()) {
-                if (e.getValue().getReal().getDb().isClosed()) {
-                    secondIndexMap.remove(e.getKey());
+        synchronized (indexMap) {
+            for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
+                if (e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
+                        || e.getValue().getReal().getIdIndex().getDb().isClosed()) {
+                    indexMap.remove(e.getKey());
                 }
             }
         }
@@ -89,38 +95,88 @@ public class XlogDb {
 
     @Scheduled(fixedDelay = 500, initialDelay = 1000)
     public void schedule4Commit() {
-        for (WithTouch<DailySecondIndex> value : secondIndexMap.values()) {
-            DailySecondIndex inner = value.inner;
-            if (CoreRun.isRunning() && !inner.getDb().isClosed()) {
-                inner.getDb().commit();
+        for (WithTouch<XlogIndexes> value : indexMap.values()) {
+            XlogIndexes inner = value.inner;
+            if (CoreRun.isRunning()) {
+                inner.commit();
             }
         }
     }
 
-    public DailySecondIndex getDailyPeriodicIndex(String dayKey) {
-        WithTouch<DailySecondIndex> daily = secondIndexMap.get(dayKey);
+    public DailySecondIndex getPeriodicIndex(String dayKey) {
+        WithTouch<XlogIndexes> daily = touchAndGet(dayKey);
+        return daily.getReal().getPeriodicIndex();
+    }
+
+    public XlogIdIndex getIdIndex(String dayKey) {
+        WithTouch<XlogIndexes> daily = touchAndGet(dayKey);
+        return daily.getReal().getIdIndex();
+    }
+
+    @NotNull
+    private WithTouch<XlogIndexes> touchAndGet(String dayKey) {
+        WithTouch<XlogIndexes> daily = indexMap.get(dayKey);
         if (daily == null) {
             daily = defineDb(dayKey);
         }
         daily.touch();
-
-        return daily.getReal();
+        return daily;
     }
 
-    private WithTouch<DailySecondIndex> defineTodayDb() {
+    private WithTouch<XlogIndexes> defineTodayDb() {
         String dayKey = DateUtil.yyyymmdd(System.currentTimeMillis());
         return defineDb(dayKey);
     }
 
-    private WithTouch<DailySecondIndex> defineDb(String dayKey) {
-        synchronized (secondIndexMap) {
-            if (secondIndexMap.get(dayKey) != null) {
-                return secondIndexMap.get(dayKey);
+    private WithTouch<XlogIndexes> defineDb(String dayKey) {
+        synchronized (indexMap) {
+            if (indexMap.get(dayKey) != null) {
+                return indexMap.get(dayKey);
             }
-            DailySecondIndex todayIndex = new DailySecondIndex(INDEX_NAME, dayKey, configCommon, configMapDb);
-            WithTouch<DailySecondIndex> defined = new WithTouch<>(todayIndex, AUTO_CLOSE_MILLIS);
-            secondIndexMap.put(dayKey, defined);
+            DailySecondIndex periodicIndex = new DailySecondIndex(INDEX_NAME, dayKey, configCommon, configMapDb);
+            XlogIdIndex idIndex = new XlogIdIndex(dayKey, configCommon, configMapDb);
+
+            XlogIndexes indexes = new XlogIndexes(periodicIndex, idIndex);
+
+            WithTouch<XlogIndexes> defined = new WithTouch<>(indexes, AUTO_CLOSE_MILLIS);
+            indexMap.put(dayKey, defined);
             return defined;
+        }
+    }
+
+    @Getter
+    @AllArgsConstructor
+    private static class XlogIndexes {
+        DailySecondIndex periodicIndex;
+        XlogIdIndex idIndex;
+
+        public void commit() {
+            try {
+                if (!periodicIndex.getDb().isClosed()) {
+                    periodicIndex.getDb().commit();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                if (!idIndex.getDb().isClosed()) {
+                    idIndex.getDb().commit();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        public void close() {
+            try {
+                periodicIndex.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                idIndex.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

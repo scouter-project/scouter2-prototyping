@@ -17,6 +17,7 @@
 
 package scouter2.collector.infrastructure.db.filedb;
 
+import com.google.protobuf.ByteString;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
@@ -90,7 +91,7 @@ public class XlogFileDbTest {
         long startOffset = db.add(pKey, xlog1);
         db.add(pKey, xlog2);
 
-        Map<Long, XlogP> map = Maps.mutable.of(
+        Map<ByteString, XlogP> map = Maps.mutable.of(
                 xlog1.getProto().getTxid(), xlog1.getProto(),
                 xlog2.getProto().getTxid(), xlog2.getProto()
         );
@@ -130,7 +131,7 @@ public class XlogFileDbTest {
         db.add(pKey, xlog12);
         db.add(pKey, xlog33);
 
-        Map<Long, XlogP> map = Maps.mutable.of(
+        Map<ByteString, XlogP> map = Maps.mutable.of(
                 xlog1.getProto().getTxid(), xlog1.getProto(),
                 xlog21.getProto().getTxid(), xlog21.getProto(),
                 xlog22.getProto().getTxid(), xlog22.getProto(),

@@ -39,7 +39,7 @@ public class LegacySupport {
     public static ObjP getDummyObjP() {
         return ObjP.newBuilder()
                 .setObjFullName(DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT)
-                .setObjLegacyType("javaee")
+                .setObjLegacyType("java")
                 .setObjFamily("javaee")
                 .setVersion("0.0.0")
                 .setAddress("127.0.0.1")

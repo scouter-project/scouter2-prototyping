@@ -17,7 +17,10 @@
 
 package scouter2.collector.infrastructure.repository.local;
 
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -30,14 +33,18 @@ import scouter2.collector.LocalRepoTest;
 import scouter2.collector.common.util.U;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.domain.xlog.RealtimeXlogOffset;
 import scouter2.collector.domain.xlog.Xlog;
 import scouter2.collector.domain.xlog.XlogOffset;
 import scouter2.collector.domain.xlog.XlogStreamObserver;
 import scouter2.common.util.DateUtil;
+import scouter2.common.util.ThreadUtil;
 import scouter2.fixture.XlogFixture;
 import scouter2.proto.ObjP;
 import scouter2.proto.XlogP;
+import scouter2.testsupport.T;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -114,8 +121,8 @@ public class LocalXlogRepoTest extends LocalRepoTest {
     }
 
     @Test
-    public void add_and_stream_to_latest() {
-        long testTime = U.now();
+    public void add_and_get_xlogs() {
+        long testTime = U.toMillis(LocalDateTime.of(2017, 8, 9, 15, 30));
         Xlog xlog1 = XlogFixture.getOne(testTime - 10000, applicationId, objId);
         Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
         Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
@@ -126,55 +133,85 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         repo.add(applicationId, xlog3);
         repo.add(applicationId, xlog4);
 
-        List<XlogP> xlogs = Lists.mutable.empty();
-        List<LocalXlogOffset> offsets = Lists.mutable.empty();
-
-        repo.streamLatest(applicationId, new LocalXlogOffset(0), Integer.MAX_VALUE, stream(xlogs, offsets));
+        MutableList<XlogP> xlogs = repo.findXlogs(applicationId,
+                Sets.mutable.of(xlog1, xlog2, xlog3, xlog4).collect(x -> x.getProto().getTxid().toByteArray()));
 
         assertThat(xlogs.size()).isEqualTo(4);
-        assertThat(offsets.get(0).getOffsetValue()).isGreaterThan(0);
     }
 
     @Test
-    public void add_and_stream_to_latest_with_offset_parameter() {
-        long testTime = U.now();
+    public void add_and_get_some_xlogs() {
+        long testTime = U.toMillis(LocalDateTime.of(2017, 8, 10, 15, 30));
         Xlog xlog1 = XlogFixture.getOne(testTime - 10000, applicationId, objId);
         Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
-        Xlog xlog3 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
-        Xlog xlogAfter_1 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
-        Xlog xlogAfter_2 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+        Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
+        Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
         repo.add(applicationId, xlog1);
         repo.add(applicationId, xlog2);
         repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlogAfter_1);
-        repo.add(applicationId, xlogAfter_2);
+        repo.add(applicationId, xlog4);
 
-        List<XlogP> xlogs = Lists.mutable.empty();
-        List<LocalXlogOffset> offsets = Lists.mutable.empty();
-
-        repo.streamLatest(applicationId, new LocalXlogOffset(0), 3, stream(xlogs, offsets));
-        LocalXlogOffset lastOffset = offsets.get(0);
-
-        //first try
-        assertThat(xlogs.size()).isEqualTo(3);
-        assertThat(lastOffset.getOffsetValue()).isGreaterThan(0);
-        assertThat(xlogs.get(0).getTxid()).isEqualTo(xlog1.getProto().getTxid());
-        assertThat(xlogs.get(2).getTxid()).isEqualTo(xlog3.getProto().getTxid());
-
-        //stream with next offset
-        xlogs.clear();
-        offsets.clear();
-        repo.streamLatest(applicationId, lastOffset, Integer.MAX_VALUE, stream(xlogs, offsets));
+        MutableSet<byte[]> xlogIds = Sets.mutable
+                .of(xlog1, xlog3)
+                .collect(x -> x.getProto().getTxid().toByteArray());
+        MutableList<XlogP> xlogs = repo.findXlogs(applicationId, xlogIds);
 
         assertThat(xlogs.size()).isEqualTo(2);
-        assertThat(xlogs.get(0).getTxid()).isEqualTo(xlogAfter_1.getProto().getTxid());
-        assertThat(xlogs.get(1).getTxid()).isEqualTo(xlogAfter_2.getProto().getTxid());
+        assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(xlog1.getProto().getTxid(), xlog3.getProto().getTxid());
+    }
 
+    @Test
+    public void add_and_get_xlogs_by_gxid() {
+        long testTime = U.toMillis(LocalDateTime.of(2017, 8, 11, 15, 30));
+
+        byte[] gxid = T.xlogId(testTime);
+        Xlog xlog1 = XlogFixture.getOneOfGxid(gxid, testTime - 10000, applicationId, objId);
+        Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
+        Xlog xlog3 = XlogFixture.getOneOfGxid(gxid, testTime - 8000, applicationId, objId);
+        Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+
+        repo.add(applicationId, xlog1);
+        repo.add(applicationId, xlog2);
+        repo.add(applicationId, xlog3);
+        repo.add(applicationId, xlog4);
+
+        MutableList<XlogP> xlogs = repo.findXlogsByGxid(applicationId, gxid);
+
+        assertThat(xlogs.size()).isEqualTo(2);
+        assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(xlog1.getProto().getTxid(), xlog3.getProto().getTxid());
+    }
+
+    @Test
+    public void add_and_get_xlogs_by_gxid_after_gxid_buffer_flush() {
+        long testTime = U.toMillis(LocalDateTime.of(2017, 8, 12, 15, 30));
+
+        byte[] gxid = T.xlogId(testTime);
+        Xlog xlog1 = XlogFixture.getOneOfGxid(gxid, testTime - 10000, applicationId, objId);
+        Xlog xlog2 = XlogFixture.getOne(testTime - 9000, applicationId, objId);
+        Xlog xlog3 = XlogFixture.getOneOfGxid(gxid, testTime - 8000, applicationId, objId);
+        Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
+        Xlog xlog5 = XlogFixture.getOneOfGxid(gxid, gxid, testTime - 8000, applicationId, objId);
+
+        repo.add(applicationId, xlog1);
+        repo.add(applicationId, xlog2);
+        repo.add(applicationId, xlog3);
+        repo.add(applicationId, xlog4);
+        repo.add(applicationId, xlog5);
+
+        ThreadUtil.sleep(500);
+        MutableList<XlogP> xlogs = repo.findXlogsByGxid(applicationId, gxid);
+
+        assertThat(xlogs.size()).isEqualTo(3);
+        assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(
+                xlog1.getProto().getTxid(),
+                xlog3.getProto().getTxid(),
+                xlog5.getProto().getTxid()
+        );
     }
 
     @NotNull
-    private XlogStreamObserver stream(List<XlogP> xlogs, List<LocalXlogOffset> offsets) {
+    private XlogStreamObserver stream(List<XlogP> xlogs, List<RealtimeXlogOffset> offsets) {
         return new XlogStreamObserver() {
             @Override
             public void onNext(XlogP xlogP) {
@@ -183,7 +220,7 @@ public class LocalXlogRepoTest extends LocalRepoTest {
 
             @Override
             public void onComplete(XlogOffset offset) {
-                offsets.add((LocalXlogOffset) offset);
+                offsets.add((RealtimeXlogOffset) offset);
             }
         };
     }

@@ -19,8 +19,11 @@ package scouter2.collector.infrastructure.repository.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.eclipse.collections.api.set.primitive.MutableLongSet;
+import org.eclipse.collections.impl.factory.Lists;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
@@ -29,7 +32,10 @@ import scouter2.collector.common.util.U;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.domain.xlog.RealtimeXlogOffset;
+import scouter2.collector.domain.xlog.RealtimeXlogStreamObserver;
 import scouter2.collector.domain.xlog.Xlog;
+import scouter2.collector.domain.xlog.XlogLoopCache;
 import scouter2.collector.domain.xlog.XlogOffset;
 import scouter2.collector.domain.xlog.XlogRepo;
 import scouter2.collector.domain.xlog.XlogRepoAdapter;
@@ -38,8 +44,10 @@ import scouter2.collector.infrastructure.db.filedb.MinuteUnitWithSeconds;
 import scouter2.collector.infrastructure.db.filedb.XlogFileDb;
 import scouter2.collector.infrastructure.db.mapdb.DailySecondIndex;
 import scouter2.collector.infrastructure.db.mapdb.XlogDb;
+import scouter2.collector.infrastructure.db.mapdb.XlogIdIndex;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.common.support.XlogIdSupport;
 import scouter2.common.util.DateUtil;
 import scouter2.proto.XlogP;
 
@@ -60,6 +68,8 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
 
     public static final ThrottleConfig S_0049 = ThrottleConfig.of("S0049");
     public static final ThrottleConfig S_0050 = ThrottleConfig.of("S0050");
+    public static final ThrottleConfig S_0055 = ThrottleConfig.of("S0055");
+    public static final ThrottleConfig S_0056 = ThrottleConfig.of("S0056");
 
     @Override
     public String getRepoType() {
@@ -79,15 +89,18 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
     private XlogFileDb xlogFileDb;
     private XlogDb xlogDb;
     private ObjService instanceService;
-    LocalMetricRepoCache cache;
+    LocalXlogRepoCache cache;
+    LocalXlogGxidBuffer gxidBuffer;
 
     public LocalXlogRepo(XlogFileDb xlogFileDb, XlogDb xlogDb,
-                         ObjService instanceService, LocalMetricRepoCache cache) {
+                         ObjService instanceService,
+                         LocalXlogRepoCache cache,
+                         LocalXlogGxidBuffer gxidBuffer) {
         this.xlogFileDb = xlogFileDb;
         this.xlogDb = xlogDb;
         this.instanceService = instanceService;
-        //TODO cache
         this.cache = cache;
+        this.gxidBuffer = gxidBuffer;
     }
 
     @Override
@@ -96,13 +109,11 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
             if (xlog == null || xlog.getProto() == null || StringUtils.isEmpty(applicationId)) {
                 return;
             }
-
-            add2Cache(xlog);
+            add2Cache(applicationId, xlog);
             addToDb(xlog);
 
         } catch (Exception e) {
-            //TODO error key
-            log.error(e.getMessage(), "", e);
+            log.error(e.getMessage(), S_0055, e);
         }
     }
 
@@ -119,8 +130,76 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
     }
 
     @Override
-    public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount,
+    public void streamLatest(String applicationId,
+                             @Nullable XlogOffset lastOffset,
+                             int maxCount,
                              XlogStreamObserver stream) {
+
+        streamLatestInCache(applicationId, lastOffset, maxCount, stream);
+    }
+
+    @Override
+    public MutableList<XlogP> findXlogs(String applicationId, MutableSet<byte[]> xlogIds) {
+        if (xlogIds == null || xlogIds.isEmpty()) {
+            return Lists.mutable.empty();
+        }
+
+        MutableList<XlogP> xlogs = Lists.mutable.empty();
+
+        String ymd = DateUtil.yyyymmdd(XlogIdSupport.timestamp(xlogIds.getAny()));
+        XlogIdIndex idIndex = xlogDb.getIdIndex(ymd);
+        try {
+            for (byte[] id : xlogIds) {
+                Long offset = idIndex.getTxidIndex().get(id);
+                if (offset == null) continue;
+                xlogs.add(xlogFileDb.get(ymd, offset));
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage(), S_0056, e);
+            throw new RuntimeException(e.getMessage(), e);
+        }
+
+        return xlogs;
+    }
+
+    @Override
+    public MutableList<XlogP> findXlogsByGxid(String applicationId, byte[] gxid) {
+        String ymd = DateUtil.yyyymmdd(XlogIdSupport.timestamp(gxid));
+        XlogIdIndex idIndex = xlogDb.getIdIndex(ymd);
+        MutableSet<byte[]> txidList = getTxidListFromGxid(gxid, idIndex);
+        return findXlogs(applicationId, txidList);
+    }
+
+    protected void streamLatestInCache(String applicationId,
+                                       @Nullable XlogOffset lastOffset,
+                                       int maxCount,
+                                       XlogStreamObserver stream) {
+
+        XlogLoopCache loopCache = this.cache.getCache(applicationId);
+        long loop = lastOffset == null ? 0 : ((RealtimeXlogOffset) lastOffset).getLoop();
+        int index = lastOffset == null ? 0 : ((RealtimeXlogOffset) lastOffset).getIndex();
+
+        loopCache.getAndHandleRealTimeXLog(null, loop, index, maxCount, new RealtimeXlogStreamObserver() {
+            @Override
+            public void onLoad(RealtimeXlogOffset lastOffset) {
+            }
+
+            @Override
+            public void onNext(XlogP xlogP) {
+                stream.onNext(xlogP);
+            }
+
+            @Override
+            public void onComplete(RealtimeXlogOffset lastOffset) {
+                stream.onComplete(lastOffset);
+            }
+        });
+    }
+
+    protected void streamLatestInDb(String applicationId,
+                                    @Nullable XlogOffset lastOffset,
+                                    int maxCount,
+                                    XlogStreamObserver stream) {
         try {
             String yyyymmdd = DateUtil.yyyymmdd(U.now());
             long offset = lastOffset == null ? -1 : ((LocalXlogOffset) lastOffset).getOffsetValue();
@@ -139,19 +218,23 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
 
     private void addToDb(Xlog xlog) throws IOException {
         String ymd = DateUtil.yyyymmdd(xlog.getTimestamp());
-        DailySecondIndex dayIndex = xlogDb.getDailyPeriodicIndex(ymd);
         long offset = xlogFileDb.add(ymd, xlog);
         if (offset >= 0) {
-            indexing(xlog, dayIndex, offset);
+            indexing(ymd, xlog, offset);
         }
     }
 
-    private void add2Cache(Xlog xlog) {
-
+    private void add2Cache(String applicationId, Xlog xlog) {
+        XlogLoopCache loopCache = this.cache.getCache(applicationId);
+        loopCache.add(xlog.getProto());
     }
 
-    private void indexing(Xlog xlog, DailySecondIndex dayIndex, long offset) {
+    private void indexing(String ymd, Xlog xlog, long offset) {
+        DailySecondIndex dayIndex = xlogDb.getPeriodicIndex(ymd);
+        XlogIdIndex idIndex = xlogDb.getIdIndex(ymd);
+
         indexing4Period(xlog, dayIndex, offset);
+        indexing4Id(xlog, idIndex, offset);
     }
 
     private void indexing4Period(Xlog xlog, DailySecondIndex dayIndex, long offset) {
@@ -169,6 +252,25 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
             dayIndex.getMinuteUnitMap().put(minuteUnit, currentMinuteBucket);
             dayIndex.getSecondIndex().put(secUnit, offset);
         }
+    }
+
+    private void indexing4Id(Xlog xlog, XlogIdIndex idIndex, long offset) {
+        XlogP p = xlog.getProto();
+        idIndex.getTxidIndex().put(p.getTxid().toByteArray(), offset);
+        gxidBuffer.add(p.getGxid().toByteArray(), p.getTxid().toByteArray(), p.getEndTime(), idIndex.getGxidIndex());
+    }
+
+    private MutableSet<byte[]> getTxidListFromGxid(byte[] gxid, XlogIdIndex idIndex) {
+        MutableList<byte[]> txidListFromGxid = gxidBuffer.getTxidListFromGxid(gxid);
+        if (txidListFromGxid == null) {
+            txidListFromGxid = idIndex.getGxidIndex().get(gxid);
+        }
+        if (txidListFromGxid == null) {
+            txidListFromGxid = Lists.mutable.empty();
+        }
+        txidListFromGxid.add(gxid);
+
+        return txidListFromGxid.toSet();
     }
 
     private MinuteUnitWithSeconds resetCurrentMinutesListModel(DailySecondIndex dayIndex, long minute) {
@@ -200,7 +302,7 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         for (long day = fromDayUnit; day <= toDayUnit; day++) {
             long dayTimestamp = DateUtil.reverseDayUnit(day);
             String ymd = DateUtil.yyyymmdd(dayTimestamp);
-            DailySecondIndex dayIndex = xlogDb.getDailyPeriodicIndex(ymd);
+            DailySecondIndex dayIndex = xlogDb.getPeriodicIndex(ymd);
 
             long dayMaxMinuteUnit = DateUtil.getMinuteUnit(dayTimestamp + MILLIS_PER_DAY - 1000);
             dayMaxMinuteUnit = Math.min(dayMaxMinuteUnit, toMinuteUnit);
@@ -231,7 +333,7 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         if (secUnit == null) {
             return -1;
         }
-        Long offset = xlogDb.getDailyPeriodicIndex(ymd).getSecondIndex().get(secUnit);
+        Long offset = xlogDb.getPeriodicIndex(ymd).getSecondIndex().get(secUnit);
         return offset == null ? -1 : offset;
     }
 

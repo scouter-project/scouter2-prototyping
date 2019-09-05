@@ -24,8 +24,11 @@ import org.eclipse.collections.api.map.primitive.MutableLongObjectMap;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.LongObjectMaps;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 import scouter2.collector.domain.metric.SingleMetricDatum;
+import scouter2.collector.springconfig.RepoTypeMatch;
+import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.collection.LruMap;
 
 import java.util.Map;
@@ -36,6 +39,8 @@ import java.util.Objects;
  */
 @Slf4j
 @Component
+@Conditional(RepoTypeSelectorCondition.class)
+@RepoTypeMatch("local")
 public class LocalMetricRepoCache {
 
     @Getter

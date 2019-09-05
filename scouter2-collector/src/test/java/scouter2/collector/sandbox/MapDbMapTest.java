@@ -33,8 +33,11 @@ public class MapDbMapTest {
 
         ConcurrentMap map = db.hashMap("test_map_write_tran").createOrOpen();
         long start = System.nanoTime();
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             map.put(i, i);
+            if (i % 5000 == 0) {
+                db.commit();
+            }
         }
         System.out.println("elapsed=" + (System.nanoTime() - start) / 1000000);
 

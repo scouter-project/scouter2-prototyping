@@ -17,9 +17,9 @@ service XlogService {
 }
 
 message XlogP {
-  int64 gxid = 1;
-  int64 txid = 2;
-  int64 ptxid = 3;
+  bytes gxid = 1;
+  bytes txid = 2;
+  bytes ptxid = 3;
   int64 objId = 5;
   int32 legacyObjHash = 6;
   XlogTypeP xlogType = 7;

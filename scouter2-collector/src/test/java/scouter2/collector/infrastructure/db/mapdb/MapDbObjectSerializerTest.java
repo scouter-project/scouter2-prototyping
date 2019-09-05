@@ -17,59 +17,44 @@
 
 package scouter2.collector.infrastructure.db.mapdb;
 
+import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.factory.primitive.LongLists;
 import org.eclipse.collections.impl.list.mutable.primitive.LongArrayList;
 import org.eclipse.collections.impl.tuple.Tuples;
-import org.jetbrains.annotations.NotNull;
-import org.mapdb.DataInput2;
-import org.mapdb.DataOutput2;
-import org.mapdb.Serializer;
+import org.junit.Test;
 import scouter2.collector.common.kryo.KryoSupportWithTaggedFieldSerializer;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.infrastructure.db.filedb.HourUnitWithMinutes;
 import scouter2.collector.infrastructure.db.filedb.MinuteUnitWithSeconds;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.TreeSet;
 
 /**
- * @author Gun Lee (gunlee01@gmail.com) on 2019-08-07
+ * @author Gun Lee (gunlee01@gmail.com) on 03/09/2019
  */
-public class MapDbObjectSerializer<T> implements Serializer<T>, Serializable {
+public class MapDbObjectSerializerTest {
 
-    KryoSupportWithTaggedFieldSerializer kryoSupport;
-
-    public MapDbObjectSerializer() {
+    @Test
+    public void test() {
         List<Pair<Class<?>, Integer>> classAndIdList = new ArrayList<>();
         classAndIdList.add(Tuples.pair(TreeSet.class, 21));
         classAndIdList.add(Tuples.pair(HourUnitWithMinutes.class, 22));
         classAndIdList.add(Tuples.pair(Obj.class, 23));
         classAndIdList.add(Tuples.pair(HashMap.class, 24));
         classAndIdList.add(Tuples.pair(MinuteUnitWithSeconds.class, 25));
-        classAndIdList.add(Tuples.pair(LongArrayList.class, 26));
-        classAndIdList.add(Tuples.pair(FastList.class, 27));
+        classAndIdList.add(Tuples.pair(LongArrayList.class, 27));
 
-        kryoSupport = new KryoSupportWithTaggedFieldSerializer(classAndIdList);
+        KryoSupportWithTaggedFieldSerializer kryoSupport = new KryoSupportWithTaggedFieldSerializer(classAndIdList);
+
+        byte[] bytes = kryoSupport.writeClassAndObject(LongLists.mutable.of(1000L, 2000L));
+        MutableLongList des = (MutableLongList) kryoSupport.readClassAndObject(bytes);
+
+        System.out.println(bytes);
+        System.out.println(des);
     }
 
-    @Override
-    public void serialize(@NotNull DataOutput2 out, @NotNull T value) throws IOException {
-        byte[] bytes = kryoSupport.writeClassAndObject(value);
-        out.packInt(bytes.length);
-        out.write(bytes);
-
-    }
-
-    @Override
-    public T deserialize(@NotNull DataInput2 input, int available) throws IOException {
-        int size = input.unpackInt();
-        byte[] bytes = new byte[size];
-        input.readFully(bytes);
-        return (T) kryoSupport.readClassAndObject(bytes);
-    }
 }

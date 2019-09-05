@@ -84,6 +84,14 @@ public class XlogFileDb {
         return table.add(xlog);
     }
 
+    public XlogP get(String pKey, long offset) throws IOException {
+        Table table = partitionTableMap.get(pKey);
+        if (table == null) {
+            table = open(pKey);
+        }
+        return table.get(offset);
+    }
+
     public void readPeriod(String pKey, long startOffset, long toMillis,
                            LongSet objIds, Consumer<XlogP> xlogPConsumer) throws IOException {
 
@@ -160,8 +168,8 @@ public class XlogFileDb {
 
         int reference;
         String pKey;
-        RandomAccessFile dataFile;
-        RandomAccessFile dataFile4Read;
+        final RandomAccessFile dataFile;
+        final RandomAccessFile dataFile4Read;
         long offset;
         long lastAccess;
 
@@ -204,6 +212,22 @@ public class XlogFileDb {
 
             this.offset = offset;
             return offset;
+        }
+
+        private XlogP get(long offset) throws IOException {
+            if (offset < 0) {
+                return null;
+            }
+            byte[] protoBytes;
+            synchronized (dataFile4Read) {
+                dataFile4Read.seek(offset);
+                DataInputX in = new DataInputX(dataFile4Read);
+                int dayUnit = in.readInt();
+                long objId = in.readDecimal();
+                int length = in.readInt();
+                protoBytes = in.read(length);
+            }
+            return XlogP.parseFrom(protoBytes);
         }
 
         private long readPeriod(long startOffset, long toMillis, LongSet objIds, long maxReadCount,
@@ -274,7 +298,7 @@ public class XlogFileDb {
         }
 
         private byte[] readOfSize(long startOffset, int size) throws IOException {
-            synchronized (this) {
+            synchronized (dataFile4Read) {
                 return RafUtil.readOfSize(dataFile4Read, startOffset, size);
             }
         }

@@ -29,6 +29,7 @@ import scouter2.collector.domain.dict.DictCategory;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.common.legacy.counters.CounterConstants;
+import scouter2.common.support.XlogIdSupport;
 import scouter2.proto.DictP;
 import scouter2.proto.MetricP;
 import scouter2.proto.ObjP;
@@ -108,9 +109,9 @@ public class LegacyMapper {
     public static XlogP toXlog(XLogPack p, Long objId) {
 
         XlogP.Builder builder = XlogP.newBuilder()
-                .setGxid(p.gxid)
-                .setTxid(p.txid)
-                .setPtxid(p.caller)
+                .setGxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.gxid)))
+                .setTxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.txid)))
+                .setPtxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.caller)))
                 .setObjId(objId)
                 .setLegacyObjHash(p.objHash)
                 .setXlogTypeValue(p.xType)
@@ -153,9 +154,9 @@ public class LegacyMapper {
 
     public static XLogPack toXlogPack(XlogP xlog) {
         XLogPack p = new XLogPack();
-        p.gxid = xlog.getGxid();
-        p.txid = xlog.getTxid();
-        p.caller = xlog.getPtxid();
+        p.gxid = XlogIdSupport.least(xlog.getGxid().toByteArray());
+        p.txid = XlogIdSupport.least(xlog.getTxid().toByteArray());
+        p.caller = XlogIdSupport.least(xlog.getPtxid().toByteArray());
         p.objHash = (int) xlog.getObjId();
         p.xType = (byte) xlog.getXlogTypeValue();
         p.service = xlog.getService();

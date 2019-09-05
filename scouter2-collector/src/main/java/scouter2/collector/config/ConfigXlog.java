@@ -47,7 +47,8 @@ public class ConfigXlog extends ScouterConfigAdapter {
     @Configurable int xlogRepoPurgeXlogDays = 30;
     @Configurable int xlogRepoPurgeProfileDays = 15;
 
-    @Configurable int xlogRealtimeLowerBoundMs = 0;
+    @Configurable int _xlogGxidWriteBufferKeepMillis = 15000;
+    @Configurable int _xlogGxidWriteBufferSize = 150000;
 
     @Override
     public List<ConfigItem> getAllConfigs() {

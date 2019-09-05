@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.list.primitive.MutableLongList;
 import org.eclipse.collections.api.tuple.Pair;
 import org.objenesis.strategy.StdInstantiatorStrategy;
 
@@ -50,6 +51,7 @@ public class KryoSupportWithTaggedFieldSerializer {
 			kryo.addDefaultSerializer(Enum.class, EnumNameSerializer.class);
 			kryo.addDefaultSerializer(ImmutableList.class, ImmutableListSerializer.class);
 			kryo.addDefaultSerializer(MutableList.class, MutableListSerializer.class);
+			kryo.addDefaultSerializer(MutableLongList.class, MutableLongListSerializer.class);
 			for (Pair<Class<?>, Integer> classAndId : classAndIdList) {
 				kryo.register(classAndId.getOne(), classAndId.getTwo());
 			}

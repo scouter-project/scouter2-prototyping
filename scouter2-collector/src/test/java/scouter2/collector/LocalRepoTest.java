@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit4.SpringRunner;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigCommon;
+import scouter2.collector.config.ConfigXlog;
 import scouter2.common.helper.Props;
 import scouter2.common.util.ThreadUtil;
 
@@ -95,6 +96,19 @@ public abstract class LocalRepoTest {
             configCommon.refresh(props);
 
             return configCommon;
+        }
+
+        @Bean
+        public ConfigXlog configXlog() {
+            ConfigXlog configXlog = new ConfigXlog();
+
+            Properties properties = new Properties();
+            properties.setProperty("_xlogGxidWriteBufferSize", "100");
+            properties.setProperty("_xlogGxidWriteBufferKeepMillis", "500");
+            Props props = new Props(properties);
+            configXlog.refresh(props);
+
+            return configXlog;
         }
     }
 }

@@ -21,6 +21,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.factory.Lists;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import scouter2.collector.legacy.LegacySupport;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-04
@@ -45,11 +46,16 @@ public class ObjServiceCache {
 
     @Cacheable(cacheNames = "objList")
     public MutableList<Obj> findByApplicationId(String applicationId) {
-        return Lists.mutable.withAll(repo.findByApplicationId(applicationId));
+        MutableList<Obj> objs = Lists.mutable.withAll(repo.findByApplicationId(applicationId));
+        if (applicationId.equals(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)) {
+            return objs.reject(obj -> obj.objFullName.equals(LegacySupport.DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT));
+        }
+        return objs;
     }
 
     @Cacheable(cacheNames = "objList")
     public MutableList<Obj> findByLegacyObjType(String legacyObjType) {
-        return Lists.mutable.withAll(repo.findByLegacyObjType(legacyObjType));
+        MutableList<Obj> objs = Lists.mutable.withAll(repo.findByLegacyObjType(legacyObjType));
+        return objs.reject(obj -> obj.objFullName.equals(LegacySupport.DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT));
     }
 }

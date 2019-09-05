@@ -17,10 +17,12 @@
 
 package scouter2.collector.transport.scouter2;
 
+import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.common.log.ThrottleConfig;
+import scouter2.common.support.XlogIdSupport;
 import scouter2.proto.CountingP;
 import scouter2.proto.XlogListP;
 import scouter2.proto.XlogP;
@@ -40,12 +42,16 @@ public class XlogGrpcService extends XlogServiceGrpc.XlogServiceImplBase {
     @Override
     public void getXlogByTxid(XlogSearchP request, StreamObserver<XlogP> responseObserver) {
         log.info("[getXlogByTxid] start, xlogSearch:" + TextFormat.shortDebugString(request));
-        responseObserver.onNext(XlogP.newBuilder().setTxid(100).setPtxid(1000).build());
+        //TODO
+        responseObserver.onNext(XlogP.newBuilder()
+                .setTxid(ByteString.copyFrom(XlogIdSupport.createId()))
+                .setPtxid(ByteString.copyFrom(XlogIdSupport.createId())).build());
         responseObserver.onCompleted();
     }
 
     @Override
     public void getXlogByGxid(XlogSearchP request, StreamObserver<XlogListP> responseObserver) {
+        //TODO
         super.getXlogByGxid(request, responseObserver);
     }
 

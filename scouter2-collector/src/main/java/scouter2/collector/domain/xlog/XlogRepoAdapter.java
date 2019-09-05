@@ -17,6 +17,8 @@
 
 package scouter2.collector.domain.xlog;
 
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.primitive.LongSet;
 import org.springframework.lang.Nullable;
 import scouter2.proto.XlogP;
@@ -45,6 +47,16 @@ public abstract class XlogRepoAdapter implements XlogRepo {
     @Override
     public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount,
                              XlogStreamObserver stream) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MutableList<XlogP> findXlogs(String applicationId, MutableSet<byte[]> xlogIds) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public MutableList<XlogP> findXlogsByGxid(String applicationId, byte[] gxid) {
         throw new UnsupportedOperationException();
     }
 }

@@ -31,6 +31,9 @@ public class MapDbBtreeTest {
         long start = System.nanoTime();
         for (int i = 0; i < 100000; i++) {
             map.put(i, i);
+            if (i % 5000 == 0) {
+                db.commit();
+            }
         }
         System.out.println("elapsed=" + (System.nanoTime() - start) / 1000000);
 

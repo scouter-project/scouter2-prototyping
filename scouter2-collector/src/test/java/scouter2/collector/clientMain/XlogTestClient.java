@@ -25,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import scouter2.proto.CountingP;
 import scouter2.proto.XlogP;
 import scouter2.proto.XlogServiceGrpc;
+import scouter2.testsupport.T;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -92,7 +93,7 @@ public class XlogTestClient {
                 try {
                     for (int i = 1; i < 100; ++i) {
                         XlogP xlog = XlogP.newBuilder()
-                                .setTxid(atomicLong.getAndIncrement())
+                                .setTxid(T.xlogIdAsBs())
                                 .build();
 
                         requestObserver.onNext(xlog);
