@@ -78,7 +78,7 @@ public class XlogRepoQueueConsumer extends Thread {
         while (CoreRun.isRunning()) {
             try {
                 Xlog xlog = repoQueue.take();
-                repo.add(xlog.getApplicationId(), xlog);
+                repo.add(xlog);
 
             } catch (InterruptedException e) {
                 log.error(e.getMessage(), S_0010, e);

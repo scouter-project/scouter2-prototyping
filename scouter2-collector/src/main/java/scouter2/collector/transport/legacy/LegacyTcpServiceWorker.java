@@ -28,6 +28,8 @@ import scouter.util.FileUtil;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.main.CoreRun;
+import scouter2.collector.transport.legacy.agent.LegacyTcpAgentManager;
+import scouter2.collector.transport.legacy.agent.LegacyTcpAgentWorker;
 import scouter2.collector.transport.legacy.service.LegacyServiceHandlingProxy;
 
 import java.io.BufferedInputStream;
@@ -35,13 +37,13 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import static scouter2.collector.transport.legacy.LegacyTcpWorker.WorkerContainer.container;
+import static scouter2.collector.transport.legacy.LegacyTcpServiceWorker.WorkerContainer.container;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-11
  */
 @Slf4j
-public class LegacyTcpWorker implements Runnable {
+public class LegacyTcpServiceWorker implements Runnable {
 
     public static final ThrottleConfig S_0029 = ThrottleConfig.of("S0029");
     public static final ThrottleConfig S_0035 = ThrottleConfig.of("S0035");
@@ -67,12 +69,14 @@ public class LegacyTcpWorker implements Runnable {
 
     Socket socket;
     ConfigLegacy conf;
+    LegacyTcpAgentManager agentManager;
     DataInputX in;
     DataOutputX out;
 
-    public LegacyTcpWorker(Socket socket, ConfigLegacy conf) throws IOException {
+    public LegacyTcpServiceWorker(Socket socket, ConfigLegacy conf, LegacyTcpAgentManager agentManager) throws IOException {
         this.socket = socket;
         this.conf = conf;
+        this.agentManager = agentManager;
         in = new DataInputX(new BufferedInputStream(socket.getInputStream()));
         out = new DataOutputX(new BufferedOutputStream(socket.getOutputStream()));
     }
@@ -93,10 +97,11 @@ public class LegacyTcpWorker implements Runnable {
                 case NetCafe.TCP_AGENT:
                 case NetCafe.TCP_AGENT_V2:
                     int objHash = in.readInt();
-//                    val num = TcpAgentManager.add(objHash, new TcpAgentWorker(socket, in, out, cafe))
-//                    if (conf.log_tcp_action_enabled) {
-//                        Logger.println("Agent : " + remoteAddr + " open [" + Hexa32.toString32(objHash) + "] #" + num);
-//                    }
+                    int agentCount = agentManager.add(objHash, new LegacyTcpAgentWorker(conf, socket, in, out, cafe));
+
+                    if (conf.isLegacyLogTcpActionEnabled()) {
+                        log.info("agent : open. {}[{}] #{}", remoteAddr, objHash, agentCount);
+                    }
                     return;
 
                 case NetCafe.TCP_CLIENT:
@@ -159,11 +164,15 @@ public class LegacyTcpWorker implements Runnable {
                 out.flush();
             }
         } catch (Throwable t) {
-            log.error(t.getMessage(), S_0035, t);
-            if (conf.isLegacyLogTcpActionEnabled()) {
-                log.info("Legacy client : {} closed, count:{}", remoteAddr, container.getActiveCount(), t);
-            }
+            if (t instanceof java.io.EOFException) {
+                log.debug("EOF of TCP client. {}" + remoteAddr);
 
+            } else {
+                log.error(t.getMessage(), S_0035, t);
+                if (conf.isLegacyLogTcpActionEnabled()) {
+                    log.info("Legacy client : {} closed, count:{}", remoteAddr, container.getActiveCount(), t);
+                }
+            }
         } finally {
             FileUtil.close(in);
             FileUtil.close(out);

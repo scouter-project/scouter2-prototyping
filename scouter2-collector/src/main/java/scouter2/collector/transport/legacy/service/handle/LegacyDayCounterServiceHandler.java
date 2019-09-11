@@ -37,6 +37,7 @@ import scouter2.collector.domain.metric.MetricService;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.legacy.LegacySupport;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 import scouter2.common.util.DateUtil;
 import scouter2.proto.TimeTypeP;
@@ -50,7 +51,7 @@ import java.io.IOException;
 public class LegacyDayCounterServiceHandler {
 
     private MetricService metricService = MetricService.getInstance();
-    private ObjService objService = ObjService.getInstance();
+    ObjService objService = ApplicationContextHolder.getBean(ObjService.class);
 
     @LegacyServiceHandler(RequestCmd.COUNTER_TODAY)
     public void getDailyCounter(DataInputX din, DataOutputX dout, boolean login) throws IOException {

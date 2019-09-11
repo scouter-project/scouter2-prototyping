@@ -30,23 +30,15 @@ public class Xlog {
     long timestamp;
     String applicationId;
 
-    private Xlog(XlogP proto) {
-        this.proto = proto;
-        this.timestamp = proto.getEndTime();
+    public Xlog(XlogP proto) {
+        this(proto, System.currentTimeMillis());
+
     }
 
-    public Xlog(XlogP proto, String applicationId) {
-        this(proto, System.currentTimeMillis(), applicationId);
-    }
-
-    public Xlog(XlogP proto, long timestamp, String applicationId) {
+    public Xlog(XlogP proto, long timestamp) {
         this.proto = proto;
         this.timestamp = timestamp;
-        this.applicationId = applicationId;
-    }
-
-    public static Xlog ofReadFrom(XlogP xlogP) {
-        return new Xlog(xlogP);
+        this.applicationId = proto.getApplicationId();
     }
 
     public boolean isRead() {

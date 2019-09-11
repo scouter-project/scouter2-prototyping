@@ -1,0 +1,1 @@
+java -cp ~/Documents/workspace/scouter2/scouter2-collector/target/scouter2-collector-0.1.0-SNAPSHOT.jar:$(echo ~/Documents/workspace/scouter2/scouter2-collector/target/lib/*.jar | tr ' ' ':') scouter2.collector.CollectorApplication

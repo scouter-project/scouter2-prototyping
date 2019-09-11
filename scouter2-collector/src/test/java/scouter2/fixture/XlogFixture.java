@@ -56,14 +56,16 @@ public class XlogFixture {
                 .setCity(115)
                 .setHasDump(true)
                 .setB3Mode(false)
-                .setProfileCount(251);
+                .setProfileCount(251)
+                .setApplicationId("testapp")
+                ;
 
         builder.putDictTags("login", 1);
         builder.putDictTags("desc", 2);
         builder.putStringTags("text1", "t1");
         builder.putStringTags("text2", "t2");
 
-        return new Xlog(builder.build(), "testapp");
+        return new Xlog(builder.build());
     }
 
     public static Xlog getOne(long endTime, long objId) {
@@ -93,14 +95,16 @@ public class XlogFixture {
                 .setCity(115)
                 .setHasDump(true)
                 .setB3Mode(false)
-                .setProfileCount(251);
+                .setProfileCount(251)
+                .setApplicationId("testapp")
+                ;
 
         builder.putDictTags("login", 1);
         builder.putDictTags("desc", 2);
         builder.putStringTags("text1", "t1");
         builder.putStringTags("text2", "t2");
 
-        return new Xlog(builder.build(), endTime, "testapp");
+        return new Xlog(builder.build(), endTime);
     }
 
     public static Xlog getOne(long endTime, String applicationId, long objId) {
@@ -130,14 +134,16 @@ public class XlogFixture {
                 .setCity(115)
                 .setHasDump(true)
                 .setB3Mode(false)
-                .setProfileCount(251);
+                .setProfileCount(251)
+                .setApplicationId(applicationId)
+                ;
 
         builder.putDictTags("login", 1);
         builder.putDictTags("desc", 2);
         builder.putStringTags("text1", "t1");
         builder.putStringTags("text2", "t2");
 
-        return new Xlog(builder.build(), endTime, applicationId);
+        return new Xlog(builder.build(), endTime);
     }
 
     public static Xlog getOneOfGxid(byte[] gxid, long endTime, String applicationId, long objId) {
@@ -167,14 +173,16 @@ public class XlogFixture {
                 .setCity(115)
                 .setHasDump(true)
                 .setB3Mode(false)
-                .setProfileCount(251);
+                .setProfileCount(251)
+                .setApplicationId(applicationId)
+                ;
 
         builder.putDictTags("login", 1);
         builder.putDictTags("desc", 2);
         builder.putStringTags("text1", "t1");
         builder.putStringTags("text2", "t2");
 
-        return new Xlog(builder.build(), endTime, applicationId);
+        return new Xlog(builder.build(), endTime);
     }
 
     public static Xlog getOneOfGxid(byte[] gxid, byte[] txid, long endTime, String applicationId, long objId) {
@@ -204,13 +212,14 @@ public class XlogFixture {
                 .setCity(115)
                 .setHasDump(true)
                 .setB3Mode(false)
-                .setProfileCount(251);
+                .setProfileCount(251)
+                .setApplicationId(applicationId);
 
         builder.putDictTags("login", 1);
         builder.putDictTags("desc", 2);
         builder.putStringTags("text1", "t1");
         builder.putStringTags("text2", "t2");
 
-        return new Xlog(builder.build(), endTime, applicationId);
+        return new Xlog(builder.build(), endTime);
     }
 }

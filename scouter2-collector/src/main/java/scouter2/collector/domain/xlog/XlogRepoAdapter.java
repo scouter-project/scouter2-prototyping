@@ -30,33 +30,34 @@ import java.util.function.Consumer;
  */
 public abstract class XlogRepoAdapter implements XlogRepo {
     @Override
-    public void add(String applicationId, Xlog xlog) {
+    public void add(Xlog xlog) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void stream(String applicationId, long from, long to, Consumer<XlogP> stream) {
+    public void stream(String applicationId, long from, long to, long maxReadCount, Consumer<XlogP> stream) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> stream) {
+    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, long maxReadCount,
+                             Consumer<XlogP> consumer) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount,
-                             XlogStreamObserver stream) {
+    public void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxReadCount,
+                             XlogStreamObserver streamObserver) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MutableList<XlogP> findXlogs(String applicationId, MutableSet<byte[]> xlogIds) {
+    public MutableList<XlogP> findXlogs(MutableSet<byte[]> xlogIds) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public MutableList<XlogP> findXlogsByGxid(String applicationId, byte[] gxid) {
+    public MutableList<XlogP> findXlogsByGxid(byte[] gxid) {
         throw new UnsupportedOperationException();
     }
 }

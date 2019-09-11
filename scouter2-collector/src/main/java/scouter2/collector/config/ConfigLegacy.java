@@ -65,6 +65,7 @@ public class ConfigLegacy extends ScouterConfigAdapter {
     @Configurable boolean legacyLogUdpCounter;
     @Configurable boolean legacyLogUdpXlog;
     @Configurable boolean legacyLogUdpText;
+    @Configurable boolean legacyLogUdpProfile;
 
 
     @Override

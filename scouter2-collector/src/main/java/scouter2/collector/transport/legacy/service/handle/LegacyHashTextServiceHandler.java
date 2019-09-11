@@ -27,6 +27,7 @@ import scouter.util.Hexa32;
 import scouter2.collector.domain.dict.DictCategory;
 import scouter2.collector.domain.dict.DictService;
 import scouter2.collector.legacy.LegacySupport;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 
 import java.io.IOException;
@@ -36,7 +37,7 @@ import java.io.IOException;
  */
 public class LegacyHashTextServiceHandler {
 
-    DictService dictService = DictService.getInstance();
+    DictService dictService = ApplicationContextHolder.getBean(DictService.class);
 
     @LegacyServiceHandler(RequestCmd.GET_TEXT)
     public void getText(DataInputX din, DataOutputX dout, boolean login) throws IOException {

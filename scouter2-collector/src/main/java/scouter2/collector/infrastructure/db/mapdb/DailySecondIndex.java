@@ -74,7 +74,7 @@ public class DailySecondIndex implements Closeable {
     public synchronized void close() {
         if (!db.isClosed()) {
             log.info("[DailySecondIndex][{}] closing. {}", name, dayKey);
-            db.commit();
+//            db.commit();
             db.close();
             log.info("[DailySecondIndex][{}] closed. {}", name, dayKey);
         } else {
@@ -90,7 +90,7 @@ public class DailySecondIndex implements Closeable {
                     .fileChannelEnable()
                     .fileMmapEnableIfSupported()
                     .closeOnJvmShutdown()
-                    .transactionEnable()
+//                    .transactionEnable()
                     .checksumHeaderBypass()
                     .allocateStartSize(1 * 1024 * 1024)
                     .allocateIncrement(3 * 1024 * 1024)

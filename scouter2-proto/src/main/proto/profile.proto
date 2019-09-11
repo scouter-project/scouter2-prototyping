@@ -1,0 +1,276 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "scouter2.proto";
+option java_outer_classname = "ProfileProto";
+
+package scouter2.proto;
+
+service ProfileService {
+}
+
+message ProfileP {
+  string applicationId = 1;
+  int64 timestamp = 2;
+  bytes txid = 3;
+  int32 elapsed = 4;
+  bool isLegacySteps = 5;
+  repeated StepTypeP stepTypes = 6; //not used on legacy steps. legacy steps can parse without step type info.
+  repeated int32 stepByteLengths = 7; //not used on legacy steps. legacy steps can parse without step length info.
+
+  /* merged bytes of all steps from XXXStepP.toByteArray().
+   * can be deserialized by help of stepTypes & stepByteLengths info. */
+  bytes steps = 8;
+}
+
+enum SqlExecuteTypeP {
+  STMT = 0;
+  PREPARED = 1;
+  DYNA = 2;
+}
+
+enum SpanTypeP {
+  CLIENT = 0;
+  SERVER = 1;
+  PRODUCER = 2;
+  CONSUMER = 3;
+  UNKNOWN = 99;
+}
+
+enum ParameterizedMessageLevelP {
+  DEBUG = 0;
+  INFO = 1;
+  WARN = 2;
+  ERROR = 3;
+  FATAL = 4;
+}
+
+enum StepTypeP {
+  UNDEFINED = 0;
+  METHOD = 1;
+  SQL = 2;
+  SOCKET = 3;
+  APICALL = 4;
+  SPAN = 5;
+  SPANCALL = 6;
+  DISPATCH = 7;
+  THREAD_SUBMIT = 8;
+  THREAD_CALL_POSSIBLE = 9;
+  MESSAGE = 10;
+  HASHED_MESSAGE = 11;
+  PARAMETERIZED_MESSAGE = 12;
+  DUMP = 13;
+}
+
+message MethodStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 elapsed = 8;
+  int32 cpuTime = 9;
+  sint32 error = 10;
+}
+
+message SqlStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 elapsed = 8;
+  int32 cpuTime = 9;
+  string param = 10;
+  sint32 error = 11;
+  SqlExecuteTypeP executeType = 12;
+  int32 updated = 13;
+}
+
+message ApiCallStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  bytes txid = 7;
+  sint32 hash = 8;
+  int32 elapsed = 9;
+  int32 cpuTime = 10;
+  sint32 error = 11;
+  bool async = 12;
+}
+message SocketStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  bytes ipaddr = 7;
+  int32 port = 8;
+  int32 elapsed = 9;
+  sint32 error = 10;
+}
+
+message ParameterizedMessageStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 elapsed = 8;
+  ParameterizedMessageLevelP level = 9;
+  sint32 error = 11;
+}
+
+message HashedMessageStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 time = 9;
+  int32 value = 10;
+}
+
+message MessageStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  string message = 7;
+}
+
+message DumpStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  repeated sint32 stacks = 7;
+  int64 threadId = 8;
+  string threadName = 9;
+  string threadState= 10;
+  int64 lockOwnerId = 11;
+  string lockName = 12;
+  string lockOwnerName = 13;
+}
+
+message ThreadCallPossibleStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  bytes txid = 7;
+  sint32 hash = 8;
+  int32 elapsed = 9;
+  bool threaded = 10;
+}
+
+message ThreadSubmitStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  bytes txid = 7;
+  sint32 hash = 8;
+  int32 elapsed = 9;
+  int32 cpuTime = 10;
+  sint32 error = 11;
+}
+
+message DispatchStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  bytes txid = 7;
+  sint32 hash = 8;
+  int32 elapsed = 9;
+  int32 cpuTime = 10;
+  sint32 error = 11;
+  string address = 12;
+}
+
+message SpanStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 elapsed = 8;
+  sint32 error = 9;
+  int64 timestamp = 10;
+  SpanTypeP spanType = 11;
+
+  sint32 localEndpointServiceName = 12;
+  bytes localEndpointIp = 13;
+  int32 localEndpointPort = 14;
+
+  sint32 remoteEndpointServiceName = 15;
+  bytes remoteEndpointIp = 16;
+  int32 remoteEndpointPort = 17;
+
+  bool debug = 18;
+  bool shared = 19;
+
+  repeated int64 annotationTimestamps = 20;
+  repeated string annotationValues = 21;
+  map<string, string> tags = 22;
+}
+
+message SpanCallStepP {
+  StepTypeP stepType = 1;
+  int32 parent = 3;
+  int32 index = 4;
+  int32 startTime = 5;
+  int32 startCpu = 6;
+
+  sint32 hash = 7;
+  int32 elapsed = 8;
+  sint32 error = 9;
+  int64 timestamp = 10;
+  SpanTypeP spanType = 11;
+
+  sint32 localEndpointServiceName = 12;
+  bytes localEndpointIp = 13;
+  int32 localEndpointPort = 14;
+
+  sint32 remoteEndpointServiceName = 15;
+  bytes remoteEndpointIp = 16;
+  int32 remoteEndpointPort = 17;
+
+  bool debug = 18;
+  bool shared = 19;
+
+  repeated int64 annotationTimestamps = 20;
+  repeated string annotationValues = 21;
+  map<string, string> tags = 22;
+
+  bytes txid = 23;
+  string address = 25;
+  bool async = 26;
+}
+
+

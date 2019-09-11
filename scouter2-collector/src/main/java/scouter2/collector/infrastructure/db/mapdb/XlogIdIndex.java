@@ -72,7 +72,7 @@ public class XlogIdIndex implements Closeable {
     public synchronized void close() {
         if (!db.isClosed()) {
             log.info("[XlogIdIndex] closing. {}", dayKey);
-            db.commit();
+//            db.commit();
             db.close();
             log.info("[XlogIdIndex] closed. {}", dayKey);
         } else {
@@ -88,7 +88,7 @@ public class XlogIdIndex implements Closeable {
                     .fileChannelEnable()
                     .fileMmapEnableIfSupported()
                     .closeOnJvmShutdown()
-                    .transactionEnable()
+//                    .transactionEnable()
                     .checksumHeaderBypass()
                     .allocateStartSize(1 * 1024 * 1024)
                     .allocateIncrement(3 * 1024 * 1024)

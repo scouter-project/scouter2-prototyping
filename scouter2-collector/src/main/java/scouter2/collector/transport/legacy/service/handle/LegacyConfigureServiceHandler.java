@@ -27,6 +27,7 @@ import scouter.net.RequestCmd;
 import scouter.net.TcpFlag;
 import scouter2.collector.domain.objtype.LegacyObjTypeManager;
 import scouter2.collector.domain.objtype.ObjFamilyManager;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 import scouter2.common.meta.LegacyType2Family;
 import scouter2.common.meta.ObjFamily;
@@ -38,7 +39,7 @@ import java.io.IOException;
  */
 public class LegacyConfigureServiceHandler {
 
-    ObjFamilyManager objFamilyManager = ObjFamilyManager.getInstance();
+    ObjFamilyManager objFamilyManager = ApplicationContextHolder.getBean(ObjFamilyManager.class);
 
 //    @ServiceHandler(RequestCmd.GET_CONFIGURE_SERVER)
 //    def getConfigureServer(din: DataInputX, dout: DataOutputX, login: Boolean) {

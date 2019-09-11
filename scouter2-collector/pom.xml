@@ -116,6 +116,19 @@
             <version>0.88.0</version>
         </dependency>
 
+        <!-- TODO why?? error without it on running via cmd line -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>1.9.13</version>GxidLocalStoreBufferFlushScheduler
+        </dependency>
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy-agent</artifactId>
+            <version>1.9.13</version>
+        </dependency>
+
+
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>

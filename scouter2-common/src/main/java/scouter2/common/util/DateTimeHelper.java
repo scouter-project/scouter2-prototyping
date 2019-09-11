@@ -265,6 +265,18 @@ public class DateTimeHelper {
 		return String.format("%02d%02d%02d", hh, mm, ss);
 	}
 
+	public String hhmmss2(long time) {
+		if (time < BASE_TIME)
+			return "000000";
+		long dtime = (time - BASE_TIME) % MILLIS_PER_DAY;
+		int hh = (int) (dtime / MILLIS_PER_HOUR);
+		dtime = (int) (dtime % MILLIS_PER_HOUR);
+		int mm = (int) (dtime / MILLIS_PER_MINUTE);
+		dtime = (int) (dtime % MILLIS_PER_MINUTE);
+		int ss = (int) (dtime / MILLIS_PER_SECOND);
+		return String.format("%02d:%02d:%02d", hh, mm, ss);
+	}
+
 	public String hhmm(long time) {
 		if (time < BASE_TIME)
 			return "0000";

@@ -99,7 +99,7 @@ public class XlogFileDbTest {
 
         //when
         db.readPeriod(pKey, startOffset, System.currentTimeMillis() + 1000,
-                LongSets.mutable.of(xlog1.getProto().getObjId()),
+                LongSets.mutable.of(xlog1.getProto().getObjId()), Integer.MAX_VALUE,
                 readList::add);
 
         //then
@@ -141,7 +141,7 @@ public class XlogFileDbTest {
 
         //when
         db.readPeriod(pKey, startOffset, now + 2000,
-                LongSets.mutable.of(objId1, objId2),
+                LongSets.mutable.of(objId1, objId2), Integer.MAX_VALUE,
                 readList::add);
 
         //then

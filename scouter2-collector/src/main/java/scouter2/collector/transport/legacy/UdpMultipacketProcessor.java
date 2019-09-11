@@ -19,11 +19,12 @@ package scouter2.collector.transport.legacy;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import scouter.util.LongEnumer;
 import scouter.util.LongKeyLinkedMap;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
-import scouter2.collector.domain.obj.ObjReceiveQueue;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -32,37 +33,30 @@ import java.net.InetAddress;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-10
  */
 @Slf4j
+@Component
 public class UdpMultipacketProcessor {
     private static final int CAPACITY = 1000;
     public static final ThrottleConfig S_0013 = ThrottleConfig.of("S0013");
-    private static UdpMultipacketProcessor instance;
 
     private LongKeyLinkedMap<UdpMultipacket> buffer;
     private ConfigLegacy configLegacy;
 
     public UdpMultipacketProcessor(ConfigLegacy configLegacy) {
-        synchronized (ObjReceiveQueue.class) {
-            if (instance != null) {
-                throw new IllegalStateException();
-            }
-            buffer = new LongKeyLinkedMap<UdpMultipacket>().setMax(CAPACITY);
-            instance = this;
-        }
-    }
-
-    public static UdpMultipacketProcessor getInstance() {
-        return instance;
+        this.buffer = new LongKeyLinkedMap<UdpMultipacket>().setMax(CAPACITY);
+        this.configLegacy = configLegacy;
     }
 
     @Scheduled(fixedDelay = 1000, initialDelay = 5000)
     public void schedule() {
-        if (buffer.size() > 0) {
-            try {
-                checkExpired();
-            } catch (Exception e) {
-                log.error(e.getMessage(), S_0013, e);
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            if (buffer.size() > 0) {
+                try {
+                    checkExpired();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), S_0013, e);
+                }
             }
-        }
+        });
     }
 
     public byte[] add(long pkid, int total, int num, byte[] data, int objHash, InetAddress addr) throws IOException {

@@ -19,12 +19,8 @@ package scouter2.collector;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.context.annotation.ComponentScan;
 import scouter2.collector.common.ShutdownManager;
-import scouter2.collector.main.CollectorMain;
 import scouter2.collector.main.CoreRun;
 import scouter2.common.helper.Props;
 import scouter2.common.util.ScouterConfigUtil;
@@ -40,24 +36,17 @@ import static scouter2.collector.main.CollectorConstants.DEFAULT_CONF_FILE;
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-26
  */
-@SpringBootConfiguration
-@ComponentScan
 @Slf4j
-public class CollectorApplication implements CommandLineRunner {
+public class CollectorApplication {
     private static Props loadProps = new Props(new Properties());
-    private final CollectorMain collectorMain;
 
-    public CollectorApplication(CollectorMain collectorMain) {
-        this.collectorMain = collectorMain;
-    }
-
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         log.info("starting Scouter CollectorApplication...");
 
         preloadConfig();
         preInit();
 
-        SpringApplication.run(CollectorApplication.class, args);
+        SpringApplication.run(SpringBoot.class, args);
     }
 
     private static void preInit() {
@@ -67,7 +56,7 @@ public class CollectorApplication implements CommandLineRunner {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown())); //for kill -3
     }
 
-    private static void preloadConfig() throws IOException {
+    private static void preloadConfig() {
         String confFileName = System.getProperty("scouter2.config", DEFAULT_CONF_DIR + DEFAULT_CONF_FILE);
         File confFile = new File(confFileName);
         if (confFile.canRead()) {
@@ -76,7 +65,8 @@ public class CollectorApplication implements CommandLineRunner {
                 configProps.load(in);
 
             } catch (IOException e) {
-                throw e;
+                log.error(e.getMessage(), e);
+                System.exit(-1);
             }
 
             Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);
@@ -87,12 +77,6 @@ public class CollectorApplication implements CommandLineRunner {
                 System.setProperty("repoType", loadProps.getString("repoType"));
             }
         }
-    }
-
-
-    @Override
-    public void run(String... args) throws Exception {
-        collectorMain.start(args);
     }
 
     public static Props getLoadProps() {

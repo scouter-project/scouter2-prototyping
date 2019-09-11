@@ -32,6 +32,7 @@ import scouter2.collector.infrastructure.db.PartitionKey;
 import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.util.FileUtil;
 import scouter2.proto.Metric4RepoP;
 import scouter2.proto.TimeTypeP;
@@ -104,7 +105,9 @@ public class MetricFileDb {
 
     @Scheduled(fixedDelay = 15000, initialDelay = 15000)
     public void schedule4CloseIdles() {
-        closeIdles();
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            closeIdles();
+        });
     }
 
     private void closeIdles() {

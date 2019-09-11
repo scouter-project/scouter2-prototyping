@@ -31,6 +31,7 @@ import scouter.lang.counters.CounterEngine;
 import scouter.util.FileUtil;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.common.util.JsonUtil;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.meta.MetricDef;
 import scouter2.common.meta.ObjFamily;
 
@@ -73,17 +74,20 @@ public class ObjFamilyManager {
 
     @Scheduled(fixedDelay = 5000, initialDelay = 10000)
     public void schedule() {
-        reload();
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            reload();
+        });
     }
 
     private void reload() {
-        InputStream in  = CounterEngine.class.getResourceAsStream(OBJ_FAMILIES_FILE_NAME);
+        InputStream in = CounterEngine.class.getResourceAsStream(OBJ_FAMILIES_FILE_NAME);
         try {
             byte[] contents = FileUtil.readAll(in);
             String jsonObjTypes = new String(contents);
 
             MutableList<ObjFamily> families = JsonUtil.toObjectList(jsonObjTypes,
-                    new TypeReference<MutableList<ObjFamily>>() {});
+                    new TypeReference<MutableList<ObjFamily>>() {
+                    });
 
             //TODO add custom
             objFamilyList = families.toImmutable();

@@ -25,16 +25,20 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.LongSets;
 import scouter.io.DataInputX;
 import scouter.io.DataOutputX;
+import scouter.lang.pack.MapPack;
 import scouter.lang.pack.ObjectPack;
 import scouter.lang.value.DoubleValue;
+import scouter.lang.value.ListValue;
 import scouter.net.RequestCmd;
 import scouter.net.TcpFlag;
+import scouter.util.StringUtil;
 import scouter2.collector.domain.metric.MetricService;
 import scouter2.collector.domain.metric.SingleMetricDatum;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.domain.objtype.ObjFamilyManager;
 import scouter2.collector.legacy.LegacySupport;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.LegacyMapper;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 
@@ -45,8 +49,8 @@ import java.io.IOException;
  */
 public class LegacyObjectServiceHandler {
 
-    private ObjService objService = ObjService.getInstance();
-    private MetricService metricService = MetricService.getInstance();
+    ObjService objService = ApplicationContextHolder.getBean(ObjService.class);
+    MetricService metricService = ApplicationContextHolder.getBean(MetricService.class);
 
     /**
      * OBJECT_LIST_REAL_TIME
@@ -87,18 +91,32 @@ public class LegacyObjectServiceHandler {
         }
     }
 
-//    @LegacyServiceHandler("OBJECT_LIST_LOAD_DATE")
-//    public void getAgentOldList(DataInputX din, DataOutputX dout, boolean login)
-//    {
-//        MapPack param = (MapPack)din.readPack();
-//        String date = param.getText("date");
-//        if (StringUtil.isEmpty(date)) {
-//            return;
-//        }
-//        MapPack mpack = ObjectRD..MODULE$.getDailyAgent(date);
-//        dout.writeByte(3);
-//        dout.writePack(mpack);
-//    }
+    @LegacyServiceHandler("OBJECT_LIST_LOAD_DATE")
+    public void getAgentOldList(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        //TODO obj of date. Currently return all realtime obj for testing !!!
+        MapPack param = (MapPack)din.readPack();
+        String date = param.getText("date");
+        if (StringUtil.isEmpty(date)) {
+            return;
+        }
+
+        MutableList<Obj> objs = Lists.adapt(objService
+                .findByApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT));
+
+        MapPack m = new MapPack();
+        ListValue objTypeLv = m.newList("objType");
+        ListValue objHashLv = m.newList("objHash");
+        ListValue objNameLv = m.newList("objName");
+
+        for (Obj obj : objs) {
+            ObjectPack pack = LegacyMapper.toObjectPack(obj);
+            objTypeLv.add(pack.objType);
+            objHashLv.add(pack.objHash);
+            objNameLv.add(pack.objName);
+        }
+        dout.writeByte(TcpFlag.HasNEXT);
+        dout.writePack(m);
+    }
 //
 //
 //    @LegacyServiceHandler("OBJECT_REMOVE_INACTIVE")

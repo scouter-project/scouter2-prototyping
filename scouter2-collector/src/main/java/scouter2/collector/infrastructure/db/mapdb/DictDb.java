@@ -20,7 +20,6 @@ package scouter2.collector.infrastructure.db.mapdb;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigCommon;
@@ -78,11 +77,11 @@ public class DictDb {
         }
     }
 
-    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+//    @Scheduled(fixedDelay = 3000, initialDelay = 1000)
     public void schedule4Commit() {
         for (CategoryDictDb value : CategoryDictDbMap.values()) {
             if (CoreRun.isRunning() && !value.getDb().isClosed()) {
-                value.getDb().commit();
+//                value.getDb().commit();
             }
         }
     }

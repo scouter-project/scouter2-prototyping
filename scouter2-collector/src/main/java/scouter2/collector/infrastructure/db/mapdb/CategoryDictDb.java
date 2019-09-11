@@ -73,7 +73,7 @@ public class CategoryDictDb implements Closeable {
     public synchronized void close() {
         if (!db.isClosed()) {
             log.info("[CategoryDictDb][{}] closing. ", category);
-            db.commit();
+//            db.commit();
             db.close();
             log.info("[CategoryDictDb][{}] closed. ", category);
         } else {
@@ -89,7 +89,7 @@ public class CategoryDictDb implements Closeable {
                     .fileChannelEnable()
                     .fileMmapEnableIfSupported()
                     .closeOnJvmShutdown()
-                    .transactionEnable()
+//                    .transactionEnable()
                     .checksumHeaderBypass()
                     .allocateStartSize(3 * 1024 * 1024)
                     .allocateIncrement(10 * 1024 * 1024)

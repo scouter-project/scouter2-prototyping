@@ -17,6 +17,8 @@
 
 package scouter2.collector.infrastructure.db.filedb;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import scouter2.collector.domain.xlog.Xlog;
 import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.util.DateUtil;
 import scouter2.common.util.FileUtil;
 import scouter2.proto.XlogP;
@@ -73,7 +76,9 @@ public class XlogFileDb {
 
     @Scheduled(fixedDelay = 15000, initialDelay = 15000)
     public void schedule4CloseIdles() {
-        closeIdles();
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            closeIdles();
+        });
     }
 
     public long add(String pKey, Xlog xlog) throws IOException {
@@ -92,16 +97,22 @@ public class XlogFileDb {
         return table.get(offset);
     }
 
-    public void readPeriod(String pKey, long startOffset, long toMillis,
-                           LongSet objIds, Consumer<XlogP> xlogPConsumer) throws IOException {
+    /**
+     * @return read count
+     */
+    public long readPeriod(String pKey, long startOffset, long toMillis,
+                           LongSet objIds, long maxReadCount, Consumer<XlogP> xlogPConsumer) throws IOException {
 
         Table table = partitionTableMap.get(pKey);
         if (table == null) {
             table = open(pKey);
         }
-        table.readPeriod(startOffset, toMillis, objIds, Long.MAX_VALUE, xlogPConsumer);
+        return table.readPeriod(startOffset, toMillis, objIds, maxReadCount, xlogPConsumer).getCount();
     }
 
+    /**
+     * @return next offset
+     */
     public long readToLatest(String pKey, long startOffset, long maxReadCount, Consumer<XlogP> xlogPConsumer)
             throws IOException {
 
@@ -109,7 +120,7 @@ public class XlogFileDb {
         if (table == null) {
             table = open(pKey);
         }
-        return table.readPeriod(startOffset, Long.MAX_VALUE, null, maxReadCount, xlogPConsumer);
+        return table.readPeriod(startOffset, Long.MAX_VALUE, null, maxReadCount, xlogPConsumer).getOffset();
     }
 
     public long findLatestOffset(String pKey) throws IOException {
@@ -230,7 +241,7 @@ public class XlogFileDb {
             return XlogP.parseFrom(protoBytes);
         }
 
-        private long readPeriod(long startOffset, long toMillis, LongSet objIds, long maxReadCount,
+        private OffsetAndCount readPeriod(long startOffset, long toMillis, LongSet objIds, long maxReadCount,
                                 Consumer<XlogP> xlogPConsumer) throws IOException {
 
             this.lastAccess = U.now();
@@ -294,7 +305,7 @@ public class XlogFileDb {
 
                 offset += partOffset;
             }
-            return offset;
+            return new OffsetAndCount(offset, readCount);
         }
 
         private byte[] readOfSize(long startOffset, int size) throws IOException {
@@ -302,5 +313,12 @@ public class XlogFileDb {
                 return RafUtil.readOfSize(dataFile4Read, startOffset, size);
             }
         }
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class OffsetAndCount {
+        long offset;
+        long count;
     }
 }

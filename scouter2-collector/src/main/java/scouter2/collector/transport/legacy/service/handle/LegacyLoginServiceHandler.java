@@ -21,6 +21,7 @@ import scouter.Version;
 import scouter.io.DataInputX;
 import scouter.io.DataOutputX;
 import scouter.lang.pack.MapPack;
+import scouter.lang.value.BooleanValue;
 import scouter.lang.value.MapValue;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 
@@ -45,6 +46,9 @@ public class LegacyLoginServiceHandler {
         boolean internalMode = (internal != null) && (internal.equalsIgnoreCase("true"));
 
         //TODO Policy
+        MapValue mv = new MapValue();
+        mv.put("AllowSqlParameter", new BooleanValue(true));
+        m.put("policy", mv);
 
         //long session = LoginManager.login(id, passwd, ip, internalMode);
         long session = 1;
@@ -62,6 +66,7 @@ public class LegacyLoginServiceHandler {
         m.put("menu", menuMv);
         m.put("so_time_out", 60000);
         m.put("ext_link_name", "extlinkname");
+
         dout.writeByte(3);
         dout.writePack(m);
     }

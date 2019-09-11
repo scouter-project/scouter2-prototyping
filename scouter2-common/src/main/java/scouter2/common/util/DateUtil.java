@@ -38,6 +38,10 @@ public class DateUtil {
 		return helper.hhmmss(time);
 	}
 
+	public static String hhmmss2(long time) {
+		return helper.hhmmss2(time);
+	}
+
 	public static String hhmm(long now) {
 		return helper.hhmm(now);
 	}

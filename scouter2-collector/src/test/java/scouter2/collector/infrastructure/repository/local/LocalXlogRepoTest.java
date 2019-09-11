@@ -85,12 +85,13 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog1 = XlogFixture.getOne(testTime - 2000, applicationId, objId);
         Xlog xlog2 = XlogFixture.getOne(testTime, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
+        repo.add(xlog1);
+        repo.add(xlog2);
 
         List<XlogP> xlogs = Lists.mutable.empty();
 
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 2000, testTime, consumer(xlogs));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 2000, testTime,  Integer.MAX_VALUE,
+                consumer(xlogs));
 
         assertThat(xlogs.size()).isEqualTo(2);
     }
@@ -103,20 +104,22 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
 
         List<XlogP> xlogs = Lists.mutable.empty();
 
         //1st case
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime - 7000, consumer(xlogs));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime - 7000,
+                Integer.MAX_VALUE, consumer(xlogs));
         assertThat(xlogs.size()).isEqualTo(2);
 
         //2nd case
         xlogs = Lists.mutable.empty();
-        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime, consumer(xlogs));
+        repo.streamByObjs(applicationId, LongSets.mutable.of(objId), testTime - 9000, testTime, Integer.MAX_VALUE,
+                consumer(xlogs));
         assertThat(xlogs.size()).isEqualTo(3);
     }
 
@@ -128,12 +131,12 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
 
-        MutableList<XlogP> xlogs = repo.findXlogs(applicationId,
+        MutableList<XlogP> xlogs = repo.findXlogs(
                 Sets.mutable.of(xlog1, xlog2, xlog3, xlog4).collect(x -> x.getProto().getTxid().toByteArray()));
 
         assertThat(xlogs.size()).isEqualTo(4);
@@ -147,15 +150,15 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
 
         MutableSet<byte[]> xlogIds = Sets.mutable
                 .of(xlog1, xlog3)
                 .collect(x -> x.getProto().getTxid().toByteArray());
-        MutableList<XlogP> xlogs = repo.findXlogs(applicationId, xlogIds);
+        MutableList<XlogP> xlogs = repo.findXlogs(xlogIds);
 
         assertThat(xlogs.size()).isEqualTo(2);
         assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(xlog1.getProto().getTxid(), xlog3.getProto().getTxid());
@@ -171,12 +174,12 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog3 = XlogFixture.getOneOfGxid(gxid, testTime - 8000, applicationId, objId);
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
 
-        MutableList<XlogP> xlogs = repo.findXlogsByGxid(applicationId, gxid);
+        MutableList<XlogP> xlogs = repo.findXlogsByGxid(gxid);
 
         assertThat(xlogs.size()).isEqualTo(2);
         assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(xlog1.getProto().getTxid(), xlog3.getProto().getTxid());
@@ -193,14 +196,14 @@ public class LocalXlogRepoTest extends LocalRepoTest {
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
         Xlog xlog5 = XlogFixture.getOneOfGxid(gxid, gxid, testTime - 8000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
-        repo.add(applicationId, xlog5);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
+        repo.add(xlog5);
 
         ThreadUtil.sleep(500);
-        MutableList<XlogP> xlogs = repo.findXlogsByGxid(applicationId, gxid);
+        MutableList<XlogP> xlogs = repo.findXlogsByGxid(gxid);
 
         assertThat(xlogs.size()).isEqualTo(3);
         assertThat(xlogs.collect(XlogP::getTxid)).containsOnly(

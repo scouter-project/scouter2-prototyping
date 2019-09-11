@@ -105,6 +105,8 @@ public abstract class LocalRepoTest {
             Properties properties = new Properties();
             properties.setProperty("_xlogGxidWriteBufferSize", "100");
             properties.setProperty("_xlogGxidWriteBufferKeepMillis", "500");
+            properties.setProperty("_xlogProfileOffsetWriteBufferSize", "100");
+            properties.setProperty("_xlogProfileOffsetWriteBufferKeepMillis", "500");
             Props props = new Props(properties);
             configXlog.refresh(props);
 

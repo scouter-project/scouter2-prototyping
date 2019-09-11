@@ -43,21 +43,41 @@ public class XlogIdSupport {
     private static Random random = new Random(System.currentTimeMillis());
     private static long MILLIS_OF_MIN = 1000 * 60;
 
+    /**
+     * do not use it for backward agent compatibility.
+     * this method may use some future version.
+     */
+    @Deprecated
     public static byte[] createId() {
         long least = random.nextLong();
         return createId(System.currentTimeMillis(), least);
     }
 
+    /**
+     * do not use it for backward agent compatibility.
+     * this method may use some future version.
+     */
+    @Deprecated
     public static byte[] createId(long timestamp) {
         long stamp = timestamp / 1000 / 60;
         long most = stamp << (64 - 27);
         return ByteUtil.toByteArray(most, random.nextLong());
     }
 
+    /**
+     * do not use it for backward agent compatibility.
+     * this method may use some future version.
+     */
+    @Deprecated
     public static byte[] createId(long timestamp, long least) {
         long stamp = timestamp / 1000 / 60;
         long most = stamp << (64 - 27);
         return ByteUtil.toByteArray(most, least);
+    }
+
+    public static byte[] createIdOfLegacySupport(long timestamp, long least) {
+        long timestampTruncated = DateUtil.yyyymmdd(DateUtil.yyyymmdd(timestamp));
+        return createId(timestampTruncated, least);
     }
 
     public static byte[] createId(String yyyymmdd, long least) {
@@ -65,6 +85,11 @@ public class XlogIdSupport {
         return createId(timestamp, least);
     }
 
+    /**
+     * do not use it for backward agent compatibility.
+     * this method may use some future version.
+     */
+    @Deprecated
     public static byte[] createUntimestampedId() {
         long least = random.nextLong();
         return ByteUtil.toByteArray(1L, least);

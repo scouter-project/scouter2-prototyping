@@ -19,6 +19,7 @@ package scouter2.collector.config.support;
 import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.main.CoreRun;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.util.ScouterConfigUtil;
 import scouter2.common.util.ThreadUtil;
 
@@ -49,7 +50,7 @@ public class ConfigWatcher extends Thread {
         instance = new ConfigWatcher(confFileName, publisher);
         instance.setDaemon(true);
         instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
-        instance.reload();
+        instance.reload(true);
         instance.start();
         return instance;
     }
@@ -68,23 +69,35 @@ public class ConfigWatcher extends Thread {
     }
 
     private boolean reload() {
+        return reload(false);
+    }
+
+    private boolean reload(boolean firstCall) {
         if (confFile.lastModified() == lastLoaded) {
             return false;
         }
 
         lastLoaded = confFile.lastModified();
         if (confFile.canRead()) {
-            Properties configProps = new Properties();
-            try (FileInputStream in = new FileInputStream(confFile)) {
-                configProps.load(in);
-            } catch (Exception e) {
-                log.error("Error on reading config file. file: {}", confFile.getAbsolutePath(), S_0025, e);
+            if (firstCall) {
+                reload0();
+            } else {
+                ThreadNameDecorator.run(this::reload0);
             }
-
-            Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);
-            publisher.refresh(configWithSystemProps);
             return true;
         }
         return false;
+    }
+
+    private void reload0() {
+        Properties configProps = new Properties();
+        try (FileInputStream in = new FileInputStream(confFile)) {
+            configProps.load(in);
+        } catch (Exception e) {
+            log.error("Error on reading config file. file: {}", confFile.getAbsolutePath(), S_0025, e);
+        }
+
+        Properties configWithSystemProps = ScouterConfigUtil.appendSystemProps(configProps);
+        publisher.refresh(configWithSystemProps);
     }
 }

@@ -17,11 +17,12 @@
 
 package scouter2.collector.infrastructure.db.filedb;
 
-import com.esotericsoftware.kryo.serializers.TaggedFieldSerializer;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.eclipse.collections.api.list.MutableList;
 import org.mapdb.HTreeMap;
+
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 03/09/2019
@@ -29,18 +30,17 @@ import org.mapdb.HTreeMap;
 @AllArgsConstructor
 @Getter
 public class GxidMapping {
-    @TaggedFieldSerializer.Tag(10)
     byte[] gxid;
-    @TaggedFieldSerializer.Tag(11)
-    MutableList<byte[]> txidList;
+    LinkedBlockingQueue<byte[]> txidQueue;
 
     long timestamp;
     HTreeMap<byte[], MutableList<byte[]>> gxidIndex;
     boolean entryIdRegistered;
 
-    public GxidMapping(byte[] gxid, MutableList<byte[]> txidList, long timestamp, HTreeMap<byte[], MutableList<byte[]>> gxidIndex) {
+    public GxidMapping(byte[] gxid, LinkedBlockingQueue<byte[]> txidQueue,
+                       long timestamp, HTreeMap<byte[], MutableList<byte[]>> gxidIndex) {
         this.gxid = gxid;
-        this.txidList = txidList;
+        this.txidQueue = txidQueue;
         this.timestamp = timestamp;
         this.gxidIndex = gxidIndex;
     }

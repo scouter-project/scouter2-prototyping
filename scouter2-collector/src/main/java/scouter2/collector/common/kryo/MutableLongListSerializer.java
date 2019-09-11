@@ -34,7 +34,7 @@ public class MutableLongListSerializer extends Serializer<MutableLongList> {
 
 	@Override
 	public MutableLongList read(Kryo kryo, Input input, Class<MutableLongList> type) {
-		final int size = input.readInt(true);
+		final int size = input.readVarInt(true);
 		final MutableLongList list = LongLists.mutable.empty();
 
 		for (int i = 0; i < size; i++) {
@@ -45,7 +45,7 @@ public class MutableLongListSerializer extends Serializer<MutableLongList> {
 
 	@Override
 	public void write(Kryo kryo, Output output, MutableLongList list) {
-		output.writeInt(list.size(), true);
+		output.writeVarInt(list.size(), true);
 		for (int i = 0; i < list.size(); i++) {
 			output.writeVarLong(list.get(i), false);
 		}

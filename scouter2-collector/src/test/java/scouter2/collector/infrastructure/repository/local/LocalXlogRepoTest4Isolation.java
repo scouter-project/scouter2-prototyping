@@ -80,10 +80,10 @@ public class LocalXlogRepoTest4Isolation extends LocalRepoTest {
         Xlog xlog3 = XlogFixture.getOne(testTime - 8000, applicationId, objId);
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
 
         List<XlogP> xlogs = Lists.mutable.empty();
         List<RealtimeXlogOffset> offsets = Lists.mutable.empty();
@@ -103,11 +103,11 @@ public class LocalXlogRepoTest4Isolation extends LocalRepoTest {
         Xlog xlog4 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
         Xlog xlog5 = XlogFixture.getOne(testTime - 5000, applicationId, objId);
 
-        repo.add(applicationId, xlog1);
-        repo.add(applicationId, xlog2);
-        repo.add(applicationId, xlog3);
-        repo.add(applicationId, xlog4);
-        repo.add(applicationId, xlog5);
+        repo.add(xlog1);
+        repo.add(xlog2);
+        repo.add(xlog3);
+        repo.add(xlog4);
+        repo.add(xlog5);
 
         List<XlogP> xlogs = Lists.mutable.empty();
         List<RealtimeXlogOffset> offsets = Lists.mutable.empty();
@@ -127,8 +127,8 @@ public class LocalXlogRepoTest4Isolation extends LocalRepoTest {
 
         Xlog xlogAfter1 = XlogFixture.getOne(testTime - 3000, applicationId, objId);
         Xlog xlogAfter2 = XlogFixture.getOne(testTime - 3000, applicationId, objId);
-        repo.add(applicationId, xlogAfter1);
-        repo.add(applicationId, xlogAfter2);
+        repo.add(xlogAfter1);
+        repo.add(xlogAfter2);
 
         repo.streamLatest(applicationId, lastOffset, Integer.MAX_VALUE, stream(xlogs, offsets));
 

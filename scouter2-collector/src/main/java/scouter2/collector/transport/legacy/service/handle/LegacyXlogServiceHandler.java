@@ -18,7 +18,10 @@
 package scouter2.collector.transport.legacy.service.handle;
 
 import lombok.val;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.MutableLongList;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.factory.Sets;
 import scouter.io.DataInputX;
 import scouter.io.DataOutputX;
 import scouter.lang.pack.MapPack;
@@ -32,12 +35,17 @@ import scouter2.collector.config.support.ConfigManager;
 import scouter2.collector.domain.xlog.RealtimeXlogOffset;
 import scouter2.collector.domain.xlog.RealtimeXlogStreamObserver;
 import scouter2.collector.domain.xlog.XlogLoopCacheManager;
+import scouter2.collector.domain.xlog.XlogService;
 import scouter2.collector.legacy.LegacySupport;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.LegacyMapper;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
+import scouter2.common.support.XlogIdSupport;
+import scouter2.common.util.DateUtil;
 import scouter2.proto.XlogP;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 30/08/2019
@@ -45,7 +53,8 @@ import java.io.IOException;
 public class LegacyXlogServiceHandler {
 
     ConfigXlog configXlog = ConfigManager.getConfig(ConfigXlog.class);
-    XlogLoopCacheManager cacheManager = XlogLoopCacheManager.getInstance();
+    XlogLoopCacheManager cacheManager = ApplicationContextHolder.getBean(XlogLoopCacheManager.class);
+    XlogService xlogService = ApplicationContextHolder.getBean(XlogService.class);
 
     @LegacyServiceHandler(RequestCmd.TRANX_REAL_TIME_GROUP)
     public void getRealtimePerfGroup(DataInputX din, DataOutputX dout, boolean login) throws IOException {
@@ -92,6 +101,165 @@ public class LegacyXlogServiceHandler {
             public void onComplete(RealtimeXlogOffset lastOffset) {}
         });
     }
+
+    @LegacyServiceHandler(RequestCmd.XLOG_READ_BY_TXID)
+    public void readByTxId(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        MapPack param = din.readMapPack();
+        String date = param.getText("date");
+        long txid = param.getLong("txid");
+        long gxid = param.getLong("gxid");
+        try {
+            XlogP xlogP = xlogService.find(XlogIdSupport.createId(date, txid));
+            XLogPack xLogPack = LegacyMapper.toXlogPack(xlogP);
+
+            //TODO Span XlogCase
+            if (xlogP != null) {
+                dout.writeByte(TcpFlag.HasNEXT);
+                dout.writePack(xLogPack);
+                dout.flush();
+            }
+        } catch (Exception e) {
+            //TODO
+        }
+    }
+
+    @LegacyServiceHandler(RequestCmd.XLOG_LOAD_BY_TXIDS)
+    public void loadByTxIds(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        MapPack param = din.readMapPack();
+        String date = param.getText("date");
+        ListValue txidLv = param.getList("txid");
+
+        try {
+            Object[] txidObjs = txidLv.toObjectArray();
+            MutableSet<byte[]> txids = Sets.mutable.of(txidObjs)
+                    .collect(id -> XlogIdSupport.createId(date, (long) id));
+
+            MutableList<XlogP> list = xlogService.findList(txids);
+            for (XlogP xlogP : list) {
+                //TODO adjust caller in the case of Span
+                dout.writeByte(TcpFlag.HasNEXT);
+                dout.writePack(LegacyMapper.toXlogPack(xlogP));
+                dout.flush();
+            }
+
+        } catch (Exception e) {
+            //TODO
+        }
+    }
+
+    @LegacyServiceHandler(RequestCmd.XLOG_LOAD_BY_GXID)
+    public void loadByGxId(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        MapPack param = din.readMapPack();
+        long stime = param.getLong("stime");
+        long etime = param.getLong("etime");
+        long gxid = param.getLong("gxid");
+        String date = DateUtil.yyyymmdd(stime);
+        String date2 = DateUtil.yyyymmdd(etime);
+
+        try {
+            MutableList<XlogP> xlogs = xlogService.findListByGxid(XlogIdSupport.createId(date, gxid));
+            for (XlogP xlogP : xlogs) {
+                //TODO adjust caller in the case of Span
+                dout.writeByte(TcpFlag.HasNEXT);
+                dout.writePack(LegacyMapper.toXlogPack(xlogP));
+                dout.flush();
+            }
+
+            if (!date.equals(date2)) {
+                xlogs = xlogService.findListByGxid(XlogIdSupport.createId(date2, gxid));
+                for (XlogP xlogP : xlogs) {
+                    //TODO adjust caller in the case of Span
+                    dout.writeByte(TcpFlag.HasNEXT);
+                    dout.writePack(LegacyMapper.toXlogPack(xlogP));
+                    dout.flush();
+                }
+            }
+        } catch (Exception e) {
+            //TODO
+        }
+    }
+
+    @LegacyServiceHandler(RequestCmd.XLOG_READ_BY_GXID)
+    public void readByGxId(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        MapPack param = din.readMapPack();
+        String date = param.getText("date");
+        long gxid = param.getLong("gxid");
+
+        try {
+            MutableList<XlogP> xlogs = xlogService.findListByGxid(XlogIdSupport.createId(date, gxid));
+            for (XlogP xlogP : xlogs) {
+                //TODO adjust caller in the case of Span
+                dout.writeByte(TcpFlag.HasNEXT);
+                dout.writePack(LegacyMapper.toXlogPack(xlogP));
+                dout.flush();
+            }
+        } catch (Exception e) {
+            //TODO
+        }
+    }
+
+    /**
+     * get past XLog data
+     * @param din MapPack{date, stime, etime, max, reverse, objHash[]}
+     * @param dout XLogPack[]
+     * @param login
+     */
+    @LegacyServiceHandler(RequestCmd.TRANX_LOAD_TIME_GROUP)
+    public void getHistoryPerfGroup(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        MapPack param = din.readMapPack();
+        String date = param.getText("date");
+        long stime = param.getLong("stime");
+        long etime = param.getLong("etime");
+        int limit = param.getInt("limit");
+        int max = param.getInt("max");
+        if (max == 0) {
+            max = Integer.MAX_VALUE;
+        }
+        boolean rev = param.getBoolean("reverse");
+        ListValue objHashLv = param.getList("objHash");
+        if (objHashLv == null || objHashLv.size() < 1) {
+            return;
+        }
+
+        //TODO reverse??
+        MutableLongList objIds = LegacySupport.listValue2LongList(objHashLv);
+        AtomicInteger ai = new AtomicInteger();
+        xlogService.streamByObjs(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT, objIds.toSet(),
+                stime, etime, max, xlogP -> {
+                    try {
+                        dout.writeByte(TcpFlag.HasNEXT);
+                        XLogPack xLogPack = LegacyMapper.toXlogPack(xlogP);
+                        dout.write(new DataOutputX().writePack(xLogPack).toByteArray());
+                        if (ai.incrementAndGet() % 2000 == 0) {
+                            dout.flush();
+                        }
+
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        dout.flush();
+    }
+
+    //    @ServiceHandler(RequestCmd.XLOG_READ_BY_GXID)
+//    def readByGxId(din: DataInputX, dout: DataOutputX, login: Boolean) {
+//        val param = din.readMapPack();
+//        val date = param.getText("date");
+//        val gxid = param.getLong("gxid");
+//        try {
+//            val list = XLogRD.getByGxid(date, gxid);
+//            EnumerScala.forward(list, (xlog: Array[Byte]) => {
+//                dout.writeByte(TcpFlag.HasNEXT);
+//                dout.write(xlog);
+//                dout.flush();
+//            })
+//
+//        } catch {
+//            case e: Exception => {}
+//        }
+//    }
+
 
 //         @ServiceHandler(RequestCmd.TRANX_PROFILE)
 //    def getProfile(din: DataInputX, dout: DataOutputX, login: Boolean): Unit = {
@@ -312,45 +480,45 @@ public class LegacyXlogServiceHandler {
 //     * @param login
 //     */
 //    @ServiceHandler(RequestCmd.TRANX_LOAD_TIME_GROUP)
-//    def getHistoryPerfGroup(din: DataInputX, dout: DataOutputX, login: Boolean) {
-//        val param = din.readMapPack();
-//        val date = param.getText("date");
-//        val stime = param.getLong("stime");
-//        val etime = param.getLong("etime");
-//        val limitTime = param.getInt("limit");
-//        val limit = Math.max(Configure.getInstance().xlog_pasttime_lower_bound_ms, limitTime);
-//        val max = param.getInt("max");
-//        val rev = param.getBoolean("reverse");
-//        val objHashLv = param.getList("objHash");
-//        if (objHashLv == null || objHashLv.size() < 1) {
-//            return ;
-//        }
-//
-//        val objHashSet = new IntSet();
-//        EnumerScala.foreach(objHashLv, (obj: DecimalValue) => {
-//            objHashSet.add(obj.intValue());
-//        })
-//
-//        var cnt = 0;
-//        val handler = (time: Long, data: Array[Byte]) => {
-//            val x = new DataInputX(data).readPack().asInstanceOf[XLogPack];
-//            if (objHashSet.contains(x.objHash) && x.elapsed > limit) {
-//                dout.writeByte(TcpFlag.HasNEXT);
-//                dout.write(data);
-//                dout.flush();
-//                cnt += 1;
-//            }
-//            if (max > 0 && cnt >= max) {
-//                return ;
-//            }
-//        }
-//
-//        if (rev) {
-//            XLogRD.readFromEndTime(date, stime, etime, handler)
-//        } else {
-//            XLogRD.readByTime(date, stime, etime, handler);
-//        }
-//    }
+////    def getHistoryPerfGroup(din: DataInputX, dout: DataOutputX, login: Boolean) {
+////        val param = din.readMapPack();
+////        val date = param.getText("date");
+////        val stime = param.getLong("stime");
+////        val etime = param.getLong("etime");
+////        val limitTime = param.getInt("limit");
+////        val limit = Math.max(Configure.getInstance().xlog_pasttime_lower_bound_ms, limitTime);
+////        val max = param.getInt("max");
+////        val rev = param.getBoolean("reverse");
+////        val objHashLv = param.getList("objHash");
+////        if (objHashLv == null || objHashLv.size() < 1) {
+////            return ;
+////        }
+////
+////        val objHashSet = new IntSet();
+////        EnumerScala.foreach(objHashLv, (obj: DecimalValue) => {
+////            objHashSet.add(obj.intValue());
+////        })
+////
+////        var cnt = 0;
+////        val handler = (time: Long, data: Array[Byte]) => {
+////            val x = new DataInputX(data).readPack().asInstanceOf[XLogPack];
+////            if (objHashSet.contains(x.objHash) && x.elapsed > limit) {
+////                dout.writeByte(TcpFlag.HasNEXT);
+////                dout.write(data);
+////                dout.flush();
+////                cnt += 1;
+////            }
+////            if (max > 0 && cnt >= max) {
+////                return ;
+////            }
+////        }
+////
+////        if (rev) {
+////            XLogRD.readFromEndTime(date, stime, etime, handler)
+////        } else {
+////            XLogRD.readByTime(date, stime, etime, handler);
+////        }
+////    }
 //
 //    /**
 //     * get past XLog data by time & object
@@ -447,139 +615,9 @@ public class LegacyXlogServiceHandler {
 //        dout.writePack(metaPack)
 //    }
 //
-//    @ServiceHandler(RequestCmd.XLOG_READ_BY_GXID)
-//    def readByGxId(din: DataInputX, dout: DataOutputX, login: Boolean) {
-//        val param = din.readMapPack();
-//        val date = param.getText("date");
-//        val gxid = param.getLong("gxid");
-//        try {
-//            val list = XLogRD.getByGxid(date, gxid);
-//            EnumerScala.forward(list, (xlog: Array[Byte]) => {
-//                dout.writeByte(TcpFlag.HasNEXT);
-//                dout.write(xlog);
-//                dout.flush();
-//            })
+
 //
-//        } catch {
-//            case e: Exception => {}
-//        }
-//    }
-//
-//    @ServiceHandler(RequestCmd.XLOG_READ_BY_TXID)
-//    def readByTxId(din: DataInputX, dout: DataOutputX, login: Boolean) {
-//        val param = din.readMapPack()
-//        val date = param.getText("date")
-//        val txid = param.getLong("txid")
-//        val gxid = param.getLong("gxid")
-//        try {
-//            var xbytes = XLogRD.getByTxid(date, txid)
-//            var xbytesChecked = false
-//
-//            if (xbytes == null && gxid != 0) {
-//                val spanMap = getSpansMap(date, gxid)
-//                if (spanMap.nonEmpty) {
-//                    val superTxId = getXLoggableParent(txid, spanMap)
-//                    xbytes = XLogRD.getByTxid(date, superTxId)
-//                    xbytesChecked = true
-//                }
-//            }
-//
-//            if (xbytes != null) {
-//                if (!xbytesChecked) {
-//                    val xlog = new DataInputX(xbytes).readPack().asInstanceOf[XLogPack]
-//                    if ((xlog.xType == XLogTypes.ZIPKIN_SPAN || xlog.b3Mode) && xlog.caller != 0 && xlog.caller != xlog.gxid) {
-//                        val spanMap = getSpansMap(date, xlog.gxid)
-//                        xlog.caller = getXLoggableParent(xlog.caller, spanMap)
-//                        xbytes = new DataOutputX().writePack(xlog).toByteArray
-//                    }
-//                }
-//                dout.writeByte(TcpFlag.HasNEXT)
-//                dout.write(xbytes)
-//                dout.flush()
-//            }
-//        } catch {
-//            case e: Exception => {}
-//        }
-//    }
-//
-//    private def getXLoggableParent(caller: Long, map: Map[Long, SpanPack]): Long = {
-//        if (!map.contains(caller)) {
-//            0
-//        } else {
-//            val pack = map(caller)
-//            if (SpanTypes.isParentXLoggable(pack.spanType)) {
-//                caller
-//            } else {
-//                getXLoggableParent(pack.caller, map)
-//            }
-//        }
-//
-//    }
-//
-//    @ServiceHandler(RequestCmd.XLOG_LOAD_BY_TXIDS)
-//    def loadByTxIds(din: DataInputX, dout: DataOutputX, login: Boolean) {
-//        val param = din.readMapPack()
-//        val date = param.getText("date")
-//        val txidLv = param.getList("txid")
-//
-//        var loadCount = 0
-//        try {
-//            EnumerScala.foreach(txidLv, (txidValue: DecimalValue) => {
-//                loadCount += 1;
-//
-//                if (loadCount >= Configure.getInstance().req_search_xlog_max_count) {
-//                    return;
-//                }
-//                val xbytes = XLogRD.getByTxid(date, txidValue.longValue())
-//                if(xbytes != null) {
-//                    //TODO adjust caller in the case of Sapn
-//                    dout.writeByte(TcpFlag.HasNEXT)
-//                    dout.write(xbytes)
-//                    dout.flush()
-//                }
-//            })
-//        } catch {
-//            case e: Exception => {}
-//        }
-//    }
-//
-//    @ServiceHandler(RequestCmd.XLOG_LOAD_BY_GXID)
-//    def loadByGxId(din: DataInputX, dout: DataOutputX, login: Boolean) {
-//        val param = din.readMapPack();
-//        val stime = param.getLong("stime");
-//        val etime = param.getLong("etime");
-//        val gxid = param.getLong("gxid");
-//        val date = DateUtil.yyyymmdd(stime);
-//        val date2 = DateUtil.yyyymmdd(etime);
-//        try {
-//            val list = XLogRD.getByGxid(date, gxid);
-//
-//            EnumerScala.forward(list, (xlog: Array[Byte]) => {
-//                //TODO adjust caller in the case of Sapn
-//                dout.writeByte(TcpFlag.HasNEXT);
-//                dout.write(xlog);
-//                dout.flush();
-//            })
-//
-//        } catch {
-//            case e: Exception => {}
-//        }
-//        if (date.equals(date2) == false) {
-//            try {
-//                val list = XLogRD.getByGxid(date2, gxid);
-//
-//                EnumerScala.forward(list, (xlog: Array[Byte]) => {
-//                    //TODO adjust caller in the case of Sapn
-//                    dout.writeByte(TcpFlag.HasNEXT);
-//                    dout.write(xlog);
-//                    dout.flush();
-//                });
-//
-//            } catch {
-//                case e: Exception => {}
-//            }
-//        }
-//    }
+
 //
 //    @ServiceHandler(RequestCmd.QUICKSEARCH_XLOG_LIST)
 //    def quickSearchXlogList(din: DataInputX, dout: DataOutputX, login: Boolean) {

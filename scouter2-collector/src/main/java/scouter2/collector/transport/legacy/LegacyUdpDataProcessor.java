@@ -30,6 +30,7 @@ import scouter.lang.pack.PackEnum;
 import scouter.lang.pack.PerfCounterPack;
 import scouter.lang.pack.TextPack;
 import scouter.lang.pack.XLogPack;
+import scouter.lang.pack.XLogProfilePack;
 import scouter.net.NetCafe;
 import scouter.util.BytesUtil;
 import scouter.util.HashUtil;
@@ -40,11 +41,16 @@ import scouter2.collector.domain.dict.DictReceiveQueue;
 import scouter2.collector.domain.metric.MetricReceiveQueue;
 import scouter2.collector.domain.obj.ObjReceiveQueue;
 import scouter2.collector.domain.obj.ObjService;
+import scouter2.collector.domain.profile.Profile;
+import scouter2.collector.domain.profile.ProfileReceiveQueue;
+import scouter2.collector.domain.xlog.Xlog;
 import scouter2.collector.domain.xlog.XlogReceiveQueue;
 import scouter2.collector.legacy.CounterManager;
 import scouter2.collector.main.CoreRun;
+import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.common.collection.PurgingQueue;
 import scouter2.common.util.ThreadUtil;
+import scouter2.proto.ProfileP;
 import scouter2.proto.XlogP;
 
 import java.io.IOException;
@@ -73,7 +79,8 @@ public class LegacyUdpDataProcessor {
             throw new RuntimeException("Already working legacy udp processor exists.");
         }
         instance = new LegacyUdpDataProcessor(conf);
-        UdpMultipacketProcessor udpMultipacketProcessor = new UdpMultipacketProcessor(conf);
+        UdpMultipacketProcessor udpMultipacketProcessor =
+                ApplicationContextHolder.getBean(UdpMultipacketProcessor.class);
 
         for (int i = 0; i < conf.get_legacyNetUdpWorkerThreadCount(); i++) {
             LegacyUdpDataProcessorThread processorThread =
@@ -113,6 +120,7 @@ public class LegacyUdpDataProcessor {
         MetricReceiveQueue metricReceiveQueue;
         XlogReceiveQueue xlogReceiveQueue;
         DictReceiveQueue dictReceiveQueue;
+        ProfileReceiveQueue profileReceiveQueue;
 
         ObjService objService;
 
@@ -127,6 +135,7 @@ public class LegacyUdpDataProcessor {
             this.metricReceiveQueue = MetricReceiveQueue.getInstance();
             this.xlogReceiveQueue = XlogReceiveQueue.getInstance();
             this.dictReceiveQueue = DictReceiveQueue.getInstance();
+            this.profileReceiveQueue = ProfileReceiveQueue.getInstance();
 
             this.objService = ObjService.getInstance();
         }
@@ -214,6 +223,7 @@ public class LegacyUdpDataProcessor {
 //                System.out.println(p)
 //            }
 
+            long now = U.now();
             switch (p.getPackType()) {
                 case PackEnum.PERF_COUNTER:
                     PerfCounterPack counterPack = (PerfCounterPack) p;
@@ -244,21 +254,22 @@ public class LegacyUdpDataProcessor {
                         break;
                     }
                     if (xlogPack.endTime == 0) {
-                        xlogPack.endTime = U.now();
+                        xlogPack.endTime = now;
                     }
                     XlogP xlogP = LegacyMapper.toXlog(xlogPack, objId);
-                    xlogReceiveQueue.offer(xlogP);
+                    xlogReceiveQueue.offer(new Xlog(xlogP, now));
                     if (conf.isLegacyLogUdpXlog()) {
                         log.debug("Legacy UDP xlogPack received: {}", xlogPack);
                     }
                     break;
 
                 case PackEnum.XLOG_PROFILE:
-                    //TODO
-//                    ProfileCore.add(p.asInstanceOf[XLogProfilePack])
-//                    if (conf.log_udp_profile) {
-//                        System.out.println("DEBUG UDP PROFILE: " + p)
-//                    }
+                    XLogProfilePack xLogProfilePack = (XLogProfilePack) p;
+                    ProfileP profileP = LegacyMapper.toProfile(xLogProfilePack, now);
+                    profileReceiveQueue.offer(new Profile(profileP, now));
+                    if (conf.isLegacyLogUdpProfile()) {
+                        log.debug("Legacy UDP profilePack received: {}", xLogProfilePack);
+                    }
                     break;
 
                 case PackEnum.TEXT:

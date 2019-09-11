@@ -29,6 +29,7 @@ import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.util.DateUtil;
 
 import java.util.ArrayList;
@@ -65,40 +66,42 @@ public class XlogDb {
 
     @Scheduled(fixedDelay = 5000, initialDelay = 12000)
     public void schedule4CloseIdles() {
-        List<XlogIndexes> candidates = new ArrayList<>();
-        synchronized (indexMap) {
-            for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
-                if (e.getValue().isExpires()
-                        || e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
-                        || e.getValue().getReal().getIdIndex().getDb().isClosed()
-                ) {
-                    candidates.add(e.getValue().getReal());
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            List<XlogIndexes> candidates = new ArrayList<>();
+            synchronized (indexMap) {
+                for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
+                    if (e.getValue().isExpires()
+                            || e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
+                            || e.getValue().getReal().getIdIndex().getDb().isClosed()
+                    ) {
+                        candidates.add(e.getValue().getReal());
+                    }
                 }
             }
-        }
-        for (XlogIndexes candidate : candidates) {
-            try {
-                candidate.close();
-            } catch (Exception e) {
-                log.error(e.getMessage(), S_0038, e);
-            }
-        }
-        synchronized (indexMap) {
-            for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
-                if (e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
-                        || e.getValue().getReal().getIdIndex().getDb().isClosed()) {
-                    indexMap.remove(e.getKey());
+            for (XlogIndexes candidate : candidates) {
+                try {
+                    candidate.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), S_0038, e);
                 }
             }
-        }
+            synchronized (indexMap) {
+                for (Map.Entry<String, WithTouch<XlogIndexes>> e : indexMap.entrySet()) {
+                    if (e.getValue().getReal().getPeriodicIndex().getDb().isClosed()
+                            || e.getValue().getReal().getIdIndex().getDb().isClosed()) {
+                        indexMap.remove(e.getKey());
+                    }
+                }
+            }
+        });
     }
 
-    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+//    @Scheduled(fixedDelay = 500, initialDelay = 1000)
     public void schedule4Commit() {
         for (WithTouch<XlogIndexes> value : indexMap.values()) {
             XlogIndexes inner = value.inner;
             if (CoreRun.isRunning()) {
-                inner.commit();
+//                inner.commit();
             }
         }
     }
@@ -153,14 +156,14 @@ public class XlogDb {
         public void commit() {
             try {
                 if (!periodicIndex.getDb().isClosed()) {
-                    periodicIndex.getDb().commit();
+//                    periodicIndex.getDb().commit();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
             try {
                 if (!idIndex.getDb().isClosed()) {
-                    idIndex.getDb().commit();
+//                    idIndex.getDb().commit();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

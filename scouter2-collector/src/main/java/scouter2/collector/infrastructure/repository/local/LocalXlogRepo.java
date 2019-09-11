@@ -18,7 +18,6 @@
 package scouter2.collector.infrastructure.repository.local;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.primitive.LongSet;
@@ -104,12 +103,12 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
     }
 
     @Override
-    public void add(String applicationId, Xlog xlog) {
+    public void add(Xlog xlog) {
         try {
-            if (xlog == null || xlog.getProto() == null || StringUtils.isEmpty(applicationId)) {
+            if (xlog == null || xlog.getProto() == null) {
                 return;
             }
-            add2Cache(applicationId, xlog);
+            add2Cache(xlog);
             addToDb(xlog);
 
         } catch (Exception e) {
@@ -118,28 +117,29 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
     }
 
     @Override
-    public void stream(String applicationId, long from, long to, Consumer<XlogP> consumer) {
+    public void stream(String applicationId, long from, long to, long maxReadCount, Consumer<XlogP> consumer) {
         MutableLongSet objIds = instanceService.findByApplicationId(applicationId)
                 .collectLong(Obj::getObjId).toSet();
-        streamListByPeriod0(objIds, from, to, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
+        streamListByPeriod0(objIds, from, to, maxReadCount, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
     }
 
     @Override
-    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> consumer) {
-        streamListByPeriod0(objIds, from, to, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
+    public void streamByObjs(String applicationId, LongSet objIds, long from, long to, long maxReadCount,
+                             Consumer<XlogP> consumer) {
+        streamListByPeriod0(objIds, from, to, maxReadCount, xlog -> publishMatched(applicationId, from, to, consumer, xlog));
     }
 
     @Override
     public void streamLatest(String applicationId,
                              @Nullable XlogOffset lastOffset,
-                             int maxCount,
-                             XlogStreamObserver stream) {
+                             int maxReadCount,
+                             XlogStreamObserver streamObserver) {
 
-        streamLatestInCache(applicationId, lastOffset, maxCount, stream);
+        streamLatestInCache(applicationId, lastOffset, maxReadCount, streamObserver);
     }
 
     @Override
-    public MutableList<XlogP> findXlogs(String applicationId, MutableSet<byte[]> xlogIds) {
+    public MutableList<XlogP> findXlogs(MutableSet<byte[]> xlogIds) {
         if (xlogIds == null || xlogIds.isEmpty()) {
             return Lists.mutable.empty();
         }
@@ -163,11 +163,11 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
     }
 
     @Override
-    public MutableList<XlogP> findXlogsByGxid(String applicationId, byte[] gxid) {
+    public MutableList<XlogP> findXlogsByGxid(byte[] gxid) {
         String ymd = DateUtil.yyyymmdd(XlogIdSupport.timestamp(gxid));
         XlogIdIndex idIndex = xlogDb.getIdIndex(ymd);
         MutableSet<byte[]> txidList = getTxidListFromGxid(gxid, idIndex);
-        return findXlogs(applicationId, txidList);
+        return findXlogs(txidList);
     }
 
     protected void streamLatestInCache(String applicationId,
@@ -224,8 +224,8 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         }
     }
 
-    private void add2Cache(String applicationId, Xlog xlog) {
-        XlogLoopCache loopCache = this.cache.getCache(applicationId);
+    private void add2Cache(Xlog xlog) {
+        XlogLoopCache loopCache = this.cache.getCache(xlog.getApplicationId());
         loopCache.add(xlog.getProto());
     }
 
@@ -290,7 +290,7 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         }
     }
 
-    private void streamListByPeriod0(LongSet objIds, long from, long to,
+    private void streamListByPeriod0(LongSet objIds, long from, long to, long maxReadCount,
                                      Consumer<XlogP> wrapperConsumer) {
 
         long fromDayUnit = DateUtil.getDayUnit(from);
@@ -299,7 +299,7 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         long toDayUnit = DateUtil.getDayUnit(to);
         long toMinuteUnit = DateUtil.getMinuteUnit(to);
 
-        for (long day = fromDayUnit; day <= toDayUnit; day++) {
+        for (long day = fromDayUnit; day <= toDayUnit && maxReadCount > 0; day++) {
             long dayTimestamp = DateUtil.reverseDayUnit(day);
             String ymd = DateUtil.yyyymmdd(dayTimestamp);
             DailySecondIndex dayIndex = xlogDb.getPeriodicIndex(ymd);
@@ -320,14 +320,15 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
             }
 
             if (startOffset >= 0) {
-                streamInDay(ymd, objIds, startOffset, to, wrapperConsumer);
+                long readCount = streamInDay(ymd, objIds, startOffset, to, maxReadCount, wrapperConsumer);
+                maxReadCount -= readCount;
             }
         }
     }
 
     private long findStartOffset(String ymd, MinuteUnitWithSeconds minuteUnitWithSeconds, long fromSecUnit) {
         NavigableSet<Long> withInRange = minuteUnitWithSeconds.getSecondUnits()
-                .subSet(fromSecUnit, true, fromSecUnit + 60, true);
+                .subSet(fromSecUnit, true, Long.MAX_VALUE, true);
 
         Long secUnit = withInRange.pollFirst();
         if (secUnit == null) {
@@ -337,10 +338,16 @@ public class LocalXlogRepo extends XlogRepoAdapter implements XlogRepo, NonThrea
         return offset == null ? -1 : offset;
     }
 
-    private void streamInDay(String ymd, LongSet objIds, long startOffset, long toMillis,
+    /**
+     * @return read count
+     */
+    private long streamInDay(String ymd, LongSet objIds, long startOffset, long toMillis, long maxReadCount,
                              Consumer<XlogP> consumer) {
+        if (maxReadCount <= 0) {
+            return 0;
+        }
         try {
-            xlogFileDb.readPeriod(ymd, startOffset, toMillis, objIds, consumer);
+            return xlogFileDb.readPeriod(ymd, startOffset, toMillis, objIds, maxReadCount, consumer);
         } catch (IOException e) {
             log.error(e.getMessage(), S_0049, e);
             throw new RuntimeException(e);

@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
 import scouter2.collector.main.CoreRun;
+import scouter2.collector.springconfig.ApplicationContextHolder;
+import scouter2.collector.transport.legacy.agent.LegacyTcpAgentManager;
 import scouter2.collector.transport.legacy.service.LegacyServiceHandlingProxy;
 import scouter2.common.util.FileUtil;
 import scouter2.common.util.ThreadUtil;
@@ -44,33 +46,29 @@ public class LegacyTcpTransport extends Thread {
     private static LegacyTcpTransport instance;
 
     private ServerSocket serverSocket;
-
     private ConfigLegacy conf;
-    private LegacyUdpDataProcessor processor;
+    private LegacyTcpAgentManager agentManager;
 
-    public synchronized static LegacyTcpTransport start(ConfigLegacy conf,
-                                                        LegacyUdpDataProcessor processor) {
+    public synchronized static LegacyTcpTransport start(ConfigLegacy conf) {
         if (instance != null) {
             throw new RuntimeException("Already working legacy udp receiver exists.");
         }
 
-        //init
         LegacyServiceHandlingProxy.load();
-
         es = ThreadUtil.createExecutor("LegacyTcpWorker", 2, conf.getLegacyNetTcpServicePoolSize(),
                 20000, true);
 
-        instance = new LegacyTcpTransport(conf, processor);
+        LegacyTcpAgentManager agentManager = ApplicationContextHolder.getBean(LegacyTcpAgentManager.class);
+        instance = new LegacyTcpTransport(conf, agentManager);
         instance.setDaemon(true);
         instance.setName(ThreadUtil.getName(instance.getClass(), threadNo.getAndIncrement()));
         instance.start();
         return instance;
-
     }
 
-    private LegacyTcpTransport(ConfigLegacy conf, LegacyUdpDataProcessor processor) {
+    private LegacyTcpTransport(ConfigLegacy conf, LegacyTcpAgentManager agentManager) {
         this.conf = conf;
-        this.processor = processor;
+        this.agentManager = agentManager;
     }
 
     @Override
@@ -96,7 +94,7 @@ public class LegacyTcpTransport extends Thread {
             socket.setSoTimeout(conf.getLegacyNetTcpClientSoTimeoutMs());
             socket.setReuseAddress(true);
             try {
-                es.execute(new LegacyTcpWorker(socket, conf));
+                es.execute(new LegacyTcpServiceWorker(socket, conf, agentManager));
             } catch (Exception e) {
                 log.error(e.getMessage(), S_0031, e);
             }

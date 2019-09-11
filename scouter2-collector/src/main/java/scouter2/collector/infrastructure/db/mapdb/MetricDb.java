@@ -28,6 +28,7 @@ import scouter2.collector.infrastructure.db.PartitionKey;
 import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.util.DateUtil;
 import scouter2.proto.TimeTypeP;
 
@@ -65,28 +66,30 @@ public class MetricDb {
 
     @Scheduled(fixedDelay = 5000, initialDelay = 12000)
     public void schedule4CloseIdles() {
-        List<DailyMinuteIndex> candidates = new ArrayList<>();
-        synchronized (minuteIndexMap) {
-            for (Map.Entry<PartitionKey, WithTouch<DailyMinuteIndex>> e : minuteIndexMap.entrySet()) {
-                if (e.getValue().isExpires() || e.getValue().getReal().getDb().isClosed()) {
-                    candidates.add(e.getValue().getReal());
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
+            List<DailyMinuteIndex> candidates = new ArrayList<>();
+            synchronized (minuteIndexMap) {
+                for (Map.Entry<PartitionKey, WithTouch<DailyMinuteIndex>> e : minuteIndexMap.entrySet()) {
+                    if (e.getValue().isExpires() || e.getValue().getReal().getDb().isClosed()) {
+                        candidates.add(e.getValue().getReal());
+                    }
                 }
             }
-        }
-        for (DailyMinuteIndex candidate : candidates) {
-            try {
-                candidate.close();
-            } catch (Exception e) {
-                log.error(e.getMessage(), S_0038, e);
-            }
-        }
-        synchronized (minuteIndexMap) {
-            for (Map.Entry<PartitionKey, WithTouch<DailyMinuteIndex>> e : minuteIndexMap.entrySet()) {
-                if (e.getValue().getReal().getDb().isClosed()) {
-                    minuteIndexMap.remove(e.getKey());
+            for (DailyMinuteIndex candidate : candidates) {
+                try {
+                    candidate.close();
+                } catch (Exception e) {
+                    log.error(e.getMessage(), S_0038, e);
                 }
             }
-        }
+            synchronized (minuteIndexMap) {
+                for (Map.Entry<PartitionKey, WithTouch<DailyMinuteIndex>> e : minuteIndexMap.entrySet()) {
+                    if (e.getValue().getReal().getDb().isClosed()) {
+                        minuteIndexMap.remove(e.getKey());
+                    }
+                }
+            }
+        });
     }
 
     public void closeAll() {
@@ -103,12 +106,12 @@ public class MetricDb {
         }
     }
 
-    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+    //    @Scheduled(fixedDelay = 500, initialDelay = 1000)
     public void schedule4Commit() {
         for (WithTouch<DailyMinuteIndex> value : minuteIndexMap.values()) {
             DailyMinuteIndex inner = value.inner;
             if (CoreRun.isRunning() && !inner.getDb().isClosed()) {
-                inner.getDb().commit();
+//                inner.getDb().commit();
             }
         }
     }

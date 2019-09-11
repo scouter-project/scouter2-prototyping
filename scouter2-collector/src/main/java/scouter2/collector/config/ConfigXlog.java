@@ -40,6 +40,7 @@ public class ConfigXlog extends ScouterConfigAdapter {
     static ConfigXlog initValuedConfig = new ConfigXlog();
 
     @Configurable int xlogQueueSize = 10000;
+    @Configurable int xlogProfileQueueSize = 10000;
     @Configurable int xlogReceiverThreadCount = 1;
     @Configurable int xlogRepoThreadCount = 1;
     @Configurable int xlogLoopCacheSize = 100000;
@@ -49,6 +50,9 @@ public class ConfigXlog extends ScouterConfigAdapter {
 
     @Configurable int _xlogGxidWriteBufferKeepMillis = 15000;
     @Configurable int _xlogGxidWriteBufferSize = 150000;
+
+    @Configurable int _xlogProfileOffsetWriteBufferKeepMillis = 15000;
+    @Configurable int _xlogProfileOffsetWriteBufferSize = 150000;
 
     @Override
     public List<ConfigItem> getAllConfigs() {

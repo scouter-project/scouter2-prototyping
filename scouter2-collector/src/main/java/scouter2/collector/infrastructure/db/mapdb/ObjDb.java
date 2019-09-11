@@ -25,7 +25,6 @@ import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.springframework.context.annotation.Conditional;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.ShutdownManager;
 import scouter2.collector.config.ConfigCommon;
@@ -72,23 +71,24 @@ public class ObjDb implements Closeable {
         ShutdownManager.getInstance().register(this::close);
     }
 
-    @Scheduled(fixedDelay = 500, initialDelay = 1000)
+//    @Scheduled(fixedDelay = 500, initialDelay = 1000)
     public void schedule4CloseIdles() {
         if (CoreRun.isRunning() && !db.isClosed()) {
-            db.commit();
+//            db.commit();
         }
     }
 
     public void commit() {
         if (CoreRun.isRunning() && !db.isClosed()) {
-            db.commit();
+//            db.commit();
         }
     }
+
     @Override
     public synchronized void close() {
         if (!db.isClosed()) {
             log.info("[ObjDb] closing.");
-            db.commit();
+//            db.commit();
             db.close();
         }
     }
@@ -99,7 +99,7 @@ public class ObjDb implements Closeable {
                 .fileChannelEnable()
                 .fileMmapEnableIfSupported()
                 .closeOnJvmShutdown()
-                .transactionEnable()
+//                .transactionEnable()
                 .checksumHeaderBypass()
                 .allocateStartSize(1 * 1024 * 1024)
                 .allocateIncrement(3 * 1024 * 1024)

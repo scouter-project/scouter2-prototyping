@@ -14,6 +14,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.github.scouter-project</groupId>
+            <artifactId>scouter2-proto</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
             <version>9.2.0</version>

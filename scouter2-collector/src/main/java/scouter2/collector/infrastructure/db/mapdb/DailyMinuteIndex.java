@@ -79,7 +79,7 @@ public class DailyMinuteIndex implements Closeable {
         if (!db.isClosed()) {
             log.info("[DailyMinuteIndex][{}] closing. {}_{}",
                     name, dayKey.getPKey(), TimeTypeP.forNumber(dayKey.getTimeType()));
-            db.commit();
+//            db.commit();
             db.close();
             log.info("[DailyMinuteIndex][{}] closed. {}_{}",
                     name, dayKey.getPKey(), TimeTypeP.forNumber(dayKey.getTimeType()));
@@ -97,7 +97,7 @@ public class DailyMinuteIndex implements Closeable {
                     .fileChannelEnable()
                     .fileMmapEnableIfSupported()
                     .closeOnJvmShutdown()
-                    .transactionEnable()
+//                    .transactionEnable()
                     .checksumHeaderBypass()
                     .allocateStartSize(1 * 1024 * 1024)
                     .allocateIncrement(3 * 1024 * 1024)

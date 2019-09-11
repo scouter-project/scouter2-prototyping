@@ -17,40 +17,41 @@ service XlogService {
 }
 
 message XlogP {
-  bytes gxid = 1;
-  bytes txid = 2;
-  bytes ptxid = 3;
-  int64 objId = 5;
-  int32 legacyObjHash = 6;
-  XlogTypeP xlogType = 7;
+  string applicationId = 1;
+  bytes gxid = 2;
+  bytes txid = 3;
+  bytes ptxid = 4;
+  int64 objId = 6;
+  int32 legacyObjHash = 7;
+  XlogTypeP xlogType = 8;
 
-  int32 service = 8;
-  int64 endTime = 9;
-  int32 elapsed = 10;
-  int32 threadName = 11;
-  int32 error = 12;
-  int32 cpuTime = 13;
-  int32 sqlCount = 14;
-  int32 sqlTime = 15;
-  bytes ipaddr = 16;
-  int32 memoryKb = 17;
-  int64 userId = 18;
-  int32 userAgent = 19;
-  int32 referrer = 20;
-  int32 apiCallCount = 21;
-  int32 apiCallTime = 22;
-  int32 group = 23;
-  string countryCode = 24;
-  int32 city = 25;
+  int32 service = 9;
+  int64 endTime = 10;
+  int32 elapsed = 11;
+  int32 threadName = 12;
+  int32 error = 13;
+  int32 cpuTime = 14;
+  int32 sqlCount = 15;
+  int32 sqlTime = 16;
+  bytes ipaddr = 17;
+  int32 memoryKb = 18;
+  int64 userId = 19;
+  int32 userAgent = 20;
+  int32 referrer = 21;
+  int32 apiCallCount = 22;
+  int32 apiCallTime = 23;
+  int32 group = 24;
+  string countryCode = 25;
+  int32 city = 26;
 
-  int32 queuingHostHash = 26;
-  int32 queuingTime = 27;
-  int32 queuing2ndHostHash = 28;
-  int32 queuing2ndTime = 29;
+  int32 queuingHostHash = 27;
+  int32 queuingTime = 28;
+  int32 queuing2NdHostHash = 29;
+  int32 queuing2NdTime = 30;
 
-  bool hasDump = 30;
-  bool b3Mode = 31;
-  int32 profileCount = 32;
+  bool hasDump = 31;
+  bool b3Mode = 32;
+  int32 profileCount = 33;
 
   map<string, int32> dictTags = 51;
   map<string, string> stringTags = 52;

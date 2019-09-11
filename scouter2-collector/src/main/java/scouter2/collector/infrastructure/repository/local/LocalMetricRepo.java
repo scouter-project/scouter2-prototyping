@@ -244,7 +244,7 @@ public class LocalMetricRepo extends MetricRepoAdapter implements MetricRepo, No
     private long findStartOffset(String ymd, TimeTypeP timeTypeP,
                                  HourUnitWithMinutes hourUnitWithMinutes, long fromMinUnit) {
         NavigableSet<Long> withInRange = hourUnitWithMinutes.getMinuteUnits()
-                .subSet(fromMinUnit, true, fromMinUnit + 60, true);
+                .subSet(fromMinUnit, true, Long.MAX_VALUE, true);
 
         Long minUnit = withInRange.pollFirst();
         if (minUnit == null) {

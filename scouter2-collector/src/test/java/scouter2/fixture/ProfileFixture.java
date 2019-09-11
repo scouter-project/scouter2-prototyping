@@ -1,0 +1,53 @@
+/*
+ * Copyright 2019. The Scouter2 Authors.
+ *
+ *  @https://github.com/scouter-project/scouter2
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package scouter2.fixture;
+
+import com.google.protobuf.ByteString;
+import scouter2.collector.common.util.U;
+import scouter2.collector.domain.profile.Profile;
+import scouter2.proto.ProfileP;
+import scouter2.proto.StepTypeP;
+import scouter2.testsupport.T;
+
+/**
+ * @author Gun Lee (gunlee01@gmail.com) on 2019-08-07
+ */
+public class ProfileFixture {
+
+    public static Profile getOne() {
+        return new Profile(
+                ProfileP.newBuilder()
+                        .setTxid(T.xlogIdAsBs())
+                        .setIsLegacySteps(true)
+                        .addStepTypes(StepTypeP.METHOD)
+                        .setSteps(ByteString.copyFrom(new byte[] {1, 2}))
+                        .build(),
+                U.now());
+    }
+
+    public static Profile getOne(ByteString txid, StepTypeP stepTypeP) {
+        return new Profile(
+                ProfileP.newBuilder()
+                        .setTxid(txid)
+                        .setIsLegacySteps(true)
+                        .addStepTypes(stepTypeP)
+                        .setSteps(ByteString.copyFrom(new byte[] {1, 2}))
+                        .build(),
+                U.now());
+    }
+}

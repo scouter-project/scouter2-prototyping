@@ -22,6 +22,7 @@ import scouter.lang.pack.ObjectPack;
 import scouter.lang.pack.PerfCounterPack;
 import scouter.lang.pack.TextPack;
 import scouter.lang.pack.XLogPack;
+import scouter.lang.pack.XLogProfilePack;
 import scouter.lang.value.ListValue;
 import scouter.lang.value.Value;
 import scouter.util.HashUtil;
@@ -33,6 +34,7 @@ import scouter2.common.support.XlogIdSupport;
 import scouter2.proto.DictP;
 import scouter2.proto.MetricP;
 import scouter2.proto.ObjP;
+import scouter2.proto.ProfileP;
 import scouter2.proto.TimeTypeP;
 import scouter2.proto.XlogP;
 
@@ -109,9 +111,10 @@ public class LegacyMapper {
     public static XlogP toXlog(XLogPack p, Long objId) {
 
         XlogP.Builder builder = XlogP.newBuilder()
-                .setGxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.gxid)))
-                .setTxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.txid)))
-                .setPtxid(ByteString.copyFrom(XlogIdSupport.createId(p.endTime, p.caller)))
+                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .setGxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.gxid)))
+                .setTxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.txid)))
+                .setPtxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.caller)))
                 .setObjId(objId)
                 .setLegacyObjHash(p.objHash)
                 .setXlogTypeValue(p.xType)
@@ -185,6 +188,17 @@ public class LegacyMapper {
         p.profileCount = xlog.getProfileCount();
 
         return p;
+    }
+
+    public static ProfileP toProfile(XLogProfilePack p, long timestamp) {
+        return ProfileP.newBuilder()
+                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .setTimestamp(timestamp)
+                .setTxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(timestamp, p.txid)))
+                .setElapsed(p.elapsed)
+                .setIsLegacySteps(true)
+                .setSteps(ByteString.copyFrom(p.profile))
+                .build();
     }
 
     private static double doubleValueOf(Value value) {

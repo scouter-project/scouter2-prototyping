@@ -29,15 +29,17 @@ import java.util.function.Consumer;
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
  */
 public interface XlogRepo extends ScouterRepo {
-    void add(String applicationId, Xlog xlog);
+    void add(Xlog xlog);
 
-    void stream(String applicationId, long from, long to, Consumer<XlogP> stream);
+    void stream(String applicationId, long from, long to, long maxReadCount, Consumer<XlogP> stream);
 
-    void streamByObjs(String applicationId, LongSet objIds, long from, long to, Consumer<XlogP> stream);
+    void streamByObjs(String applicationId, LongSet objIds, long from, long to, long maxReadCount,
+                      Consumer<XlogP> consumer);
 
-    void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxCount, XlogStreamObserver stream);
+    void streamLatest(String applicationId, @Nullable XlogOffset lastOffset, int maxReadCount,
+                      XlogStreamObserver streamObserver);
 
-    MutableList<XlogP> findXlogs(String applicationId, MutableSet<byte[]> xlogIds);
+    MutableList<XlogP> findXlogs(MutableSet<byte[]> xlogIds);
 
-    MutableList<XlogP> findXlogsByGxid(String applicationId, byte[] gxid);
+    MutableList<XlogP> findXlogsByGxid(byte[] gxid);
 }

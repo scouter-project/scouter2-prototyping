@@ -19,17 +19,20 @@ package scouter2.collector.infrastructure.repository.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.collector.Collectors2;
 import org.eclipse.collections.impl.factory.Lists;
 import org.mapdb.HTreeMap;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.common.util.U;
 import scouter2.collector.config.ConfigXlog;
 import scouter2.collector.infrastructure.db.filedb.GxidMapping;
 import scouter2.collector.main.CoreRun;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
+import scouter2.collector.springconfig.ThreadNameDecorator;
 import scouter2.common.collection.LruList;
 import scouter2.common.lang.ByteArrayKeyMap2;
 import scouter2.common.util.ThreadUtil;
@@ -38,6 +41,7 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 29/08/2019
@@ -47,6 +51,9 @@ import java.util.List;
 @Conditional(RepoTypeSelectorCondition.class)
 @RepoTypeMatch("local")
 public class LocalXlogGxidBuffer extends Thread {
+
+    public static final ThrottleConfig S_0064 = ThrottleConfig.of("S0064");
+    public static final ThrottleConfig S_0066 = ThrottleConfig.of("S0066");
 
     LruList<GxidMapping> innerBuffer;
     ByteArrayKeyMap2<GxidMapping> gxidMap;
@@ -70,7 +77,7 @@ public class LocalXlogGxidBuffer extends Thread {
         GxidMapping mapping = gxidMap.get(gxid);
 
         if (mapping == null) {
-            mapping = new GxidMapping(gxid, Lists.mutable.empty(), timestamp, gxidIndex);
+            mapping = new GxidMapping(gxid, new LinkedBlockingQueue<>(), timestamp, gxidIndex);
             gxidMap.put(gxid, mapping);
             innerBuffer.addLast(mapping);
         }
@@ -79,7 +86,7 @@ public class LocalXlogGxidBuffer extends Thread {
             mapping.registerEntry();
             return;
         }
-        mapping.getTxidList().add(txid);
+        mapping.getTxidQueue().offer(txid);
     }
 
     public @Nullable MutableList<byte[]> getTxidListFromGxid(byte[] gxid) {
@@ -87,7 +94,7 @@ public class LocalXlogGxidBuffer extends Thread {
         if (gxidMapping == null) {
             return null;
         }
-        return gxidMapping.getTxidList();
+        return queue2List(gxidMapping.getTxidQueue());
     }
 
     public void flushAll() {
@@ -129,24 +136,37 @@ public class LocalXlogGxidBuffer extends Thread {
 
     private boolean add2Db(GxidMapping mapping, long now) {
         if (mapping.isEntryIdRegistered()) {
-            if (!mapping.getTxidList().isEmpty()) {
-                mapping.getGxidIndex().put(mapping.getGxid(), mapping.getTxidList());
+            if (!mapping.getTxidQueue().isEmpty()) {
+                mapping.getGxidIndex().put(mapping.getGxid(), queue2List(mapping.getTxidQueue()));
             }
             return true;
 
         } else {
             if (mapping.getTimestamp() + (300 * 1000) < now) {
+                if (mapping.getGxidIndex() == null) {
+                    log.warn("gxidIndex is null", S_0066);
+                    return true;
+                }
+                if (mapping.getGxid() == null) {
+                    log.warn("gxid is null", S_0066);
+                    return true;
+                }
                 MutableList<byte[]> txidList = mapping.getGxidIndex().get(mapping.getGxid());
                 if (txidList == null) {
                     txidList = Lists.mutable.empty();
                 }
-                txidList.addAll(mapping.getTxidList());
+                txidList.addAll(queue2List(mapping.getTxidQueue()));
                 mapping.getGxidIndex().put(mapping.getGxid(), txidList);
 
                 return true;
             }
             return false;
         }
+    }
+
+    private MutableList<byte[]> queue2List(LinkedBlockingQueue<byte[]> queue) {
+        Object[] gxids = queue.toArray();
+        return Arrays.stream(gxids).map(o -> (byte[]) o).collect(Collectors2.toList());
     }
 
 
@@ -163,8 +183,14 @@ public class LocalXlogGxidBuffer extends Thread {
         public void run() {
             ThreadUtil.sleep(configXlog.get_xlogGxidWriteBufferKeepMillis());
             while (CoreRun.isRunning()) {
-                buffer.flushInSec(configXlog.get_xlogGxidWriteBufferKeepMillis());
-                ThreadUtil.sleep(100);
+                try {
+                    ThreadNameDecorator.run(() -> buffer.flushInSec(configXlog.get_xlogGxidWriteBufferKeepMillis()));
+
+                    ThreadUtil.sleep(100);
+
+                } catch (Exception e) {
+                    log.error(e.getMessage(), S_0064, e);
+                }
             }
         }
     }
