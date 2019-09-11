@@ -24,6 +24,7 @@ import scouter.lang.pack.TextPack;
 import scouter.lang.pack.XLogPack;
 import scouter.lang.pack.XLogProfilePack;
 import scouter.lang.value.ListValue;
+import scouter.lang.value.MapValue;
 import scouter.lang.value.Value;
 import scouter.util.HashUtil;
 import scouter2.collector.domain.dict.DictCategory;
@@ -41,6 +42,8 @@ import scouter2.proto.XlogP;
 import java.util.HashMap;
 import java.util.Map;
 
+import static scouter2.collector.legacy.LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT;
+
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-28
  */
@@ -53,7 +56,7 @@ public class LegacyMapper {
         }
 
         return ObjP.newBuilder()
-                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .setApplicationId(APPLICATION_ID_FOR_SCOUTER1_AGENT)
                 .setObjFamily(legacyFamily)
                 .setObjLegacyType(objectPack.objType)
                 .setObjFullName(objectPack.objName)
@@ -66,11 +69,13 @@ public class LegacyMapper {
 
     public static ObjectPack toObjectPack(Obj obj) {
         ObjectPack pack = new ObjectPack();
-        pack.objType = obj.getObjLegacyType();
+        pack.objType = obj.isLegacy() ? obj.getObjLegacyType() : obj.getApplicationId() +"::" + obj.getObjFamily();
         pack.objName = obj.getObjFullName();
         pack.objHash = (int) obj.getObjId();
         pack.address = obj.getAddress();
         pack.version = obj.getVersion();
+        pack.tags = MapValue.ofStringValueMap(obj.getTags());
+        pack.tags.put("applicationId", obj.getApplicationId());
 
         return pack;
     }
@@ -111,7 +116,7 @@ public class LegacyMapper {
     public static XlogP toXlog(XLogPack p, Long objId) {
 
         XlogP.Builder builder = XlogP.newBuilder()
-                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .setApplicationId(APPLICATION_ID_FOR_SCOUTER1_AGENT)
                 .setGxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.gxid)))
                 .setTxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.txid)))
                 .setPtxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(p.endTime, p.caller)))
@@ -192,7 +197,7 @@ public class LegacyMapper {
 
     public static ProfileP toProfile(XLogProfilePack p, long timestamp) {
         return ProfileP.newBuilder()
-                .setApplicationId(LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT)
+                .setApplicationId(APPLICATION_ID_FOR_SCOUTER1_AGENT)
                 .setTimestamp(timestamp)
                 .setTxid(ByteString.copyFrom(XlogIdSupport.createIdOfLegacySupport(timestamp, p.txid)))
                 .setElapsed(p.elapsed)

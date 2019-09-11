@@ -27,7 +27,7 @@ import scouter2.proto.ObjP;
  */
 public class LegacySupport {
 
-    public static final String APPLICATION_ID_FOR_SCOUTER1_AGENT = "SCOUTER1-DEFAULT";
+    public static final String APPLICATION_ID_FOR_SCOUTER1_AGENT = "SC1-DEFAULT-APPLICATION";
     public static final String DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT = "dummyObjForScouter1";
 
     /**

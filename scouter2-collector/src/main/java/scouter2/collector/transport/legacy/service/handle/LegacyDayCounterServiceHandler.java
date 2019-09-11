@@ -98,7 +98,7 @@ public class LegacyDayCounterServiceHandler {
             log.warn("please check.. COUNTER_REAL_TIME_ALL objType is null");
             return;
         }
-        MutableList<Obj> objs = objService.findByLegacyObjType(objType);
+        MutableList<Obj> objs = objService.findByObjTypeParam(objType);
         MutableLongList objIds = objs.collectLong(Obj::getObjId);
 
         String date = DateUtil.yyyymmdd();
@@ -301,7 +301,7 @@ public class LegacyDayCounterServiceHandler {
             return;
         }
 
-        MutableList<Obj> objs = objService.findByLegacyObjType(objType);
+        MutableList<Obj> objs = objService.findByObjTypeParam(objType);
         MutableLongList objIds = objs.collectLong(Obj::getObjId);
 
         long stime = DateUtil.yyyymmdd(sDate);

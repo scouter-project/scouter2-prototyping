@@ -25,7 +25,7 @@ import scouter2.collector.LocalRepoTest;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.fixture.ObjFixture;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-07
@@ -60,21 +60,53 @@ public class LocalObjRepoTest extends LocalRepoTest {
     }
 
     @Test
-    public void add_and_find_all() {
+    public void find_by_application_id() {
+        String appl1 = "app1";
+        String appl2 = "appl2";
 
-        Obj fixture1 = ObjFixture.getOne(sut.generateUniqueIdByName("obj1"));
-        Obj fixture2 = ObjFixture.getOne(sut.generateUniqueIdByName("obj2"));
-        Obj fixture3 = ObjFixture.getOne(sut.generateUniqueIdByName("obj3"));
+        Obj fixture1 = ObjFixture.getOne(sut.generateUniqueIdByName("obj1"), appl1);
+        Obj fixture2 = ObjFixture.getOne(sut.generateUniqueIdByName("obj2"), appl1);
+        Obj anotherFixture = ObjFixture.getOne(sut.generateUniqueIdByName("objAnother"), appl2);
 
         sut.addOrModify(fixture1);
         sut.addOrModify(fixture2);
-        sut.addOrModify(fixture3);
+        sut.addOrModify(anotherFixture);
 
-        MutableList<Obj> actuals = Lists.adapt(sut.findAll());
+        MutableList<Obj> actuals = Lists.adapt(sut.findByApplicationId(appl1));
 
-        assertThat(actuals.size()).isGreaterThanOrEqualTo(3);
-        assertThat(actuals.select(e -> e.getObjId() == fixture1.getObjId()).getFirst()).isEqualTo(fixture1);
-        assertThat(actuals.select(e -> e.getObjId() == fixture2.getObjId()).getFirst()).isEqualTo(fixture2);
-        assertThat(actuals.select(e -> e.getObjId() == fixture3.getObjId()).getFirst()).isEqualTo(fixture3);
+        assertThat(actuals.size()).isEqualTo(2);
+        assertThat(actuals).containsOnly(fixture1, fixture2);
+    }
+
+    @Test
+    public void find_by_legacy_obj_type() {
+        Obj fixture1 = ObjFixture.getOneOfType(sut.generateUniqueIdByName("obj1"), "tomcat");
+        Obj fixture2 = ObjFixture.getOneOfType(sut.generateUniqueIdByName("obj2"), "tomcat");
+        Obj anotherFixture = ObjFixture.getOneOfType(sut.generateUniqueIdByName("objAnother"), "another");
+
+        sut.addOrModify(fixture1);
+        sut.addOrModify(fixture2);
+        sut.addOrModify(anotherFixture);
+
+        MutableList<Obj> actuals = Lists.adapt(sut.findByLegacyObjType(fixture1.getApplicationId(), "tomcat"));
+
+        assertThat(actuals.size()).isEqualTo(2);
+        assertThat(actuals).containsOnly(fixture1, fixture2);
+    }
+
+    @Test
+    public void find_by_family() {
+        Obj fixture1 = ObjFixture.getOneOfFamily(sut.generateUniqueIdByName("obj1"), "javaee");
+        Obj fixture2 = ObjFixture.getOneOfFamily(sut.generateUniqueIdByName("obj2"), "javaee");
+        Obj anotherFixture = ObjFixture.getOneOfFamily(sut.generateUniqueIdByName("objAnother"), "another");
+
+        sut.addOrModify(fixture1);
+        sut.addOrModify(fixture2);
+        sut.addOrModify(anotherFixture);
+
+        MutableList<Obj> actuals = Lists.adapt(sut.findByFamily(fixture1.getApplicationId(), "javaee"));
+
+        assertThat(actuals.size()).isEqualTo(2);
+        assertThat(actuals).containsOnly(fixture1, fixture2);
     }
 }

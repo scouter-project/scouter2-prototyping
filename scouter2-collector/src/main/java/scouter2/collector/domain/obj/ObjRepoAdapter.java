@@ -55,12 +55,17 @@ public abstract class ObjRepoAdapter implements ObjRepo {
     }
 
     @Override
-    public List<Obj> findByLegacyObjType(String legacyObjType) {
+    public List<Obj> findByLegacyObjType(String applicationId, String legacyObjType) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public List<Obj> findAll() {
+    public List<Obj> findByFamily(String applicationId, String family) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<String> findAllApplicationIds() {
         throw new UnsupportedOperationException();
     }
 }

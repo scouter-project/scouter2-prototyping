@@ -85,6 +85,10 @@ public class Obj implements Serializable {
         return now - lastActive > deadIntervalMillis;
     }
 
+    public boolean isLegacy() {
+        return objLegacyHash != 0;
+    }
+
     @Override
     public String toString() {
         return "Obj{" +

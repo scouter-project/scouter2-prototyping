@@ -89,8 +89,7 @@ public class LegacyCounterServiceHandler {
             return;
         }
 
-        MutableList<Obj> objs = objService.findByLegacyObjType(objType);
-
+        MutableList<Obj> objs = objService.findByObjTypeParam(objType);
         MutableList<SingleMetricDatum> metrics = metricService.findCurrentMetricData(
                 LegacySupport.APPLICATION_ID_FOR_SCOUTER1_AGENT,
                 objs.collectLong(Obj::getObjId).toSet(),
@@ -162,9 +161,13 @@ public class LegacyCounterServiceHandler {
             log.warn("please check.. COUNTER_LOAD_TIME_ALL objType is null");
             return;
         }
-        MutableLongList objIds = (objHashParamLv != null && objHashParamLv.size() > 0)
-                ? LegacySupport.listValue2LongList(objHashParamLv)
-                : objService.findByLegacyObjType(objType).collectLong(Obj::getObjId);
+
+        MutableLongList objIds;
+        if (objHashParamLv != null && objHashParamLv.size() > 0) {
+            objIds = LegacySupport.listValue2LongList(objHashParamLv);
+        } else {
+            objIds = objService.findByObjTypeParam(objType).collectLong(Obj::getObjId);
+        }
 
         MutableLongObjectMap<MapPack> mapPackMap = LongObjectMaps.mutable.empty();
         objIds.forEach(objId -> {

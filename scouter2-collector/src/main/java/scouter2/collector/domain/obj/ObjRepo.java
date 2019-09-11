@@ -58,8 +58,10 @@ public interface ObjRepo extends ScouterRepo {
 
     List<Obj> findByApplicationId(String applicationId);
 
-    List<Obj> findByLegacyObjType(String legacyObjType);
+    List<Obj> findByLegacyObjType(String applicationId, String legacyObjType);
 
-    List<Obj> findAll();
+    List<Obj> findByFamily(String applicationId, String family);
+
+    List<String> findAllApplicationIds();
 
 }

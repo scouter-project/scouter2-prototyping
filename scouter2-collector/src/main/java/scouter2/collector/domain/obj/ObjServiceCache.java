@@ -54,8 +54,14 @@ public class ObjServiceCache {
     }
 
     @Cacheable(cacheNames = "objList")
-    public MutableList<Obj> findByLegacyObjType(String legacyObjType) {
-        MutableList<Obj> objs = Lists.mutable.withAll(repo.findByLegacyObjType(legacyObjType));
+    public MutableList<Obj> findByLegacyObjType(String applicationId, String legacyObjType) {
+        MutableList<Obj> objs = Lists.mutable.withAll(repo.findByLegacyObjType(applicationId, legacyObjType));
+        return objs.reject(obj -> obj.objFullName.equals(LegacySupport.DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT));
+    }
+
+    @Cacheable(cacheNames = "objList2")
+    public MutableList<Obj> findByFamily(String applicationId, String family) {
+        MutableList<Obj> objs = Lists.mutable.withAll(repo.findByFamily(applicationId, family));
         return objs.reject(obj -> obj.objFullName.equals(LegacySupport.DUMMY_OBJ_FULL_NAME_FOR_SCOUTER1_AGENT));
     }
 }

@@ -38,4 +38,46 @@ public class ObjFixture {
 
         return new Obj(objId, proto);
     }
+
+    public static Obj getOne(long objId, String applicationId) {
+        ObjP proto = ObjP.newBuilder()
+                .setApplicationId(applicationId)
+                .setLegacyObjHash(100)
+                .setAddress("10.0.0.1")
+                .setObjFullName("/test/java01")
+                .setObjLegacyType("tomcat")
+                .setObjFamily("javaee")
+                .setVersion("0.0.1")
+                .build();
+
+        return new Obj(objId, proto);
+    }
+
+    public static Obj getOneOfType(long objId, String objType) {
+        ObjP proto = ObjP.newBuilder()
+                .setApplicationId("test-application")
+                .setLegacyObjHash(100)
+                .setAddress("10.0.0.1")
+                .setObjFullName("/test/java01")
+                .setObjLegacyType(objType)
+                .setObjFamily("javaee")
+                .setVersion("0.0.1")
+                .build();
+
+        return new Obj(objId, proto);
+    }
+
+    public static Obj getOneOfFamily(long objId, String family) {
+        ObjP proto = ObjP.newBuilder()
+                .setApplicationId("test-application")
+                .setLegacyObjHash(100)
+                .setAddress("10.0.0.1")
+                .setObjFullName("/test/java01")
+                .setObjLegacyType("tomcat")
+                .setObjFamily(family)
+                .setVersion("0.0.1")
+                .build();
+
+        return new Obj(objId, proto);
+    }
 }

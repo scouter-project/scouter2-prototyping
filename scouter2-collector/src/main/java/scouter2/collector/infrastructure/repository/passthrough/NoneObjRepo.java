@@ -80,12 +80,17 @@ public class NoneObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSaf
     }
 
     @Override
-    public List<Obj> findByLegacyObjType(String legacyObjType) {
+    public List<Obj> findByLegacyObjType(String applicationId, String legacyObjType) {
         return Lists.mutable.empty();
     }
 
     @Override
-    public List<Obj> findAll() {
+    public List<Obj> findByFamily(String applicationId, String family) {
         return Lists.mutable.empty();
+    }
+
+    @Override
+    public List<String> findAllApplicationIds() {
+        return super.findAllApplicationIds();
     }
 }

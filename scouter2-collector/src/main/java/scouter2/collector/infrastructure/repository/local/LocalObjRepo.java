@@ -31,6 +31,7 @@ import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
 import scouter2.common.collection.LruMap;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -157,18 +158,28 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
     }
 
     @Override
-    public List<Obj> findByLegacyObjType(String legacyObjType) {
+    public List<Obj> findByLegacyObjType(String applicationId, String legacyObjType) {
         return objCache.values().stream()
                 .filter(obj -> !obj.isDeleted())
+                .filter(obj -> applicationId.equals(obj.getApplicationId()))
                 .filter(obj -> legacyObjType.equals(obj.getObjLegacyType()))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Obj> findAll() {
+    public List<Obj> findByFamily(String applicationId, String family) {
         return objCache.values().stream()
                 .filter(obj -> !obj.isDeleted())
+                .filter(obj -> applicationId.equals(obj.getApplicationId()))
+                .filter(obj -> family.equals(obj.getObjFamily()))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> findAllApplicationIds() {
+        return new ArrayList<>(objCache.values().stream()
+                .collect(Collectors.toMap(Obj::getApplicationId, o -> o, (o1, o2) -> o2))
+                .keySet());
     }
 
     protected List<Obj> findAllFromPersistence() {

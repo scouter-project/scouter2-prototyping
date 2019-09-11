@@ -64,6 +64,15 @@
     </cache>
 
     <cache
+            name="objList2"
+            maxElementsInMemory="300"
+            timeToLiveSeconds="5"
+            overflowToDisk="false"
+            diskPersistent="false"
+            memoryStoreEvictionPolicy="LRU">
+    </cache>
+
+    <cache
             name="metricDict"
             maxElementsInMemory="10000"
             timeToLiveSeconds="3600"

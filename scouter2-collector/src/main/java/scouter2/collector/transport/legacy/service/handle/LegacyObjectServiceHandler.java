@@ -40,6 +40,7 @@ import scouter2.collector.domain.objtype.ObjFamilyManager;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.collector.springconfig.ApplicationContextHolder;
 import scouter2.collector.transport.legacy.LegacyMapper;
+import scouter2.collector.transport.legacy.service.RequestCmd2;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 
 import java.io.IOException;
@@ -52,10 +53,16 @@ public class LegacyObjectServiceHandler {
     ObjService objService = ApplicationContextHolder.getBean(ObjService.class);
     MetricService metricService = ApplicationContextHolder.getBean(MetricService.class);
 
+    @LegacyServiceHandler(RequestCmd2.OBJ_LIST_REAL_TIME)
+    public void findObjList2(DataInputX din, DataOutputX dout, boolean login) throws IOException {
+        
+    }
+
     /**
      * OBJECT_LIST_REAL_TIME
-     * @param din none
-     * @param dout ObjectPack[]
+     *
+     * @param din   none
+     * @param dout  ObjectPack[]
      * @param login
      */
     @LegacyServiceHandler(RequestCmd.OBJECT_LIST_REAL_TIME)
@@ -94,7 +101,7 @@ public class LegacyObjectServiceHandler {
     @LegacyServiceHandler("OBJECT_LIST_LOAD_DATE")
     public void getAgentOldList(DataInputX din, DataOutputX dout, boolean login) throws IOException {
         //TODO obj of date. Currently return all realtime obj for testing !!!
-        MapPack param = (MapPack)din.readPack();
+        MapPack param = (MapPack) din.readPack();
         String date = param.getText("date");
         if (StringUtil.isEmpty(date)) {
             return;
