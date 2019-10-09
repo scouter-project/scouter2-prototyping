@@ -72,7 +72,7 @@ public class Scouter2Transport {
         CompletableFuture<Void> future = server.start();
         log.info("Scouter collector GRPC server listening on " + port);
 
-        ShutdownManager.getInstance().register(() -> {
+        ShutdownManager.getInstance().register1st(() -> {
             log.info("shutting down gRPC server since JVM is shutting down");
             Scouter2Transport.this.stop();
             log.info("GRPC server shut down");

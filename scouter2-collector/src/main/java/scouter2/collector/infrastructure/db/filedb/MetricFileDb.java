@@ -105,9 +105,7 @@ public class MetricFileDb {
 
     @Scheduled(fixedDelay = 15000, initialDelay = 15000)
     public void schedule4CloseIdles() {
-        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), () -> {
-            closeIdles();
-        });
+        ThreadNameDecorator.runWithName(this.getClass().getSimpleName(), this::closeIdles);
     }
 
     private void closeIdles() {

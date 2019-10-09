@@ -63,7 +63,7 @@ public class LocalProfileOffsetBuffer extends Thread {
         this.innerBuffer = new LruList<>(configXlog.get_xlogProfileOffsetWriteBufferSize());
         this.txidMap = new ByteArrayKeyMap2<>();
 
-        ShutdownManager.getInstance().register(this::flushAll);
+        ShutdownManager.getInstance().register1st(this::flushAll);
 
         ProfileOffsetLocalStoreBufferFlushScheduler thread =
                 new ProfileOffsetLocalStoreBufferFlushScheduler(this, configXlog);

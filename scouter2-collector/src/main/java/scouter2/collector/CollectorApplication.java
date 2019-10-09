@@ -21,7 +21,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.SpringApplication;
 import scouter2.collector.common.ShutdownManager;
+import scouter2.collector.config.ConfigCommon;
 import scouter2.collector.main.CoreRun;
+import scouter2.collector.main.FileDbLockHandler;
 import scouter2.common.helper.Props;
 import scouter2.common.util.ScouterConfigUtil;
 
@@ -38,26 +40,40 @@ import static scouter2.collector.main.CollectorConstants.DEFAULT_CONF_FILE;
  */
 @Slf4j
 public class CollectorApplication {
-    private static Props loadProps = new Props(new Properties());
+    private static Props loadProps;
 
     public static void main(String[] args) {
         log.info("starting Scouter CollectorApplication...");
 
         preloadConfig();
         preInit();
-
+        if (!checkFileDbLock()) {
+            log.error("can't check FileDbLock!");
+            return;
+        }
         SpringApplication.run(SpringBoot.class, args);
+    }
+
+    private static boolean checkFileDbLock() {
+        ConfigCommon configCommon4Init = new ConfigCommon();
+        configCommon4Init.refresh(loadProps);
+        FileDbLockHandler.getInstance().setDbDir(configCommon4Init.getDbDir());
+        return FileDbLockHandler.getInstance().createLock();
     }
 
     private static void preInit() {
         CoreRun.init();
         ShutdownManager.getInstance().register(() -> CoreRun.getInstance().shutdown()); //for manual shutdown
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> CoreRun.getInstance().shutdown())); //for kill -3
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown())); //for kill -3
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> CoreRun.getInstance().shutdown())); //for kill signal
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> ShutdownManager.getInstance().shutdown())); //for kill signal
     }
 
     private static void preloadConfig() {
         String confFileName = System.getProperty("scouter2.config", DEFAULT_CONF_DIR + DEFAULT_CONF_FILE);
+        if (StringUtils.isNotBlank(System.getenv("SCOUTER2_CONFIG"))) {
+            confFileName = System.getenv("SCOUTER2_CONFIG");
+        }
+
         File confFile = new File(confFileName);
         if (confFile.canRead()) {
             Properties configProps = new Properties();

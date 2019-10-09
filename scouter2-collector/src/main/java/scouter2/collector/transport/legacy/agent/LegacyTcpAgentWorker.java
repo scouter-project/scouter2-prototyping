@@ -29,8 +29,10 @@ import scouter2.collector.common.functional.TriProcedure;
 import scouter2.collector.common.log.ThrottleConfig;
 import scouter2.collector.config.ConfigLegacy;
 
+import java.io.EOFException;
 import java.net.Socket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-08-11
@@ -43,6 +45,10 @@ public class LegacyTcpAgentWorker {
     static final ThrottleConfig S_0069 = ThrottleConfig.of("S0069");
     static final ThrottleConfig S_0070 = ThrottleConfig.of("S0070");
     static final ThrottleConfig S_0071 = ThrottleConfig.of("S0071");
+    static final ThrottleConfig S_0075 = ThrottleConfig.of("S0075");
+    static final ThrottleConfig S_0076 = ThrottleConfig.of("S0076");
+    static final ThrottleConfig S_0077 = ThrottleConfig.of("S0077");
+    static final ThrottleConfig S_0078 = ThrottleConfig.of("S0078");
 
     ConfigLegacy conf;
     Socket socket;
@@ -81,8 +87,12 @@ public class LegacyTcpAgentWorker {
 
             lastWriteTime = System.currentTimeMillis();
 
-        } catch(Throwable t) {
-            log.error(t.getMessage(), S_0067, t);
+        } catch (SocketException | EOFException se) {
+            log.warn("{} on addr:{}", se.getMessage(), remoteAddr, S_0076);
+            close();
+
+        } catch (Throwable t) {
+            log.error("{} on addr:{}", t.getMessage(), remoteAddr, S_0067, t);
             close();
         }
     }
@@ -102,8 +112,12 @@ public class LegacyTcpAgentWorker {
                         throw new RuntimeException("unknown protocol " );
                 }
             }
+        } catch (SocketException | EOFException se) {
+            log.warn("{} on addr:{}", se.getMessage(), remoteAddr, S_0078);
+            close();
+
         } catch(Throwable t) {
-            log.error(t.getMessage(), S_0068, t);
+            log.error("{} on addr:{}", t.getMessage(), remoteAddr, S_0068, t);
             close();
         }
         return null;
@@ -115,6 +129,10 @@ public class LegacyTcpAgentWorker {
                 return 0;
             }
             return in.readByte();
+
+        } catch (SocketException | EOFException se) {
+            log.warn("{} on addr:{}", se.getMessage(), remoteAddr, S_0077);
+            close();
 
         } catch(Throwable t) {
             log.error(t.getMessage(), S_0069, t);
@@ -161,8 +179,12 @@ public class LegacyTcpAgentWorker {
             }
             socket.setSoTimeout(orgSoTime);
 
-        } catch(Throwable t) {
-            log.error(t.getMessage(), S_0071, t);
+        } catch (SocketException | EOFException se) {
+            log.warn("{} on addr:{}", se.getMessage(), remoteAddr, S_0075);
+            close();
+
+        } catch (Throwable t) {
+            log.error("{} on addr:{}", t.getMessage(), remoteAddr, S_0071, t);
             close();
         }
     }

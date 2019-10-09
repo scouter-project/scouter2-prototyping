@@ -17,8 +17,8 @@
 package scouter2.collector.common;
 
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.factory.Lists;
+
+import java.util.LinkedList;
 
 /**
  * @author Gun Lee (gunlee01@gmail.com) on 2019-07-08
@@ -27,7 +27,8 @@ import org.eclipse.collections.impl.factory.Lists;
 public class ShutdownManager {
 
     private static ShutdownManager instance = new ShutdownManager();
-    MutableList<ShutdownHook> shutdownHooks = Lists.mutable.empty();
+    LinkedList<ShutdownHook> shutdownHooks = new LinkedList<>();
+    LinkedList<ShutdownHook> shutdownHooks1st = new LinkedList<>();
 
     private ShutdownManager() {}
 
@@ -39,6 +40,10 @@ public class ShutdownManager {
         shutdownHooks.add(shutdownHook);
     }
 
+    public void register1st(ShutdownHook shutdownHook) {
+        shutdownHooks1st.add(shutdownHook);
+    }
+
     public synchronized void shutdown() {
         log.info("Collector on shutdown.");
         try {
@@ -47,6 +52,14 @@ public class ShutdownManager {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        for (ShutdownHook hook : shutdownHooks1st) {
+            try {
+                hook.shutdown();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        shutdownHooks1st.clear();
         for (ShutdownHook hook : shutdownHooks) {
             try {
                 hook.shutdown();

@@ -92,14 +92,8 @@ public class CollectorMain {
         }
     }
 
-    private void startServer() throws IOException {
-        //TODO after file DB
-//        if(DBCtr.createLock()==false){
-//            return;
-//        }
-
+    private void startServer() {
         File exit = createExitFile();
-
         TransportLauncher.startTransports();
 
         while (true) {
@@ -110,12 +104,11 @@ public class CollectorMain {
                     ShutdownManager.getInstance().shutdown();
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage(), e);
                 }
                 System.exit(0);
             }
-            //TODO after file DB
-            //DBCtr.updateLock();
+            FileDbLockHandler.getInstance().updateLock();
             ThreadUtil.sleep(1000);
         }
     }
@@ -140,7 +133,7 @@ public class CollectorMain {
                 }
 
             } catch (Exception e2) {
-                e.printStackTrace();
+                log.error(e2.getMessage(), e2);
                 System.exit(1);
             }
         }

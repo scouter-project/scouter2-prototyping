@@ -65,7 +65,7 @@ public class LocalXlogGxidBuffer extends Thread {
         this.innerBuffer = new LruList<>(configXlog.get_xlogGxidWriteBufferSize());
         this.gxidMap = new ByteArrayKeyMap2<>();
 
-        ShutdownManager.getInstance().register(this::flushAll);
+        ShutdownManager.getInstance().register1st(this::flushAll);
 
         GxidLocalStoreBufferFlushScheduler thread = new GxidLocalStoreBufferFlushScheduler(this, configXlog);
         thread.setDaemon(true);

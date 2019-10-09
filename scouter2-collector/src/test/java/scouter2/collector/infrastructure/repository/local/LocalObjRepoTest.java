@@ -108,5 +108,6 @@ public class LocalObjRepoTest extends LocalRepoTest {
 
         assertThat(actuals.size()).isEqualTo(2);
         assertThat(actuals).containsOnly(fixture1, fixture2);
+
     }
 }

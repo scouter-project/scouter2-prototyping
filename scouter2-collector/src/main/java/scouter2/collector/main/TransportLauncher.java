@@ -64,7 +64,7 @@ public class TransportLauncher {
                 }
                 TransportInitializer transport = (TransportInitializer) clazz.newInstance();
                 transport.start();
-                ShutdownManager.getInstance().register(transport::stop);
+                ShutdownManager.getInstance().register1st(transport::stop);
 
             } catch (Exception e) {
                 log.error("Exception on loading scouter transport classes", S_0006, e);

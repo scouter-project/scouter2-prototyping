@@ -116,11 +116,11 @@
             <version>0.88.0</version>
         </dependency>
 
-        <!-- TODO why?? error without it on running via cmd line -->
+<!--        TODO why?? error without it on running via cmd line-->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
-            <version>1.9.13</version>GxidLocalStoreBufferFlushScheduler
+            <version>1.9.13</version>
         </dependency>
         <dependency>
             <groupId>net.bytebuddy</groupId>
