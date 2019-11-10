@@ -75,7 +75,7 @@ public class XlogReceiveQueueConsumer extends Thread {
                 Xlog xlog = receiveQueue.take();
                 adder.addXlog(xlog);
 
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage(), S_0009, e);
             }
         }

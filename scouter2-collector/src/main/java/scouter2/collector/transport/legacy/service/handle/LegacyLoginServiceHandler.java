@@ -23,6 +23,7 @@ import scouter.io.DataOutputX;
 import scouter.lang.pack.MapPack;
 import scouter.lang.value.BooleanValue;
 import scouter.lang.value.MapValue;
+import scouter.net.RequestCmd;
 import scouter2.collector.transport.legacy.service.annotation.LegacyServiceHandler;
 
 import java.io.IOException;
@@ -33,7 +34,56 @@ import java.util.TimeZone;
  */
 public class LegacyLoginServiceHandler {
 
-    @LegacyServiceHandler("LOGIN")
+    /*
+    <Groups>
+	<Group name="admin">
+		<Policy>
+			<AllowEditGroupPolicy>true</AllowEditGroupPolicy>
+			<AllowHeapDump>true</AllowHeapDump>
+			<AllowFileDump>true</AllowFileDump>
+			<AllowHeapHistogram>true</AllowHeapHistogram>
+			<AllowThreadDump>true</AllowThreadDump>
+			<AllowSystemGC>true</AllowSystemGC>
+			<AllowConfigure>true</AllowConfigure>
+			<AllowExportCounter>true</AllowExportCounter>
+			<AllowExportAppSum>true</AllowExportAppSum>
+			<AllowLoginList>true</AllowLoginList>
+			<AllowDBManager>true</AllowDBManager>
+			<AllowAddAccount>true</AllowAddAccount>
+			<AllowEditAccount>true</AllowEditAccount>
+			<AllowSqlParameter>true</AllowSqlParameter>
+			<AllowKillTransaction>true</AllowKillTransaction>
+			<AllowExportClass>true</AllowExportClass>
+			<AllowRedefineClass>true</AllowRedefineClass>
+			<AllowDefineObjectType>true</AllowDefineObjectType>
+		</Policy>
+	</Group>
+
+	<Group name="guest">
+		<Policy>
+			<AllowEditGroupPolicy>false</AllowEditGroupPolicy>
+			<AllowHeapDump>false</AllowHeapDump>
+			<AllowFileDump>false</AllowFileDump>
+			<AllowHeapHistogram>false</AllowHeapHistogram>
+			<AllowThreadDump>true</AllowThreadDump>
+			<AllowSystemGC>true</AllowSystemGC>
+			<AllowConfigure>false</AllowConfigure>
+			<AllowExportCounter>false</AllowExportCounter>
+			<AllowExportAppSum>false</AllowExportAppSum>
+			<AllowLoginList>false</AllowLoginList>
+			<AllowDBManager>false</AllowDBManager>
+			<AllowAddAccount>false</AllowAddAccount>
+			<AllowEditAccount>false</AllowEditAccount>
+			<AllowSqlParameter>false</AllowSqlParameter>
+			<AllowKillTransaction>false</AllowKillTransaction>
+			<AllowExportClass>false</AllowExportClass>
+			<AllowRedefineClass>false</AllowRedefineClass>
+			<AllowDefineObjectType>false</AllowDefineObjectType>
+		</Policy>
+	</Group>
+</Groups>
+     */
+    @LegacyServiceHandler(RequestCmd.LOGIN)
     public void login(DataInputX din, DataOutputX dout, boolean login) throws IOException {
         //Temp logic for skip login
         MapPack m = din.readMapPack();
@@ -47,7 +97,26 @@ public class LegacyLoginServiceHandler {
 
         //TODO Policy
         MapValue mv = new MapValue();
+
+        mv.put("AllowEditGroupPolicy", new BooleanValue(true));
+        mv.put("AllowHeapDump", new BooleanValue(true));
+        mv.put("AllowFileDump", new BooleanValue(true));
+        mv.put("AllowHeapHistogram", new BooleanValue(true));
+        mv.put("AllowThreadDump", new BooleanValue(true));
+        mv.put("AllowSystemGC", new BooleanValue(true));
+        mv.put("AllowConfigure", new BooleanValue(true));
+        mv.put("AllowExportCounter", new BooleanValue(true));
+        mv.put("AllowExportAppSum", new BooleanValue(true));
+        mv.put("AllowLoginList", new BooleanValue(true));
+        mv.put("AllowDBManager", new BooleanValue(true));
+        mv.put("AllowAddAccount", new BooleanValue(true));
+        mv.put("AllowEditAccount", new BooleanValue(true));
         mv.put("AllowSqlParameter", new BooleanValue(true));
+        mv.put("AllowKillTransaction", new BooleanValue(true));
+        mv.put("AllowExportClass", new BooleanValue(true));
+        mv.put("AllowRedefineClass", new BooleanValue(true));
+        mv.put("AllowDefineObjectType", new BooleanValue(true));
+
         m.put("policy", mv);
 
         //long session = LoginManager.login(id, passwd, ip, internalMode);

@@ -25,12 +25,20 @@ import java.util.Map;
  */
 public class LruMap {
     public static <K, V> Map<K, V> newOfMax(final int maxEntries) {
-        return new LinkedHashMap<K, V>(maxEntries * 10/7, 0.7f, true) {
 
+        LinkedHashMap<K, V> linkedHashMap = new LinkedHashMap<K, V>(maxEntries * 10 / 7, 0.7f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-                return size() > maxEntries;
+                if (size() > maxEntries) {
+                    //TODO remove it
+                    System.out.println("LruMap maxEntries are reached. " + maxEntries);
+                    return true;
+                } else {
+                    return false;
+                }
             }
         };
+
+        return linkedHashMap;
     }
 }

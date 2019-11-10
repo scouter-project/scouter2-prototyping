@@ -80,7 +80,7 @@ public class XlogRepoQueueConsumer extends Thread {
                 Xlog xlog = repoQueue.take();
                 repo.add(xlog);
 
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 log.error(e.getMessage(), S_0010, e);
             }
         }
