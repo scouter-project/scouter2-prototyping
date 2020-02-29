@@ -26,12 +26,11 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.LongObjectMaps;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.collection.LruCache;
 import scouter2.collector.domain.metric.SingleMetricDatum;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.common.collection.LruMap;
 
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -61,7 +60,8 @@ public class LocalMetricRepoCache {
     }
 
 
-    private Map<String, CurrentMetric> currentMetricCache = LruMap.newOfMax(1000);
+    private LruCache<String, CurrentMetric> currentMetricCache =
+            new LruCache<>(1000, "LocalMetricRepoCache.currentMetricCache");
 
     public void addCurrentMetric(String applicationId, long objId, long metricId, double value, long timestamp,
                                  long aliveMillis) {

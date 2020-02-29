@@ -30,8 +30,6 @@ public class LruMap {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
                 if (size() > maxEntries) {
-                    //TODO remove it
-                    System.out.println("LruMap maxEntries are reached. " + maxEntries);
                     return true;
                 } else {
                     return false;

@@ -19,12 +19,12 @@ package scouter2.collector.infrastructure.repository.local;
 
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.collector.Collectors2;
 import org.eclipse.collections.impl.factory.Lists;
 import org.mapdb.Atomic;
 import org.mapdb.HTreeMap;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
+import scouter2.collector.common.collection.LruCache;
 import scouter2.collector.domain.NonThreadSafeRepo;
 import scouter2.collector.domain.obj.Obj;
 import scouter2.collector.domain.obj.ObjRepo;
@@ -32,10 +32,8 @@ import scouter2.collector.domain.obj.ObjRepoAdapter;
 import scouter2.collector.infrastructure.db.mapdb.ObjDb;
 import scouter2.collector.springconfig.RepoTypeMatch;
 import scouter2.collector.springconfig.RepoTypeSelectorCondition;
-import scouter2.common.collection.LruMap;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -52,8 +50,8 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
     private HTreeMap<String, Long> objNameIdMap;
     private Atomic.Long objIdGenerator;
 
-    private Map<Long, Obj> objCache = LruMap.newOfMax(2000);
-    private Map<String, Long> objNameIdCache = LruMap.newOfMax(2000);
+    private LruCache<Long, Obj> objCache = new LruCache<>(2000, "LocalObjRepo.objCache");
+    private LruCache<String, Long> objNameIdCache = new LruCache<>(2000, "LocalObjRepo.objNameIdCache");
 
     public LocalObjRepo(ObjDb objDb) {
         this.db = objDb;
@@ -153,30 +151,28 @@ public class LocalObjRepo extends ObjRepoAdapter implements ObjRepo, NonThreadSa
 
     @Override
     public MutableList<Obj> findByApplicationId(String applicationId) {
-        return objCache.values().stream()
-                .filter(obj -> !obj.isDeleted())
-                .filter(obj -> applicationId.equals(obj.getApplicationId()))
-                .collect(Collectors2.toList());
+        return objCache.values()
+                .select(obj -> !obj.isDeleted())
+                .select(obj -> applicationId.equals(obj.getApplicationId()));
     }
 
     @Override
     public MutableList<Obj> findByLegacyObjType(String applicationId, String legacyObjType) {
         //TODO solve java.util.ConcurrentModificationException
-        return objCache.values().stream()
-                .filter(obj -> !obj.isDeleted())
-                .filter(obj -> applicationId.equals(obj.getApplicationId()))
-                .filter(obj -> legacyObjType.equals(obj.getObjLegacyType()))
-                .collect(Collectors2.toList());
+        //TODO applicationId & objType cache
+        return objCache.values()
+                .select(obj -> !obj.isDeleted())
+                .select(obj -> applicationId.equals(obj.getApplicationId()))
+                .select(obj -> legacyObjType.equals(obj.getObjLegacyType()));
     }
 
     @Override
     public MutableList<Obj> findByFamily(String applicationId, String family) {
         Lists.mutable.empty().toImmutable();
-        return objCache.values().stream()
-                .filter(obj -> !obj.isDeleted())
-                .filter(obj -> applicationId.equals(obj.getApplicationId()))
-                .filter(obj -> family.equals(obj.getObjFamily()))
-                .collect(Collectors2.toList());
+        return objCache.values()
+                .select(obj -> !obj.isDeleted())
+                .select(obj -> applicationId.equals(obj.getApplicationId()))
+                .select(obj -> family.equals(obj.getObjFamily()));
     }
 
     @Override

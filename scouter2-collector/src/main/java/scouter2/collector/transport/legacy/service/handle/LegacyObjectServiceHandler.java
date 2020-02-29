@@ -80,14 +80,14 @@ public class LegacyObjectServiceHandler {
                 .groupBy(SingleMetricDatum::getObjId);
 
         for (Obj obj : objs) {
-            ObjectPack pack = LegacyMapper.toObjectPack(obj);
+            ObjectPack pack = LegacyMapper.toObjectPack(obj, objService);
 
             if (!objService.isDeadObject(obj)) {
                 String masterMetricName = ObjFamilyManager.getInstance().getMasterMetricName(obj.getObjFamily());
                 long masterMetricId = metricService.findMetricIdAbsentGen(masterMetricName);
 
                 //TODO getMasterMetricDefs 타입에 따라 float or decimal value
-                //TODO 특이케이스 어캐할지를 결정. heap, active servier
+                //TODO 특이케이스 어캐할지를 결정. heap, active service
                 MutableList<SingleMetricDatum> metricsByObj = metricsOfObj.get(obj.getObjId());
                 metricsByObj.select(metric -> masterMetricId == metric.getMetricId()).getFirstOptional()
                         .ifPresent(datum -> pack.tags.put("counter", new DoubleValue(datum.getValue())));
@@ -116,7 +116,7 @@ public class LegacyObjectServiceHandler {
         ListValue objNameLv = m.newList("objName");
 
         for (Obj obj : objs) {
-            ObjectPack pack = LegacyMapper.toObjectPack(obj);
+            ObjectPack pack = LegacyMapper.toObjectPack(obj, objService);
             objTypeLv.add(pack.objType);
             objHashLv.add(pack.objHash);
             objNameLv.add(pack.objName);

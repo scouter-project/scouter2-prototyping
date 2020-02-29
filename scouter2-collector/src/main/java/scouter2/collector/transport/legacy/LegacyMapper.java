@@ -29,6 +29,7 @@ import scouter.lang.value.Value;
 import scouter.util.HashUtil;
 import scouter2.collector.domain.dict.DictCategory;
 import scouter2.collector.domain.obj.Obj;
+import scouter2.collector.domain.obj.ObjService;
 import scouter2.collector.legacy.LegacySupport;
 import scouter2.common.legacy.counters.CounterConstants;
 import scouter2.common.support.XlogIdSupport;
@@ -67,13 +68,14 @@ public class LegacyMapper {
                 .build();
     }
 
-    public static ObjectPack toObjectPack(Obj obj) {
+    public static ObjectPack toObjectPack(Obj obj, ObjService objService) {
         ObjectPack pack = new ObjectPack();
         pack.objType = obj.isLegacy() ? obj.getObjLegacyType() : obj.getApplicationId() +"::" + obj.getObjFamily();
         pack.objName = obj.getObjFullName();
         pack.objHash = (int) obj.getObjId();
         pack.address = obj.getAddress();
         pack.version = obj.getVersion();
+        pack.alive = !objService.isDeadObject(obj);
         pack.tags = MapValue.ofStringValueMap(obj.getTags());
         pack.tags.put("applicationId", obj.getApplicationId());
 
